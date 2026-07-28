@@ -1,14 +1,10 @@
 {
   "mcpServers": {
     "composio": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://mcp.composio.dev/composio/mcp",
-        "--header",
-        "x-api-key:${COMPOSIO_API_KEY}"
-      ]
+      "url": "https://connect.composio.dev/mcp",
+      "headers": {
+        "x-consumer-api-key": "${COMPOSIO_CONSUMER_API_KEY}"
+      }
     }
   }
 }
