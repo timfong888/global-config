@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/~anthropic/claude-sonnet-latest",
+  "provider": {
+    "openrouter": {
+      "apiKey": "{env:OPENROUTER_API_KEY}",
+      "models": {
+        "~anthropic/claude-sonnet-latest": {},
+        "~anthropic/claude-opus-latest": {},
+        "~anthropic/claude-haiku-latest": {},
+        "~google/gemini-flash-latest": {},
+        "openai/gpt-4o": {},
+        "deepseek/deepseek-r1": {}
+      }
+    }
+  }
+}

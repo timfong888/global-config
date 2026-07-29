@@ -1,0 +1,30 @@
+#!/bin/bash
+# Post-clone setup for OpenCode + OpenRouter
+# Runs automatically after global-config is cloned into each sandbox.
+#
+# Writes OpenRouter credentials into OpenCode's auth store so that
+# sessions pick up the key without requiring an interactive /connect run.
+# The OPENROUTER_API_KEY must be set in Blocks → Settings → Environment Variables.
+
+set -e
+
+if [ -z "$OPENROUTER_API_KEY" ]; then
+  echo "OPENROUTER_API_KEY is not set — skipping OpenCode auth setup"
+  exit 0
+fi
+
+OPENCODE_AUTH_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
+OPENCODE_AUTH_FILE="$OPENCODE_AUTH_DIR/auth.json"
+
+mkdir -p "$OPENCODE_AUTH_DIR"
+
+# Write (or overwrite) the OpenRouter credential entry
+cat > "$OPENCODE_AUTH_FILE" <<EOF
+{
+  "openrouter": {
+    "apiKey": "$OPENROUTER_API_KEY"
+  }
+}
+EOF
+
+echo "OpenCode auth configured with OpenRouter key"
