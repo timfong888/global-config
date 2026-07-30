@@ -99,9 +99,13 @@ jobs:
 
               Please review the CodeRabbit feedback and address any blocking comments before this branch is ready to merge.""")
 
+          # Blocks Linear user ID — ensures commentCreate fires a proper mention
+          # notification (AppUserMentioned webhook) rather than plain text.
+          BLOCKS_LINEAR_USER_ID = "86010372-1d6d-4dd1-90a7-98445e7a9805"
+
           query = """
-          mutation PostComment($issueId: String!, $body: String!) {
-            commentCreate(input: { issueId: $issueId, body: $body }) {
+          mutation PostComment($issueId: String!, $body: String!, $mentionedUserIds: [String!]) {
+            commentCreate(input: { issueId: $issueId, body: $body, mentionedUserIds: $mentionedUserIds }) {
               success
               comment { id url }
             }
@@ -110,7 +114,11 @@ jobs:
 
           payload = json.dumps({
               "query": query,
-              "variables": {"issueId": linear_id, "body": body},
+              "variables": {
+                  "issueId": linear_id,
+                  "body": body,
+                  "mentionedUserIds": [BLOCKS_LINEAR_USER_ID],
+              },
           }).encode()
 
           req = urllib.request.Request(
