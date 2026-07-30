@@ -69,8 +69,7 @@ length + key messages; research needs a specific-enough question):
    redo. (by Claude)` — and **do the work**.
 3. **Block only when expensive or irreversible** — a large `deep-research` run a
    wrong scope would waste, or content meant to go out without your review. Then
-   post ONE batched `> question:`, reassign to **@timfong888**, set **Urgent**, move
-   to In Review, end the tick.
+   post ONE batched `> question:`, set **Urgent**, stateId → In Review, end the tick.
 
 Honor a per-ticket autonomy label if present: `auto:full` (never block — always act
 with assumptions), `auto:confirm` (confirm before the expensive/irreversible step),
@@ -141,14 +140,19 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
   inline in the result comment. No vault file.
 - **Long** (multi-section report/plan, full article — anything you'd scroll) → write
   a vault note and link it:
-  - research → `~/Documents/remoteObsidian1025/05-Index/research/SAT-<id>-<slug>.md`
+  - research → `{VAULT_ROOT}/05-Index/research/SAT-<id>-<slug>.md`
   - plan / draft → the named project folder if the ticket clearly belongs to one
-    (e.g. `~/Documents/remoteObsidian1025/10-Projects/<project>/…`); otherwise
-    `~/Documents/remoteObsidian1025/02-AI-Tools/linear-agent-system/drafts/SAT-<id>-<slug>.md`
+    (e.g. `{VAULT_ROOT}/10-Projects/<project>/…`); otherwise
+    `{VAULT_ROOT}/02-AI-Tools/linear-agent-system/drafts/SAT-<id>-<slug>.md`
   - Frontmatter: `linear: SAT-<id>`, `type: research|plan|draft`, `created`,
     `status: draft`, source links.
   - Append a newest-on-top `[create]` line to
-    `~/Documents/remoteObsidian1025/CLAUDE-CHANGELOG.md` for the new file.
+    `{VAULT_ROOT}/CLAUDE-CHANGELOG.md` for the new file.
+  - **`VAULT_ROOT`** must be defined in the workspace `## Agent Poll Configuration` block
+    of the project `CLAUDE.md` (e.g. `VAULT_ROOT: ~/Documents/remoteObsidian1025`).
+    If unavailable (e.g. Blocks cloud environment where the local vault isn't mounted),
+    post the full content inline as a Linear comment instead and note the vault path
+    it *would* have been written to.
 - **Image** → the deliverable isn't text, so it doesn't go inline or to a vault note:
   each edited image is **attached to the Linear issue** via the `capability-image` skill
   pipeline (durable-hosted attachment). The result comment describes what was edited and
@@ -156,13 +160,13 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
 
 ## 4. Report & hand back (tick step 7)
 
-Handback = **reassignment to @timfong888** (returns the turn to Tim and removes the
-issue from the queue).
+Handback = set `stateId` to `STATE_IN_REVIEW` — never change the assignee (the human
+keeps it throughout, per B6 in `linear-agent-poll`).
 
-- **Short** → `✅ Done — <one-line framing>` + the full draft/answer inline. `(by Claude)`. State → Done, reassign to @timfong888.
-- **Long** → `✅ Done — <3–5 line summary>. Full <research|plan|draft>: <Markdown link to the vault note>.` `(by Claude)`. State → Done, reassign to @timfong888.
-- **Image** → `✅ Done — <what was edited, from which photo, how many angles>.` + the attached edited images. `(by Claude)`. State → Done, reassign to @timfong888.
-- **Blocked / missing input** → `> question: <what you need>`, reassign to @timfong888, set **Urgent**, state → In Review, end the tick.
+- **Short** → `✅ Done — <one-line framing>` + the full draft/answer inline. `(by Claude)`. State → In Review.
+- **Long** → `✅ Done — <3–5 line summary>. Full <research|plan|draft>: <Markdown link to the vault note>.` `(by Claude)`. State → In Review.
+- **Image** → `✅ Done — <what was edited, from which photo, how many angles>.` + the attached edited images. `(by Claude)`. State → In Review.
+- **Blocked / missing input** → `> question: <what you need>`, set **Urgent**, state → In Review, end the tick.
 
 Render any cross-issue reference as a clickable Markdown link —
 `[SAT-123](https://linear.app/sophia-xyz/issue/SAT-123)`, never a bare identifier.

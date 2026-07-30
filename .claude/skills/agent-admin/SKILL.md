@@ -36,9 +36,8 @@ an explicit `subtype: email|vault|logseq` token in the ticket if present — it
 overrides inference.
 
 **Ambiguous → stop.** Post one `> question:` naming the sub-types you can't choose
-between, set `assigneeId` = @timfong888, `priority` = 1 (Urgent), `stateId` = In
-Review, end the tick. Don't guess a sub-type — a wrong guess on this branch means
-wrong tools and wrong guardrails downstream.
+between, set `priority` = 1 (Urgent), `stateId` = In Review, end the tick. Don't guess
+a sub-type — a wrong guess on this branch means wrong tools and wrong guardrails downstream.
 
 ## 2. (a) Email procedure — DRAFT ONLY, NEVER SEND
 
@@ -133,9 +132,9 @@ Build one batch table, one row per surviving todo:
 
 Post it as **one** `> question:` ("Approve creating these N Linear Todo issues?
 Reply with approve-all, a list of row numbers to approve, or edits."), set
-`assigneeId` = @timfong888, `priority` = 1 (Urgent), `stateId` = In Review, end the
-tick. **Create nothing yet.** This is the hard gate — no Linear or GitHub item
-exists until Tim's explicit approval comment lands.
+`priority` = 1 (Urgent), `stateId` = In Review, end the tick. **Create nothing yet.**
+This is the hard gate — no Linear or GitHub item exists until Tim's explicit approval
+comment lands.
 
 ### Step 4 — Create on approval (resume)
 
@@ -196,7 +195,7 @@ labeled sections (US-5), signed `(by Claude)`:
 
 Omit a section entirely if it's empty rather than showing it blank.
 
-Handback = **reassignment to @timfong888** (per B6 in the `linear-agent-poll` skill):
+Handback = set `stateId` to `STATE_IN_REVIEW` — never change the assignee (per B6 in the `linear-agent-poll` skill):
 - **Pending Approval is non-empty** (the LogSeq gate, or missing scope) →
   `> question:` with the batch/ask, `priority` = 1 (Urgent), `stateId` = In
   Review. Return `needs-input: {issue}`.

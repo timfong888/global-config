@@ -20,16 +20,22 @@ attachment built directly from one will eventually **404**, silently breaking th
 attachment for future reference. Re-hosting the image on durable storage first gives
 Linear a **non-expiring URL**.
 
+## Configuration
+
+**`GDRIVE_ACCOUNT`** — the Composio-connected Google Drive account name to upload images
+into. Must be defined in the workspace `## Agent Poll Configuration` block of the project
+`CLAUDE.md`. Satchel default: `timfong888-gdrive`.
+
 ## Procedure
 
 Run this after the image is generated (and optionally downloaded locally per the
 `capability-image-download` skill) and before `LINEAR_CREATE_ATTACHMENT`:
 
 1. **Upload to durable storage.** Call `GOOGLEDRIVE_UPLOAD_FROM_URL` against the
-   Composio-connected **`timfong888-gdrive`** Google Drive account, passing the
+   Composio-connected **`{GDRIVE_ACCOUNT}`** Google Drive account, passing the
    generated image's hosted URL. This copies the bytes into Drive before the presigned
-   link can expire. (Pin the Composio call to the `timfong888-gdrive` account so the
-   upload lands in the right Drive.)
+   link can expire. (Pin the Composio call to `{GDRIVE_ACCOUNT}` so the upload lands
+   in the right Drive.)
 2. **Make the Drive URL shareable / non-expiring.** Confirm the uploaded file's
    sharing/permission level keeps its URL viewable — anyone-with-the-link view access
    — so the URL renders in the Linear attachment preview rather than showing a
@@ -45,6 +51,6 @@ Run this after the image is generated (and optionally downloaded locally per the
 - Durable hosting is only about giving Linear a **non-expiring** attachment URL. Getting
   the image onto local disk for native `Read` review is a separate stage — see the
   `capability-image-download` skill ([SAT-492](https://linear.app/sophia-xyz/issue/SAT-492)).
-- If the `timfong888-gdrive` connection is missing or the upload/permission step fails,
+- If the `{GDRIVE_ACCOUNT}` connection is missing or the upload/permission step fails,
   do **not** fall back to attaching the presigned link (it will 404 later) — surface the
   gap rather than creating an attachment that silently breaks.

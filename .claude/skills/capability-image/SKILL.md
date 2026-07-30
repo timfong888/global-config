@@ -87,10 +87,11 @@ Five stages, in order. The middle/final stages are documented in their own stage
 3. **Host durably** — see the `capability-image-host` skill
    ([SAT-490](https://linear.app/sophia-xyz/issue/SAT-490)). The `fal_ai` / `gemini`
    URL is a short-lived presigned link (~1–6h) that will 404. Upload the image to the
-   connected **`timfong888-gdrive`** Drive via `GOOGLEDRIVE_UPLOAD_FROM_URL`, set
-   sharing so the URL stays viewable, and use that **durable** Drive URL downstream —
-   only needed when the image will be **attached to / referenced from Linear** (or
-   anywhere the link must outlive the presigned window).
+   connected **`{GDRIVE_ACCOUNT}`** Drive (configured in workspace `CLAUDE.md`;
+   Satchel default: `timfong888-gdrive`) via `GOOGLEDRIVE_UPLOAD_FROM_URL`, set sharing
+   so the URL stays viewable, and use that **durable** Drive URL downstream — only needed
+   when the image will be **attached to / referenced from Linear** (or anywhere the link
+   must outlive the presigned window).
 
 4. **Attach.** Pass the **durable** Drive URL from stage 3 (never the presigned
    `fal_ai` / `gemini` link) to `LINEAR_CREATE_ATTACHMENT` so the Linear attachment
@@ -99,7 +100,7 @@ Five stages, in order. The middle/final stages are documented in their own stage
 5. **Report cost & running balance** (stage 5) — see the `capability-image-cost` skill
    ([SAT-533](https://linear.app/sophia-xyz/issue/SAT-533)). After the image is
    generated/edited, append one line to that same image's comment (never a separate
-   comment — see the SAT-482 one-image-per-comment convention in `CONVENTIONS.md`)
+   comment — one image per comment, so cost lines stay traceable per image)
    stating that image's generation cost and the cumulative balance spent so far. Stage
    5 always needs a comment to append to; if the image is a genuine one-off that skips
    stages 2–4 (never reviewed or attached), post a minimal top-level comment for it
