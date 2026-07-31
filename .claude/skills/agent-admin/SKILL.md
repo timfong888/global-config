@@ -84,13 +84,10 @@ a sub-type — a wrong guess on this branch means wrong tools and wrong guardrai
 
 ## 4. (c) LogSeq procedure — personal, propose-first
 
-**FilOz decoupling (resolves the standing blocker):** Tim is no longer at FilOz.
-Do **not** use the `logseq-todo-process` skill — it hard-points at the FilOz
-journal path (`06-Filecoin/LogSeq-Filecoin/...`), the **XFN** Linear team, and the
-retired Rube MCP. That entire dependency is dead. This procedure replaces it for
-personal use; it does not repoint or fix the old skill.
+Do **not** use the `logseq-todo-process` skill — it is retired. This procedure
+replaces it for personal use.
 
-**Where the list lives (unchanged):** aged todos stay a list *in LogSeq* —
+**Where the list lives:** aged todos stay a list *in LogSeq* —
 `03-LogSeq/journals/`. This procedure reads that list; it does not move or copy it
 elsewhere in the vault.
 
@@ -159,9 +156,7 @@ what Step 1's "already processed" skip checks on the next scan, and it's how the
 todo stays traceable from LogSeq. Rejected/edited-out rows get **no** link and
 will resurface in the next scan unless Tim resolves them directly in LogSeq.
 
-**No GitHub issues.** The old skill also filed GitHub issues per todo (FilOz repo
-mapping); there's no equivalent personal repo mapping, so this procedure creates
-Linear issues only.
+**No GitHub issues.** This procedure creates Linear issues only.
 
 ## 5. Cross-cutting
 
