@@ -1,6 +1,11 @@
 {
-  "command": "node",
-  "args": ["${env:GLOBAL_CONFIG_PATH}/mcp-servers/aurora/server.js"],
+  "command": "npx",
+  "args": [
+    "--yes",
+    "--package",
+    "github:timfong888/global-config",
+    "aurora-mcp-server"
+  ],
   "env": {
     "AURORA_API_KEY": "${env:AURORA_API_KEY}",
     "AURORA_BASE_URL": "https://ai.aur.lu/v1"
