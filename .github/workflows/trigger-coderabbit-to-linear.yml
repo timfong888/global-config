@@ -1,0 +1,14 @@
+# Fires whenever CodeRabbit reviews a PR in this repo (global-config).
+# Uses the LINEAR_API secret stored in this repo's settings.
+
+name: CodeRabbit Review → Linear (global-config)
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  coderabbit-to-linear:
+    uses: ./.github/workflows/coderabbit-to-linear.yml
+    secrets:
+      LINEAR_API: ${{ secrets.LINEAR_API }}

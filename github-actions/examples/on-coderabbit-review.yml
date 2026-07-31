@@ -1,0 +1,26 @@
+# Copy this file into your project repo at:
+#   .github/workflows/coderabbit-to-linear.yml
+#
+# It wires the CodeRabbit → Linear notification via the reusable workflow
+# defined in global-config.
+#
+# Required secret in this repo (Settings → Secrets → Actions):
+#   LINEAR_API — a Linear personal API key with comment:create scope.
+#     Generate one at: https://linear.app/settings/api  (Personal API keys section)
+#
+# Branch naming: the reusable workflow extracts the first Linear issue identifier
+# (e.g. SAT-660, BLO-123) from the PR branch name.  As long as your branches
+# follow the convention  <prefix>/<TEAM>-<N>-<slug>  (e.g. blocks/sat-660-title)
+# no extra configuration is needed.
+
+name: CodeRabbit Review → Linear
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  coderabbit-to-linear:
+    uses: timfong888/global-config/.github/workflows/coderabbit-to-linear.yml@main
+    secrets:
+      LINEAR_API: ${{ secrets.LINEAR_API }}
