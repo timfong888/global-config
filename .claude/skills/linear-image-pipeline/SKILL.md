@@ -1,6 +1,6 @@
 ---
 name: linear-image-pipeline
-description: Generate or edit an image and get it durably attached to a Linear issue with a cost line — generate, download to disk for native review, host on a non-expiring URL, attach, report cost + running balance. Use whenever a task needs a generated/edited image delivered into Linear, not as a standalone image generator.
+description: Generate or edit an image and get it durably attached to a Linear issue with a cost line — generate, download to disk for native review, re-host on a durable URL (subject to the chosen host's own retention policy), attach, report cost + running balance. Use whenever a task needs a generated/edited image delivered into Linear, not as a standalone image generator.
 ---
 
 # linear-image-pipeline
@@ -19,7 +19,7 @@ Run image generation through Composio: **`fal_ai`** is the default provider for 
 
 ## Download to disk (before native review)
 
-A native `Read`-style review tool needs a local path, not a remote URL. Sanitize `<issue-id>` and `<descriptive-name>` before building the path — reject path separators and `..`, reduce each to a plain basename — and confirm the resolved path still falls under `generated-images/` before creating anything, the same guard the `linear-ticket` skill applies to a ticket id used as a path segment. Download the hosted URL to `generated-images/<issue-id>/<descriptive-name>.<ext>` (create the directory if missing, gitignore it — never commit these). Verify the download actually succeeded and is image data, not just non-empty: check the HTTP response succeeded, confirm the content type is an image MIME type, and only then hand that **local path** to the review step — an error page or truncated payload saved to disk and "reviewed" is worse than an obvious failure. Skip this stage only when the image is never reviewed before attaching.
+A native `Read`-style review tool needs a local path, not a remote URL. Sanitize `<issue-id>` and `<descriptive-name>` before building the path — reject path separators and `..`, reduce each to a plain basename — and confirm the resolved path still falls under `generated-images/` before creating anything, the same guard the `linear-ticket` skill applies to a ticket id used as a path segment. Download the hosted URL to `generated-images/<issue-id>/<descriptive-name>.<ext>` (create the directory if missing, gitignore it — never commit these), capping the download at a sane size (a few tens of MB) and aborting if that's exceeded. Verify the download actually succeeded and is image data, not just non-empty: check the HTTP response succeeded, confirm the content type is an image MIME type, and only then hand that **local path** to the review step — an error page or truncated payload saved to disk and "reviewed" is worse than an obvious failure. Skip this stage only when the image is never reviewed before attaching.
 
 ## Host durably (before attaching to Linear)
 
