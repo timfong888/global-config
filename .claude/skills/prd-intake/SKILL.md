@@ -91,4 +91,17 @@ Summarize which sections were touched, what prerequisite context was added, and 
 
 ## Both modes
 
-Commit PRD file changes with a `feat:`/`docs:` prefix describing what was added or integrated, so later `git diff` checks (this skill's step 2, and prd-review) have a real baseline to learn the user's edit patterns from.
+Committing keeps a real baseline for later `git diff` checks (this skill's step 2, and prd-review) to
+learn the user's edit patterns from. Do it last, and **ask first**: show the user which PRD file(s)
+this run touched and the proposed message, and wait for explicit approval — don't commit as a matter
+of course.
+
+Once approved, commit only the PRD file(s) this run modified, by path. A plain `git add -A`/`git
+commit` sweeps in whatever else was already staged or dirty in the working tree:
+
+```bash
+git commit --only -- "$PRD_FILE" -m "docs: <what was added or integrated>"
+```
+
+`--only` commits the named paths from the working tree and ignores anything else in the index. Use a
+`feat:` prefix instead when the change introduces new scope rather than documenting existing scope.

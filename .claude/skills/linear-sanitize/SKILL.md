@@ -31,10 +31,21 @@ Run all Linear queries/mutations via the Composio CLI (`composio execute LINEAR_
 
 ## Next-Friday calculation
 
+`today` is the current date in the **local reporting timezone** (America/Los_Angeles unless the
+invoking CLAUDE.md says otherwise) — not UTC, which rolls over a day early in the evening. All
+`dueDate` and "N days overdue" arithmetic in the checks below uses that same date.
+
+The formula assumes **Sunday = 0 … Friday = 5**. Python's `date.weekday()` is Monday-based, so
+convert first (`dow = (d.weekday() + 1) % 7`) or use `d.isoweekday() % 7`; feeding a Monday-based
+value in silently returns the wrong date.
+
 ```text
-daysUntilFriday = (5 - today.dayOfWeek + 7) % 7; if 0, use 7
+daysUntilFriday = (5 - dowSundayZero + 7) % 7; if 0, use 7
 nextFriday = today + daysUntilFriday days   → format as YYYY-MM-DD
 ```
+
+Check both branches before relying on it: from a Wednesday (`dow` 3) it must return that same
+week's Friday (+2); from a Friday (`dow` 5) it must return the *following* Friday (+7), never today.
 
 ## Query plan (2 API calls for a full pass)
 

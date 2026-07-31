@@ -61,13 +61,25 @@ Anchor text must appear **only once** in the doc (lengthen the substring if it r
 
 ```bash
 composio execute GOOGLEDOCS_GET_DOCUMENT_PLAINTEXT -d '{"document_id": "<DOC_ID>"}'
+```
 
-composio execute GOOGLEDRIVE_CREATE_COMMENT -d '{
-  "file_id": "<DOC_ID>",
-  "content": "N. <comment text> (by Claude)",
-  "quoted_file_content_value": "<exact anchor phrase, appears only once>"
-}'
+The comment text and the anchor phrase are document content — they can contain quotes, newlines,
+backticks, or `$(...)`. **Never paste them into a single-quoted `-d '{...}'` payload**; hand-escaping
+breaks the quoting and makes the document able to inject shell. Build the JSON with `jq --arg` for
+every dynamic value, write it to a temp file, and pass the file:
 
+```bash
+PAYLOAD=$(mktemp)
+jq -n --arg id "$DOC_ID" --arg content "$COMMENT_TEXT" --arg anchor "$ANCHOR_PHRASE" \
+  '{file_id: $id, content: $content, quoted_file_content_value: $anchor}' > "$PAYLOAD"
+composio execute GOOGLEDRIVE_CREATE_COMMENT -d @"$PAYLOAD"
+rm -f "$PAYLOAD"
+```
+
+`content` should be `"N. <comment text> (by Claude)"`; `quoted_file_content_value` is the exact
+anchor phrase that appears only once. Static payloads are fine inline:
+
+```bash
 composio execute GOOGLEDRIVE_LIST_COMMENTS -d '{"file_id": "<DOC_ID>"}'
 composio execute GOOGLEDRIVE_DELETE_COMMENT -d '{"file_id": "<DOC_ID>", "comment_id": "<ID>"}'
 ```
@@ -79,8 +91,14 @@ Prefix every comment with its table number and sign `(by Claude)`. Capture retur
 **Fallback — Playwright, for a real inline-highlighted comment.** Use when the doc must show a genuine highlighted anchor (this is the default expectation in `editorial` mode). Drives the actual Docs UI. The approval table was built from an earlier read — re-check each anchor against the live doc as you go, not from memory:
 
 ```javascript
-// Cmd+F → type → confirm exactly one match → Enter → Escape (selection persists) → Cmd+Opt+M → type comment → Post
-async function addComment(page, searchText, commentText) {
+// Cmd+F → type → confirm exactly one match → Enter → Escape (selection persists)
+// → screenshot and CONFIRM the highlight → Cmd+Opt+M → type comment → Post
+//
+// `confirmHighlight(path, searchText)` is not automatable from the page: Docs paints the
+// selection on a canvas, so no DOM query can see it. Implement it as a stop where you
+// (the agent) Read the screenshot file and return true only if searchText is visibly
+// highlighted. Never stub it to `true` — that is the whole point of the gate.
+async function addComment(page, searchText, commentText, confirmHighlight) {
   await page.keyboard.press('Meta+f');
   await page.waitForTimeout(600);
   await page.getByRole('searchbox', { name: 'Find in document' }).fill(searchText);
@@ -99,9 +117,16 @@ async function addComment(page, searchText, commentText) {
   await page.waitForTimeout(600);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(400);
-  // Docs renders the selection on a canvas — no DOM API can confirm it stuck.
-  // Screenshot here and visually confirm searchText is highlighted before
-  // continuing; if it isn't, skip this anchor rather than comment blind.
+
+  // Gate: the selection must be visibly highlighted before the composer opens.
+  // Without this check the comment can attach to the wrong text, or to nothing.
+  const shot = `/tmp/gdoc-anchor-${Date.now()}.png`;
+  await page.screenshot({ path: shot });
+  if (!(await confirmHighlight(shot, searchText))) {
+    await page.keyboard.press('Escape');
+    return { posted: false, searchText, reason: 'highlight not visible after selection' };
+  }
+
   await page.keyboard.press('Meta+Alt+m');
   await page.waitForTimeout(800);
   await page.getByRole('textbox', { name: 'Comment draft' }).fill(commentText);

@@ -43,29 +43,62 @@ Before shipping a generated file, open it in the target loader (Obsidian's Excal
 
 Default canvas 800×600. Common layouts: flowchart = rectangles + arrows; hierarchy = rectangles at different y-levels + vertical lines; quadrant = two perpendicular lines + 4 labels; triangle/trilemma = 3 lines + vertex labels + a position-dot ellipse (vertices at `(cx, cy-s)`, `(cx-0.866s, cy+0.5s)`, `(cx+0.866s, cy+0.5s)`).
 
-Write to `design/excalidraw/<name>.excalidraw.md` relative to the source document (create the dir if needed), then return the embed: `![[name.excalidraw|500]]` (width 400-600 typical).
+Write to `design/excalidraw/<name>.excalidraw.md` relative to the source document (create the dir
+if needed), then return the embed: `![[name.excalidraw|500]]` (width 400-600 typical).
+
+`<name>` comes from the user's request, so treat it as a filename, not a path. Require
+`^[A-Za-z0-9][A-Za-z0-9._-]*$` — reject anything containing `/`, `\`, or `..` — then resolve the
+target and confirm it is still inside `design/excalidraw` before writing:
+
+```bash
+[[ "$NAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { echo "unsafe diagram name"; exit 1; }
+OUT_DIR="$(cd "$(dirname "$SOURCE_DOC")" && pwd -P)/design/excalidraw"
+mkdir -p "$OUT_DIR"
+OUT="$OUT_DIR/$NAME.excalidraw.md"
+[[ "$OUT" == "$OUT_DIR"/* ]] || { echo "output path escaped design/excalidraw"; exit 1; }
+```
 
 ## Mode: export
 
-Tool: `excalidraw-brute-export-cli` (Playwright-based; renders via excalidraw.com, needs internet + Node 18+).
+Tool: `excalidraw-brute-export-cli` (Playwright-based, needs internet + Node 18+).
+
+**This renders through excalidraw.com — the scene leaves the machine.** Say that to the user and
+get explicit confirmation before exporting any diagram you didn't generate yourself from public
+content. For confidential diagrams, don't use this path: render offline instead, either with
+Obsidian's Excalidraw plugin ("Export as PNG/SVG" on the open drawing) or a local
+`@excalidraw/excalidraw` + headless-browser script that never loads excalidraw.com.
+
+Installing the CLI runs third-party code, so pin an exact version and confirm with the user before
+installing. Prefer a project-local dependency with a reviewed lockfile (`npm ci`) over a global
+install:
 
 ```bash
-npm install -g excalidraw-brute-export-cli   # one-time
-
-excalidraw-brute-export-cli \
+# one-time, after user confirmation — check `npm view excalidraw-brute-export-cli versions`
+# and substitute the exact reviewed version for X.Y.Z
+npm install --save-dev excalidraw-brute-export-cli@X.Y.Z   # then commit package-lock.json
+npx --no-install excalidraw-brute-export-cli \
   -i input.excalidraw -o output.png \
   -f png -s 2 --headless
 ```
 
 Flags: `-f png|svg`, `-s 1|2|3` (scale — use 2 for retina), `-b` include background (default transparent), `-d` dark mode, `-e` embed scene data in the image, `--headless`.
 
-For `.excalidraw.md` inputs, don't grab the first ```` ```json ```` fence in the file — extract specifically from inside the `%%...%%` / `# Drawing` block, into a unique temp file:
+For `.excalidraw.md` inputs, don't grab the first ```` ```json ```` fence in the file — extract
+specifically from inside the `%%...%%` / `# Drawing` block, into a unique temp file. The input path
+may come from the user or a glob, so hold it in `INPUT`, confirm it resolves inside the workspace,
+and always pass it quoted — an unquoted path that begins with `-` or contains whitespace changes
+how `awk` parses its arguments:
 
 ```bash
+INPUT="$1"
+[ -f "$INPUT" ] || { echo "no such file: $INPUT"; exit 1; }
+REAL_INPUT="$(cd "$(dirname -- "$INPUT")" && pwd -P)/$(basename -- "$INPUT")"
+[[ "$REAL_INPUT" == "$(pwd -P)"/* ]] || { echo "input outside workspace"; exit 1; }
+
 TMP=$(mktemp)
-awk '/^%%$/{n++; next} n==1' input.excalidraw.md \
+awk '/^%%$/{n++; next} n==1' -- "$REAL_INPUT" \
   | awk '/^```json$/{f=1; next} /^```$/{f=0} f' > "$TMP"
-excalidraw-brute-export-cli -i "$TMP" -o output.png -f png -s 2 --headless
+npx --no-install excalidraw-brute-export-cli -i "$TMP" -o output.png -f png -s 2 --headless
 rm "$TMP"
 ```
 
@@ -77,13 +110,15 @@ for f in *.excalidraw *.excalidraw.md; do
   case "$f" in
     *.excalidraw.md)
       TMP=$(mktemp)
-      awk '/^%%$/{n++; next} n==1' "$f" \
+      awk '/^%%$/{n++; next} n==1' -- "./$f" \
         | awk '/^```json$/{fl=1; next} /^```$/{fl=0} fl' > "$TMP"
-      excalidraw-brute-export-cli -i "$TMP" -o "${f%.excalidraw.md}.png" -f png -s 2 --headless
+      npx --no-install excalidraw-brute-export-cli \
+        -i "$TMP" -o "${f%.excalidraw.md}.png" -f png -s 2 --headless
       rm "$TMP"
       ;;
     *.excalidraw)
-      excalidraw-brute-export-cli -i "$f" -o "${f%.excalidraw}.png" -f png -s 2 --headless
+      npx --no-install excalidraw-brute-export-cli \
+        -i "./$f" -o "${f%.excalidraw}.png" -f png -s 2 --headless
       ;;
   esac
 done

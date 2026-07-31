@@ -36,11 +36,19 @@ jq -e '((.errors // []) | length) == 0 and has("data")' <<<"$response" >/dev/nul
   || { echo "endpoint smoke test FAILED: $response" >&2; exit 1; }
 ```
 
-Query with POST:
+Query with POST. Use the same failure flags as the smoke test on every real query, not just the
+probe — a bare `curl -s` hangs on a dead endpoint and pipes a 404/500 body into `jq` as if it
+succeeded, and a 200 response can still carry `errors` with no usable `data`:
 
 ```bash
-curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
-  -d '{"query": "{ paymentsMetrics(first: 1) { totalRails totalActiveRails totalAccounts uniquePayers uniquePayees } }"}' | jq
+set -euo pipefail
+response=$(curl --connect-timeout 5 --max-time 30 --fail-with-body \
+  --silent --show-error -X POST "$ENDPOINT" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ paymentsMetrics(first: 1) { totalRails totalActiveRails totalAccounts uniquePayers uniquePayees } }"}')
+jq -e '((.errors // []) | length) == 0 and has("data")' <<<"$response" >/dev/null \
+  || { echo "query FAILED: $response" >&2; exit 1; }
+jq '.data' <<<"$response"
 ```
 
 ## Known traps
@@ -72,7 +80,13 @@ curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
 
 ## Example queries
 
-Unless stated otherwise, the `first: N` queries below return a bounded top-N sample in the order shown — not an exhaustive list. To enumerate every matching entity, add cursor pagination (loop on `first`/`skip`, or `where: { id_gt: "<last id>" }`) until a page returns fewer rows than `first`.
+Unless stated otherwise, the `first: N` queries below return a bounded top-N sample in the order
+shown — not an exhaustive list. To enumerate every matching entity, add cursor pagination and keep
+going until a page returns fewer rows than `first`. **The cursor field must be the same field as
+`orderBy`.** `where: { id_gt: "<last id>" }` is correct only for an ID-ordered query; under
+`orderBy: timestamp` (as in `dailyMetrics` and `dailyTokenMetrics` below) `id` is not guaranteed to
+follow timestamp order, so an `id_gt` cursor can skip or repeat rows. Use the timestamp-plus-ID
+cursor described under the `dailyTokenMetrics` example instead.
 
 Daily metrics, last 7 days:
 

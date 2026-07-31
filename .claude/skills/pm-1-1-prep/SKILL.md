@@ -24,17 +24,25 @@ composio search linear   # confirm the exact slug for this connection first
 - **Active** — `filter: { assignee: { email: { eq: "<email>" } }, state: { type: { eq: "started" } } }`
 - **Blocked** — `state.type` has no "blocked" value, and `unstarted` covers backlog and planned work too, not just blocked issues. Blocked is normally a named workflow state (e.g. "Blocked") or a label — resolve the exact name for this workspace first (`LINEAR_LIST_LINEAR_STATES`, or ask) rather than assuming. `filter: { assignee: { email: { eq: "<email>" } }, state: { name: { eq: "<resolved-blocked-state>" } } }` (swap for `labels: { name: { eq: "<blocked-label>" } }` if this workspace flags blocked work with a label instead).
 - **Overdue** — same assignee filter + `dueDate: { lt: "<today>" }`, `state: { type: { nin: ["completed", "canceled"] } }`
-- **Upcoming (next 7 days)** — same assignee filter + `dueDate: { gte: "<today>", lte: "<today+7>" }`, `state: { type: { nin: ["completed", "canceled"] } }` — exclude finished work; the due-date filter alone doesn't drop issues that closed early.
-- **Recently completed (last 7 days)** — same assignee filter + `completedAt: { gte: "<today-7>" }`. Use `completedAt`, not `updatedAt` — an issue can be edited without being completed. Compute the 7-day boundary explicitly in the local reporting timezone, not whatever the API defaults to.
+- **Upcoming (next 7 days)** — same assignee filter + `dueDate: { gte: "<today>", lt: "<today+7>" }`, `state: { type: { nin: ["completed", "canceled"] } }` — exclude finished work; the due-date filter alone doesn't drop issues that closed early. Half-open on purpose: `gte today, lte today+7` spans **eight** calendar dates, not seven.
+- **Recently completed (last 7 days)** — same assignee filter + `completedAt: { gte: "<today-6T00:00 local, as UTC>", lt: "<tomorrow T00:00 local, as UTC>" }` — the seven dates ending today, today included.
+
+Every boundary above is a date in the **local reporting timezone** (America/Los_Angeles unless the invoking CLAUDE.md says otherwise), converted to a UTC instant before it goes into the query. `completedAt` is a timestamp, so a bare `YYYY-MM-DD` is midnight UTC and drops or adds most of a local day. `dueDate` is a plain date and needs no conversion.
 
 Watch for patterns: items stuck in review, repeat blockers.
 
 **Slack** — last 7 days, from this person only: messages containing "blocker"/"stuck"/"help", threads with unanswered questions from them, and any wins they shared. Always scope with `from:` — without a person filter, other people's messages land in the agenda.
 
+Slack's `after:`/`before:` are **exclusive** — they omit the dates you name. To cover the same seven
+dates as the Linear windows (today-6 through today inclusive), pass `after:<today-7>` and
+`before:<tomorrow>`; using `after:<today-7> before:<today>` silently drops today, and
+`after:<today-6>` drops the oldest day.
+
 ```bash
 composio search slack
 composio execute SLACK_SEARCH_MESSAGES -d @payload.json
-# query: from:<slack_handle> after:YYYY-MM-DD before:YYYY-MM-DD (blocker OR stuck OR help OR question OR win)
+# query: from:<slack_handle> after:<today-7> before:<tomorrow> (blocker OR stuck OR help OR question OR win)
+# dates YYYY-MM-DD in the local reporting timezone, and both bounds are exclusive
 ```
 
 `SLACK_SEARCH_MESSAGES` returns matching messages, not the surrounding thread — a hit on a question doesn't tell you whether it was answered. For each question-shaped hit, fetch its thread with `SLACK_FETCH_MESSAGE_THREAD_FROM_A_CONVERSATION` (channel ID + `thread_ts` from the hit) and check the replies: if someone else replied after the person's message, classify it answered and leave it off the agenda; only genuinely unanswered questions go on.
