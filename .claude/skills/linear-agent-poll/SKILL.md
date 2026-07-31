@@ -41,9 +41,9 @@ If the invoking repo's `CLAUDE.md` has no `## Agent Poll Configuration` block **
 
 ## Part B — Per-issue worker
 
-Own exactly the one issue you were handed. Sign every comment `(by Claude)`; never post as Tim; never touch `assigneeId` except to leave it on the human.
+Own exactly the one issue you were handed. Sign every comment `(by Claude)`; never post as Tim. `assigneeId` stays on `HUMAN_USER_ID` throughout — the B6 templates below re-set it explicitly at handback, but that's a defensive no-op for the common case (nothing in this flow ever moves it off the human), not a signal that reassignment is how a handback works; the `state` transition is the actual handback mechanism.
 
-**B1. Load layered context.** A ticket is a delta against project/epic baselines — fetch `issue { description comments { nodes { id body createdAt user { id } parent { id } } } project { description labels } parent { description } }` in one call (comment `id` + `parent.id` are the thread structure, needed for B2/B5; if the issue has more than a page of comments, page with `after: cursor` until `hasNextPage` is false — same rule as A2 below — before running B2). For `project.description` / `parent.description`, look for a fenced `agent-context` block:
+**B1. Load layered context.** A ticket is a delta against project/epic baselines — fetch `issue { description comments { nodes { id body createdAt user { id } parent { id } } } project { id name description labels } parent { description } }` in one call (comment `id` + `parent.id` are the thread structure, needed for B2/B5; `project.name` is the `CODING_REPO_ROOT` lookup key for B3; if the issue has more than a page of comments, page with `after: cursor` until `hasNextPage` is false — same rule as A2 below — before running B2). For `project.description` / `parent.description`, look for a fenced `agent-context` block:
 
 ```yaml
 claude_md: <pointer to a linked CLAUDE.md, if any>
@@ -52,14 +52,16 @@ rules:
 scope: one-line description
 ```
 
+If `claude_md:` is present, resolve and read that file as part of this layer: join a relative path against the repo root, then canonicalize and verify the result still resolves under the repo root before reading — reject (don't read) anything that would escape it. On any failure to resolve or read it, fall back to the raw description text for that layer rather than blocking the tick.
+
 Stack layers least- to most-specific (global → repo → project → epic → issue) — additive, not overriding. Compact only verbose prose if over budget; **hard rules (`never`/`always`/`must` lines, and any `rules:` entry) survive compaction verbatim.** Only for a genuine same-point contradiction does the more-specific layer win (`ticket > epic > project`).
 
 **B2. Confirm pending, per thread (not flat).** Linear comments are single-level threaded (`parent` id, or own id if root). For each **distinct thread on the issue** — including a thread you've never replied in at all — compare its newest comment against your most recent `(by Claude)` comment **in that same thread**; a thread with no `(by Claude)` comment in it yet has no "last reply" to compare against, so it's pending by definition, exactly like a fresh issue-level ask. Never compare against your newest comment issue-wide (a flat comparison hides a reply in an older or untouched thread behind an unrelated newer one — that was the SAT-480 bug). So, pending when: you've never commented on the issue at all (fresh ask — use the description plus the newest comment in every existing thread), **or** some thread — touched by you before or not — has a human comment newer than your last `(by Claude)` reply in that specific thread. All threads already answered by you → stop, return `skipped: already answered`.
 - **Floor + prior-handback gate** (secondary/auto-resume path only): a reply only resumes a thread that's currently in a floor state (`STATE_IN_REVIEW`/`STATE_NEEDS_INPUT`/`STATE_BLOCKED`) **and** already contains a prior `(by Claude)` handback in it.
-- **Loop breaker:** count consecutive `> question:` (needs-input) handbacks in a thread since its last Ready-for-review/Done handback. At **≥3**, stop auto-resuming it: post `🔴 Needs input — I've gone {n} rounds without converging; please restate the goal, or move this to Agent Queue to force another pass. [model: {m}, effort: {e}] (by Claude)` and treat the thread as parked.
+- **Loop breaker:** count consecutive `> question:` (needs-input) handbacks in a thread since its last Ready-for-review/Done handback. At **≥3**, stop auto-resuming it: post `🔴 Needs input — I've gone {n} rounds without converging; please restate the goal, or move this to Agent Queue to force another pass. [model: {m}, effort: {e}] (by Claude)` and treat the thread as parked — that comment is itself the parked marker (it's now the newest, so the thread reads as answered). A further reply that just re-litigates the same point doesn't un-park it; only genuinely new direction, or moving the issue to Agent Queue, resumes it.
 - Pure acknowledgment with no request ("thanks", "looks good") → one short `(by Claude)` reply nudging toward Done, don't invent work, don't skip silently.
 
-**B3. Run the track's profile.**
+**B3. Run the track's profile.** Use the track the orchestrator handed you (routing label or its own inference). Only if it's genuinely ambiguous even after reading the description — not just "could plausibly be either" — post one `> question:` naming the choices, leave `assigneeId = HUMAN_USER_ID`, and end rather than guessing and doing the wrong track's work.
 
 | Track | What to do |
 |---|---|
