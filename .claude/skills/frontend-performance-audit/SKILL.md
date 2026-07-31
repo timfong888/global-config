@@ -99,33 +99,41 @@ Only after approval. Every issue carries a stable marker (`rule-id` + `file:line
 
 ```bash
 MARKER="<!-- perf-audit: {rule-id} @ {file}:{line} -->"
-EXISTING=$(gh issue list --repo {REPO} --state all --search "\"$MARKER\" in:body" --json number -q '.[0].number')
+EXISTING=$(gh issue list --repo "$REPO" --state all --search "\"$MARKER\" in:body" --json number -q '.[0].number')
 ```
 
-If `$EXISTING` is non-empty, skip (or `gh issue edit $EXISTING --body ...` to refresh) — don't create. Otherwise, confirm the `performance` label exists first — `gh issue create --label` fails outright if it doesn't:
+If `$EXISTING` is non-empty, skip (or refresh with `gh issue edit "$EXISTING" --body-file "$BODY"`, built the same way as below) — don't create. Otherwise, confirm the `performance` label exists first — `gh issue create --label` fails outright if it doesn't:
 
 ```bash
-gh label list --repo {REPO} --json name -q '.[].name' | grep -qx performance
+gh label list --repo "$REPO" --json name -q '.[].name' | grep -qx performance
 ```
 
-If that check fails, either create the label (`gh label create performance --repo {REPO} --color BFD4F2 --description "Performance audit finding"`) or drop `--label "performance"` from the command below — ask the user which they want rather than guessing. Then:
+If that check fails, either create the label (`gh label create performance --repo "$REPO" --color BFD4F2 --description "Performance audit finding"`) or drop `--label "performance"` from the command below — ask the user which they want rather than guessing.
+
+Then write the body to a temp file and pass it with `--body-file`. Never interpolate a code snippet
+into the shell command: findings come from repository source, which is untrusted for this purpose,
+and a snippet containing `$(...)`, backticks, or a line equal to the heredoc delimiter would either
+execute or truncate. The quoted `'EOF'` delimiter below disables expansion inside the heredoc.
 
 ```bash
-gh issue create --repo {REPO} \
-  --title "[Performance] {rule-id}: {brief description}" \
-  --label "performance" \
-  --body "$(cat <<EOF
-$MARKER
+BODY=$(mktemp)
+cat > "$BODY" <<'EOF'
+<!-- perf-audit: {rule-id} @ {file}:{line} -->
 ## Rule Violated
 **Category:** {category}  **Rule:** {rule-id}  **Impact:** {CRITICAL|HIGH|MEDIUM|LOW}
 ## Location
-\`{file}:{line}\`
+`{file}:{line}`
 ## Current Code / Recommended Fix
 {before snippet} / {after snippet}
 ## Why This Matters
 {one-line explanation}
 EOF
-)"
+
+gh issue create --repo "$REPO" \
+  --title "[Performance] {rule-id}: {brief description}" \
+  --label "performance" \
+  --body-file "$BODY"
+rm -f "$BODY"
 ```
 
 Reference: https://github.com/vercel-labs/agent-skills. Don't suggest replacing UI libraries the project has already standardized on — flag the perf cost, not a swap.
