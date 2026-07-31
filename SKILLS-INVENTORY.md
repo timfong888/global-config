@@ -175,16 +175,18 @@ These are changes of substance, not compression — flagged because they alter b
    `**bold**`, which does not render in Slack. Slack mrkdwn rules (`*bold*`, `<url|label>`) are now
    stated explicitly. The "never auto-send, draft only" house rule was also added.
 4. **`frontend-performance-audit` — the "51 rules" claim is unsupported.** The source asserts
-   "Vercel's 51 performance rules across 8 categories" but only ever names 17 (IDs 1.1–8.2). All 8
-   categories and all 17 named rules are preserved; the skill states plainly that the rest are not
+   "Vercel's 51 performance rules across 8 categories" but only ever names 17 of them (categories 1
+   and 2 carry three rules each, the other six carry two). All 8 categories and all 17 named rules
+   are preserved, and the skill now advertises 17 rather than 51; it states plainly that the rest are not
    specified, so nobody invents them to reach 51.
 5. **`google-sheets` — FilOz spreadsheet IDs dropped.** They are real-format IDs, but they came
    from a skill Tim had already retired, belong to another org's Drive, carry no capture date, and
    depend on `tim@filoz.org` OAuth this skill no longer documents. A stale ID in a globally-loaded
    skill sends the agent to the wrong document *silently*. The skill now points back at the vault
    copy instead.
-6. **Retired infrastructure removed throughout.** References to Rube MCP (sunset 2026-05-15),
-   `composio-personal`, and the pipedream MCP servers were replaced with the Composio CLI, with
+6. **Retired infrastructure removed throughout.** References to Rube MCP / `rube-personal`
+   (sunset 2026-05-15), `composio-personal` (never existed), the pipedream MCP servers, and
+   Greptile (retired 2026-05-27, replaced by CodeRabbit) were replaced with the Composio CLI, with
    direct GraphQL via `$LINEAR_API_KEY` as the documented Linear fallback.
    `scripts/validate_skills.py` fails the build if any of them reappear.
 

@@ -31,7 +31,9 @@ Tag each item inline: `[NEEDS CLARIFICATION]`, `[ASSUMPTION]`, `[CONTRADICTION]`
 
 ### Structure
 
-Produce a draft in that section order (Problem Statement → Goals → User Needs → Proposed Solution → Constraints → Open Questions → Assumptions → Contradictions), preserve the raw input in a collapsed `<details>` block at the end, and close with 3-5 targeted clarifying questions — e.g. "Who is the primary user?", "What's the one metric that defines success?", "What's explicitly out of v1?".
+Produce a draft in that section order (Problem Statement → Goals → User Needs → Proposed Solution → Constraints → Open Questions → Assumptions → Contradictions), and close with 3-5 targeted clarifying questions — e.g. "Who is the primary user?", "What's the one metric that defines success?", "What's explicitly out of v1?".
+
+Before appending the raw input as a collapsed `<details>` block at the end, scan it for anything sensitive — PII, credentials, API keys, confidential business detail. A collapsed block still commits the raw text to the repo (see "Both modes" below); it doesn't protect it. Flag anything sensitive to the user and confirm whether to keep it verbatim, redact the flagged parts, or drop the `<details>` block entirely — don't persist raw secrets or personal data by default.
 
 Save to `prds/[product-name]-initial-draft-[date].md` unless told otherwise. Then offer to run `prd-review` for full multi-dimension scoring, or continue refining a specific section.
 
@@ -51,14 +53,19 @@ Run `git diff path/to/prd-file.md` before touching it. Adopt whatever terminolog
 
 ### 3. Gather the intake
 
-Either a dated intake file or raw ideas pasted inline by the user. Locate the most recent intake file without relying on `ls -t <glob>` — it exits non-zero when nothing matches and word-splits filenames containing spaces:
+Either a dated intake file or raw ideas pasted inline by the user. Locate the most recent intake file without relying on `ls -t <glob>` — it exits non-zero when nothing matches and word-splits filenames containing spaces. Guard the empty case explicitly too: `xargs -0 ls -t` with no input still runs `ls -t` on the current directory and returns a false match instead of nothing:
 
 ```bash
-find context/projects -path "*/prds/intake/*-intake-*.md" -print0 2>/dev/null \
-  | xargs -0 ls -t 2>/dev/null | head -5
+count=$(find context/projects -path "*/prds/intake/*-intake-*.md" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$count" -eq 0 ]; then
+  echo "no intake file found"
+else
+  find context/projects -path "*/prds/intake/*-intake-*.md" -print0 2>/dev/null \
+    | xargs -0 ls -t 2>/dev/null | head -5
+fi
 ```
 
-No result → no intake file exists yet. Say so and continue with whatever ideas the user pastes inline — don't stop the weave.
+No result (`count` is 0) → no intake file exists yet. Say so and continue with whatever ideas the user pastes inline — don't stop the weave.
 
 ### 4. Reason through placement — this is the actual job
 

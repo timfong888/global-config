@@ -1,6 +1,6 @@
 ---
 name: prd-review
-description: Reviews a PRD across five dimensions — strategy, JTBD, research, validation, writing — with 0-100 scoring per domain and iterative re-review that skips domains already scoring 85+ except writing, which always reruns. Activate for "review this PRD", "score this PRD", "run full PM review", "multi-agent PRD analysis".
+description: Reviews a PRD across five dimensions — strategy, JTBD, research, validation, writing — with 0-100 scoring per domain and iterative re-review that skips domains already scoring 85+ except writing, which always reruns. Activate for "review this PRD", "score this PRD", "run full PM review".
 ---
 
 # PRD Review

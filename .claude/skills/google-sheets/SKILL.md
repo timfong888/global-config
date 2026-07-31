@@ -52,7 +52,13 @@ const sp = await sheets.spreadsheets.create({
 });
 // sp.data.spreadsheetId, sp.data.spreadsheetUrl
 
-// Formatting / structural ops go through batchUpdate and need the numeric sheetId, NOT the sheet name
+// Formatting / structural ops go through batchUpdate and need the numeric sheetId, NOT the sheet
+// name — so resolve it first. A missing tab yields undefined, which the API rejects with an
+// unhelpful error; fail loudly here instead.
+const meta = await sheets.spreadsheets.get({ spreadsheetId });
+const sheetId = meta.data.sheets.find(s => s.properties.title === sheetName)?.properties.sheetId;
+if (sheetId === undefined) throw new Error(`No sheet named "${sheetName}" in ${spreadsheetId}`);
+
 await sheets.spreadsheets.batchUpdate({
   spreadsheetId,
   requestBody: { requests: [
@@ -67,10 +73,6 @@ await sheets.spreadsheets.batchUpdate({
     }},
   ]},
 });
-
-// Look up sheetId (int) by tab name
-const meta = await sheets.spreadsheets.get({ spreadsheetId });
-const sheetId = meta.data.sheets.find(s => s.properties.title === sheetName)?.properties.sheetId;
 ```
 
 ## Conventions

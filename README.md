@@ -56,6 +56,11 @@ python3 scripts/validate_skills.py
 ```
 
 It checks that each skill has a `SKILL.md` with parseable frontmatter, that `name` matches its
-folder, that no two skills across the three roots share a name, and that nothing references
-infrastructure this workspace has retired (Rube MCP, Greptile, the pipedream MCP servers). Run it
-before opening a PR; it exits non-zero on any failure.
+folder, that no two distinct skills across the three roots share a name (a skill symlinked into a
+second root is deduplicated by resolved path, not flagged), and that nothing references
+infrastructure this workspace has retired — Rube MCP / `rube-personal`, `composio-personal`,
+the pipedream MCP servers, and Greptile. Run it before opening a PR; it exits non-zero on any
+failure. `--selftest` exercises the frontmatter parser against known-bad inputs.
+
+Frontmatter is a strict subset of YAML: flat `key: value` scalars only. A value containing `": "`
+must be quoted, so the file parses identically whether or not PyYAML is installed.

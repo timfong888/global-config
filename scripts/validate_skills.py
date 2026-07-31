@@ -113,9 +113,13 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str | None]:
             if len(value) < 2 or value[-1] != quote or value.count(quote) % 2 != 0:
                 return None, f"line {lineno}: unbalanced {quote} quote in `{key}`"
             value = value[1:-1]
-        elif value.count('"') % 2 or value.count("'") % 2:
-            # An unpaired quote inside a bare scalar is almost always a typo that
-            # a real YAML parser would either reject or reinterpret.
+        else:
+            # A bare scalar containing ": " (or a trailing ":") is a mapping to a
+            # real YAML parser, not text. Requiring quotes here keeps this parser
+            # and PyYAML agreeing in every environment.
+            if ": " in value or value.endswith(":"):
+                return None, (f"line {lineno}: `{key}` contains \": \" — wrap the whole "
+                              "value in quotes so it parses as text, not a mapping")
             if value.count('"') % 2:
                 return None, f"line {lineno}: unbalanced \" quote in `{key}`"
         fields[key] = value
@@ -152,7 +156,11 @@ def check_skill(skill_dir: Path, out: Findings) -> str | None:
         out.error(skill_dir, "no SKILL.md — Blocks will not discover this skill")
         return None
 
-    text = skill_md.read_text(encoding="utf-8")
+    try:
+        text = skill_md.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        out.error(skill_md, f"cannot be read as UTF-8 text: {exc}")
+        return None
     if not text.strip():
         out.error(skill_md, "file is empty")
         return None
@@ -202,11 +210,15 @@ def selftest() -> int:
         "duplicate key": "---\nname: x\nname: y\n---\n",
         "not a pair": "---\nname: x\njust-text\n---\n",
         "list item": "---\nname: x\n- item\n---\n",
+        # PyYAML reads these as nested mappings, not text, so reject them here too
+        # rather than behaving differently depending on whether PyYAML is installed.
+        "bare colon-space": "---\nname: x\ndescription: Use for a: b mappings.\n---\n",
+        "bare trailing colon": "---\nname: x\ndescription: Triggers:\n---\n",
     }
     good = {
         "plain": "---\nname: x\ndescription: A thing. Use when Y.\n---\n# x\n",
         "quoted": '---\nname: x\ndescription: "A: thing"\n---\n# x\n',
-        "colon in value": "---\nname: x\ndescription: Use for a: b mappings.\n---\n# x\n",
+        "colon without space": "---\nname: x\ndescription: Ratio is 3:1 here.\n---\n# x\n",
     }
 
     failures = []
@@ -235,6 +247,7 @@ def main(argv: list[str]) -> int:
 
     out = Findings()
     seen: dict[str, Path] = {}
+    visited: set[Path] = set()
 
     for root_name in SKILL_ROOTS:
         root = REPO_ROOT / root_name
@@ -243,6 +256,14 @@ def main(argv: list[str]) -> int:
         entries = sorted(p for p in root.iterdir()
                          if p.is_dir() or (p.is_symlink() and not p.exists()))
         for skill_dir in entries:
+            # A skill symlinked into a second root is one skill wearing two hats,
+            # not a collision — dedupe on the resolved path before name checking.
+            if skill_dir.exists():
+                target = skill_dir.resolve()
+                if target in visited:
+                    continue
+                visited.add(target)
+
             name = check_skill(skill_dir, out)
             if name is None:
                 continue

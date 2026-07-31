@@ -76,29 +76,43 @@ Prefix every comment with its table number and sign `(by Claude)`. Capture retur
 
 **Known constraint — inline-anchored (highlighted) comments cannot be created via the API.** The Drive/Docs API accepts anchor data but Google Workspace editors only honor internal `kix.PARAGRAPH_ID` values, which no public API exposes (open since 2016: issuetracker.google.com/issues/36763384). A `GOOGLEDRIVE_CREATE_COMMENT` call with `quoted_file_content_value` often lands but renders as "Original content deleted" instead of a real highlight.
 
-**Fallback — Playwright, for a real inline-highlighted comment.** Use when the doc must show a genuine highlighted anchor (this is the default expectation in `editorial` mode). Drives the actual Docs UI:
+**Fallback — Playwright, for a real inline-highlighted comment.** Use when the doc must show a genuine highlighted anchor (this is the default expectation in `editorial` mode). Drives the actual Docs UI. The approval table was built from an earlier read — re-check each anchor against the live doc as you go, not from memory:
 
 ```javascript
-// Cmd+F → type → Enter → Escape (selection persists) → Cmd+Opt+M → type comment → Post
+// Cmd+F → type → confirm exactly one match → Enter → Escape (selection persists) → Cmd+Opt+M → type comment → Post
 async function addComment(page, searchText, commentText) {
   await page.keyboard.press('Meta+f');
   await page.waitForTimeout(600);
   await page.getByRole('searchbox', { name: 'Find in document' }).fill(searchText);
   await page.waitForTimeout(400);
+
+  // Google Docs' find bar renders "n of m" (or "No results") next to the box —
+  // read it before touching anything else. Abort this anchor, don't guess,
+  // unless it reads exactly "1 of 1".
+  const matchLabel = await page.getByText(/^(\d+ of \d+|No results)$/).textContent().catch(() => null);
+  if (matchLabel !== '1 of 1') {
+    await page.keyboard.press('Escape');
+    return { posted: false, searchText, reason: matchLabel ? `matched "${matchLabel}", not exactly one` : 'not found' };
+  }
+
   await page.keyboard.press('Enter');
   await page.waitForTimeout(600);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(400);
+  // Docs renders the selection on a canvas — no DOM API can confirm it stuck.
+  // Screenshot here and visually confirm searchText is highlighted before
+  // continuing; if it isn't, skip this anchor rather than comment blind.
   await page.keyboard.press('Meta+Alt+m');
   await page.waitForTimeout(800);
   await page.getByRole('textbox', { name: 'Comment draft' }).fill(commentText);
   await page.waitForTimeout(300);
   await page.getByRole('button', { name: 'Post Comment' }).click();
   await page.waitForTimeout(1000);
+  return { posted: true, searchText };
 }
 ```
 
-Navigate with `?tab=<TAB_ID>` for multi-tab docs and confirm the correct tab in the snapshot before starting. If Playwright lands on a Google sign-in page, stop and ask the user to log in — do not fall back to guessing or to API-based posting. Post in batches of 3–5, snapshotting between batches. Pass `commentText` to `.fill()` unchanged — apostrophes don't need escaping there. Only escape apostrophes/quotes where the transport actually requires it: inside a JS string literal, a shell command, or a JSON payload (e.g. the Composio CLI calls above).
+Two abort conditions, checked in order: (1) the match-count label isn't exactly `1 of 1` — anchor missing or duplicated; (2) after Enter+Escape, the screenshot doesn't show `searchText` visibly highlighted — selection didn't survive. Either one means skip that row, don't post, and carry it into the skipped list for the Verify report below. Navigate with `?tab=<TAB_ID>` for multi-tab docs and confirm the correct tab in the snapshot before starting. If Playwright lands on a Google sign-in page, stop and ask the user to log in — do not fall back to guessing or to API-based posting. Post in batches of 3–5, snapshotting between batches. Pass `commentText` to `.fill()` unchanged — apostrophes don't need escaping there. Only escape apostrophes/quotes where the transport actually requires it: inside a JS string literal, a shell command, or a JSON payload (e.g. the Composio CLI calls above).
 
 ## Verify
 

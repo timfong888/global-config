@@ -24,9 +24,10 @@ Bash, Read, Grep, Glob. `gh` CLI required only for `full` mode's issue creation.
 ```bash
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$PROJECT_ROOT"
+EXCLUDE_DIRS='node_modules,.next,dist,build,out,coverage,.git'
 ```
 
-Run every scan command below from `$PROJECT_ROOT` (not the invocation directory) so a subdirectory invocation still audits the whole project. Warn (don't block) if no `next.config.{js,ts,mjs}` is found.
+Run every scan command below from `$PROJECT_ROOT` (not the invocation directory) so a subdirectory invocation still audits the whole project. Warn (don't block) if no `next.config.{js,ts,mjs}` is found. Every recursive `grep -r` in this skill must add `--exclude-dir=$EXCLUDE_DIRS` (or use `git grep`, which only scans tracked files) — without it, generated and dependency code dominates the scan and produces false findings.
 
 `full` mode only, also resolve the repo before scanning:
 
@@ -88,16 +89,26 @@ Per category, start at 100 and deduct once per finding by its bucket: P0 −25, 
 **Critical (P0):** n  **High (P1):** n  **Medium (P2):** n  **Low (P3):** n
 ```
 
+### Approval gate — required before any GitHub write
+
+Filing or editing issues is an outbound side effect, not a read. After scoring, show the user the scorecard and the full findings list (rule, file:line, category) and stop. Do not run `gh issue create` or `gh issue edit` until the user explicitly approves — either the whole batch or a named subset. If they approve a subset, file only those findings.
+
 ### GitHub issue per finding (idempotent)
 
-Every issue carries a stable marker (`rule-id` + `file:line`) so re-running the audit updates instead of duplicating:
+Only after approval. Every issue carries a stable marker (`rule-id` + `file:line`) so re-running the audit updates instead of duplicating:
 
 ```bash
 MARKER="<!-- perf-audit: {rule-id} @ {file}:{line} -->"
 EXISTING=$(gh issue list --repo {REPO} --state all --search "\"$MARKER\" in:body" --json number -q '.[0].number')
 ```
 
-If `$EXISTING` is non-empty, skip (or `gh issue edit $EXISTING --body ...` to refresh) — don't create. Otherwise:
+If `$EXISTING` is non-empty, skip (or `gh issue edit $EXISTING --body ...` to refresh) — don't create. Otherwise, confirm the `performance` label exists first — `gh issue create --label` fails outright if it doesn't:
+
+```bash
+gh label list --repo {REPO} --json name -q '.[].name' | grep -qx performance
+```
+
+If that check fails, either create the label (`gh label create performance --repo {REPO} --color BFD4F2 --description "Performance audit finding"`) or drop `--label "performance"` from the command below — ask the user which they want rather than guessing. Then:
 
 ```bash
 gh issue create --repo {REPO} \
@@ -133,9 +144,9 @@ Rough, environment-dependent reference values only (bundler, package version, an
 | ethers | 150-250ms | consider `viem` |
 
 ```bash
-grep -rn "from 'recharts'\|from 'lodash'\|from '@mui/material'\|from 'date-fns'\|from '@heroicons/react'\|from 'lucide-react'" --include=*.{ts,tsx,js,jsx}
-grep -rn "import.*Chart\|import.*Editor\|import.*Map\|import.*PDF" --include=*.{tsx,jsx} | grep -v "next/dynamic"
-grep -rn "dynamic(" --include=*.{tsx,jsx} | wc -l
+grep -rn --exclude-dir=$EXCLUDE_DIRS "from 'recharts'\|from 'lodash'\|from '@mui/material'\|from 'date-fns'\|from '@heroicons/react'\|from 'lucide-react'" --include=*.{ts,tsx,js,jsx}
+grep -rn --exclude-dir=$EXCLUDE_DIRS "import.*Chart\|import.*Editor\|import.*Map\|import.*PDF" --include=*.{tsx,jsx} | grep -v "next/dynamic"
+grep -rn --exclude-dir=$EXCLUDE_DIRS "dynamic(" --include=*.{tsx,jsx} | wc -l
 grep -rn "optimizePackageImports" next.config.*
 ```
 
@@ -162,13 +173,13 @@ Report: `Library | Files | Est. Impact | Priority` table, plus `Component | File
 ## Mode: rerender
 
 ```bash
-grep -rn "\.map(\|\.filter(\|\.reduce(\|\.sort(" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
-grep -rn "Object\.keys\|Object\.values\|Object\.entries" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
-grep -rn "onClick={() =>\|onChange={() =>\|onSubmit={() =>" --include=*.{tsx,jsx}
-grep -rn "const \[.*\] = useState" --include=*.{ts,tsx,js,jsx} -A 2
-grep -rn "useEffect.*set" --include=*.{ts,tsx,js,jsx}
-grep -rn "useSelector\|useContext\|useStore" --include=*.{ts,tsx,js,jsx}
-grep -rn "useMemo(\|useCallback(\|React\.memo\|memo(" --include=*.{ts,tsx,js,jsx} | wc -l   # existing coverage
+grep -rn --exclude-dir=$EXCLUDE_DIRS "\.map(\|\.filter(\|\.reduce(\|\.sort(" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
+grep -rn --exclude-dir=$EXCLUDE_DIRS "Object\.keys\|Object\.values\|Object\.entries" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
+grep -rn --exclude-dir=$EXCLUDE_DIRS "onClick={() =>\|onChange={() =>\|onSubmit={() =>" --include=*.{tsx,jsx}
+grep -rn --exclude-dir=$EXCLUDE_DIRS "const \[.*\] = useState" --include=*.{ts,tsx,js,jsx} -A 2
+grep -rn --exclude-dir=$EXCLUDE_DIRS "useEffect.*set" --include=*.{ts,tsx,js,jsx}
+grep -rn --exclude-dir=$EXCLUDE_DIRS "useSelector\|useContext\|useStore" --include=*.{ts,tsx,js,jsx}
+grep -rn --exclude-dir=$EXCLUDE_DIRS "useMemo(\|useCallback(\|React\.memo\|memo(" --include=*.{ts,tsx,js,jsx} | wc -l   # existing coverage
 ```
 
 Flag:

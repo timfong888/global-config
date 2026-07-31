@@ -24,11 +24,16 @@ https://api.goldsky.com/api/public/project_cmb9tuo8r1xdw01ykb8uidk7h/subgraphs/f
   deterministic mapping error at block 5,810,264; needs a code fix + redeploy.
 - The **old project** `project_cmj7soo5uf4no01xw0tij21a1` was deleted.
 
-Smoke-test any candidate endpoint before building on it:
+Smoke-test any candidate endpoint before building on it. Plain `curl -s` exits 0 on a 404/500 body too, so a bare response reads as success — check for a real `data` field and fail loudly otherwise:
 
 ```bash
-curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
-  -d '{"query":"{ _meta { block { number } } }"}'
+set -euo pipefail
+response=$(curl --fail-with-body --silent --show-error \
+  -X POST "$ENDPOINT" -H "Content-Type: application/json" \
+  -d '{"query":"{ _meta { block { number } } }"}')
+jq -e '((.errors // []) | length) == 0 and has("data")' <<<"$response" >/dev/null \
+  && echo "endpoint OK" \
+  || { echo "endpoint smoke test FAILED: $response" >&2; exit 1; }
 ```
 
 Query with POST:
@@ -98,7 +103,7 @@ Daily token metrics (sum these into weekly for WBR — no weekly per-token entit
 }
 ```
 
-If a page returns exactly `first` rows, it may be incomplete — page forward with `where: { timestamp_gte: "<week_start_unix>", timestamp_lt: "<week_end_unix>", id_gt: "<last id in page>" }` using the previous page's last `id` as the cursor, and keep summing until a page returns fewer rows than `first`.
+If a page returns exactly `first` rows, it may be incomplete — page forward with a cursor that matches the sort key, not `id_gt`. This query sorts `orderBy: timestamp, orderDirection: asc`, and `id` is not guaranteed monotonic with `timestamp`; cursoring on `id_gt` under a timestamp-ordered query can skip or repeat rows relative to that order. Pair an ascending timestamp cursor with the ascending sort instead: `where: { timestamp_gte: "<week_start_unix>", timestamp_lt: "<week_end_unix>", timestamp_gt: "<last row's timestamp>" }`, using the previous page's last row `timestamp` as the cursor, and keep summing until a page returns fewer rows than `first`. If multiple rows can share the exact same timestamp, add `id_gt: "<last row's id>"` scoped to that timestamp only (`timestamp: "<last row's timestamp>", id_gt: "<last row's id>"`, OR'd with the `timestamp_gt` branch above) so same-timestamp ties aren't silently dropped.
 
 Active rails (sample, not exhaustive — see pagination note above):
 

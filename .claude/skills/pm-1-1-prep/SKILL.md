@@ -7,15 +7,24 @@ description: Prepares 1:1 meeting agendas by pulling context from Linear (assign
 
 ## Gather context
 
+### 0. Resolve identifiers
+
+The trigger arrives as a bare `[name]`, but every query below needs a concrete Linear email and Slack handle, not a name. Before building any query:
+
+- Resolve the person's Linear email — look them up (`LINEAR_LIST_LINEAR_USERS` or a GraphQL `users` query filtered by name) rather than guessing `firstname@company.com`.
+- Resolve their Slack handle — `composio search slack` then a user-search tool, or ask the user directly if the match is ambiguous.
+- Confirm both resolved identifiers with the user before running any Linear or Slack query below.
+
 **Linear** — issues assigned to the person: In Progress / Blocked / Overdue, completed in the last 7 days, due in the next 7 days. `LINEAR_LIST_ISSUES` supports neither state nor date filters, so use `LINEAR_RUN_QUERY_OR_MUTATION` with a GraphQL query instead, run as separate filter branches per category rather than one combined `or`:
 
 ```bash
 composio search linear   # confirm the exact slug for this connection first
 ```
 
-- **Active / Blocked** — `filter: { assignee: { email: { eq: "<email>" } }, state: { type: { in: ["started", "unstarted"] } } }`
+- **Active** — `filter: { assignee: { email: { eq: "<email>" } }, state: { type: { eq: "started" } } }`
+- **Blocked** — `state.type` has no "blocked" value, and `unstarted` covers backlog and planned work too, not just blocked issues. Blocked is normally a named workflow state (e.g. "Blocked") or a label — resolve the exact name for this workspace first (`LINEAR_LIST_LINEAR_STATES`, or ask) rather than assuming. `filter: { assignee: { email: { eq: "<email>" } }, state: { name: { eq: "<resolved-blocked-state>" } } }` (swap for `labels: { name: { eq: "<blocked-label>" } }` if this workspace flags blocked work with a label instead).
 - **Overdue** — same assignee filter + `dueDate: { lt: "<today>" }`, `state: { type: { nin: ["completed", "canceled"] } }`
-- **Upcoming (next 7 days)** — same assignee filter + `dueDate: { gte: "<today>", lte: "<today+7>" }`
+- **Upcoming (next 7 days)** — same assignee filter + `dueDate: { gte: "<today>", lte: "<today+7>" }`, `state: { type: { nin: ["completed", "canceled"] } }` — exclude finished work; the due-date filter alone doesn't drop issues that closed early.
 - **Recently completed (last 7 days)** — same assignee filter + `completedAt: { gte: "<today-7>" }`. Use `completedAt`, not `updatedAt` — an issue can be edited without being completed. Compute the 7-day boundary explicitly in the local reporting timezone, not whatever the API defaults to.
 
 Watch for patterns: items stuck in review, repeat blockers.
@@ -27,6 +36,8 @@ composio search slack
 composio execute SLACK_SEARCH_MESSAGES -d @payload.json
 # query: from:<slack_handle> after:YYYY-MM-DD before:YYYY-MM-DD (blocker OR stuck OR help OR question OR win)
 ```
+
+`SLACK_SEARCH_MESSAGES` returns matching messages, not the surrounding thread — a hit on a question doesn't tell you whether it was answered. For each question-shaped hit, fetch its thread with `SLACK_FETCH_MESSAGE_THREAD_FROM_A_CONVERSATION` (channel ID + `thread_ts` from the hit) and check the replies: if someone else replied after the person's message, classify it answered and leave it off the agenda; only genuinely unanswered questions go on.
 
 Both lookups go through the Composio CLI, authed as `timfong888` in project `timfong888_org`. Resolve the live tool slug with `composio search <app>` before executing — do not hardcode a slug from memory.
 

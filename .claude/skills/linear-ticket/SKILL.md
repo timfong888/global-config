@@ -83,4 +83,4 @@ Fetch workflow states via `LINEAR_LIST_LINEAR_STATES`, find the "In Progress" st
 
 ## Handoff
 
-When a ticket links a GitHub issue, hand off to `github-ticket --linear <ID> --repo <owner/repo>`. Linear stays the orchestration record (move status manually via `--dev` / "complete ticket"); GitHub holds the plan, review, and PRs.
+When a ticket links a GitHub issue, hand off to `/github-ticket <number-or-URL> --linear <ID> --repo <owner/repo>` — pass the concrete GitHub issue number (or its URL) from the ticket's linked issue, not a placeholder; `github-ticket` requires that positional argument before `--linear`/`--repo` and can't start the workflow without it. Linear stays the orchestration record (move status manually via `--dev` / "complete ticket"); GitHub holds the plan, review, and PRs.

@@ -66,7 +66,19 @@ Every method below runs third-party code with your privileges. Before running an
 | npx (preferred) | Published npm package | `npx -y package-name@X.Y.Z --help` to smoke-test the pinned version; no install step |
 | npm global | Package has no npx entry | `npm install -g package-name@X.Y.Z && which package-name` |
 | Local clone | Unpublished / dev server | `git clone <url> ~/.claude/mcp-servers/<name> && cd ~/.claude/mcp-servers/<name> && git checkout <pinned-tag-or-sha> && npm install && npm run build`; point `args` at the built entry file |
-| Remote | Hosted/cloud MCP | No install — validate only against an approved HTTPS host you've confirmed is the real endpoint: `curl --connect-timeout 5 --max-time 15 -H "Authorization: Bearer $KEY" <url>/health` |
+| Remote | Hosted/cloud MCP | No install — validate before sending any credential, see below |
+
+**Validating a remote endpoint**: if the URL is user-supplied, a malicious or mistyped endpoint can collect the token. Probe without credentials first, against the exact HTTPS host the user explicitly confirmed (not a redirect target, not a URL scraped from an untrusted page):
+
+```bash
+curl --connect-timeout 5 --max-time 15 -I <url>/health   # unauthenticated reachability check
+```
+
+Confirm the response looks like the expected server (not a generic 404 or an unrelated service) and that `<url>`'s host matches what the user confirmed. Only after that validation, send the credential:
+
+```bash
+curl --connect-timeout 5 --max-time 15 -H "Authorization: Bearer $KEY" <url>/health
+```
 
 ## Source parsing quirks
 

@@ -9,9 +9,15 @@ description: Cross-platform persistent memory via mem0 Platform, shared across C
 
 `mcp__mem0__mem0_add`, `mcp__mem0__mem0_search`, `mcp__mem0__mem0_get_all`, `mcp__mem0__mem0_delete`, `mcp__mem0__mem0_update`
 
+## Safety
+
+- Refuse `mem0_add` for secrets: API keys, passwords, access/refresh/session tokens, private keys, and similar credentials. Decline and say why instead of storing them.
+- Don't echo sensitive text back in the stored-confirmation — summarize what was stored rather than repeating the literal value when content is sensitive.
+- For other sensitive personal data (health, financial specifics, someone else's private info), get the user's explicit consent before calling `mem0_add`, even when their phrasing already sounds like a command.
+
 ## Commands
 
-- `/mem0 remember <text>` → `mem0_add(text)`. Confirm what was stored.
+- `/mem0 remember <text>` → `mem0_add(text)`, subject to Safety above. Confirm what was stored.
 - `/mem0 recall <query>` or `/mem0 search <query>` → `mem0_search(query)`. Show content, ID, creation date.
 - `/mem0 list` → `mem0_get_all()`. Numbered list with IDs.
 - `/mem0 delete <memory_id>` → `mem0_delete(id)`. Confirm deletion.
@@ -27,6 +33,6 @@ description: Cross-platform persistent memory via mem0 Platform, shared across C
 
 ## Notes
 
-- Resolve `user_id` at runtime — prefer the authenticated account identity (OS user / `$USER` / an explicit identity the user gives you). Use the literal `"tim"` only as an explicit fallback when no identity resolves and this is a known single-user install; never hardcode it for a shared or multi-user install, or every user reads and writes the same memory namespace.
+- Resolve `user_id` at runtime from a stable, explicitly configured identity (a documented account/config value, or an identity the user states outright) — not `$USER`. `$USER` is a local process value, not a provider identity: it collides when two accounts share an OS username, and splits one person's memories when the same account runs under different usernames across machines. Use the literal `"tim"` only as a last-resort fallback when nothing else resolves, and say explicitly that you're falling back — that pool is shared by anyone else who also has no configured identity, not private to one person.
 - For project- or workspace-scoped recall, namespace the identity instead of using a bare `user_id`, e.g. `"<identity>:<project-or-workspace>"`, so unrelated projects don't collide in the same memory pool.
 - Separate from Claude Code's file-based project memory (`~/.claude/projects/.../memory/`) — mem0 is the cross-tool layer; project memory is Claude-Code-only.

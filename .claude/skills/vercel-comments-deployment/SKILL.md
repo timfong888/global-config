@@ -73,7 +73,13 @@ Per actioned thread: `reply_to_toolbar_thread` with "Change applied — [descrip
 
 ```bash
 gh issue create --title "Vercel toolbar comments resolved — <date>" \
-  --body "<summary table>\n\nProduction URL: <url>\nPR: <pr url>"
+  --body "$(cat <<EOF
+<summary table>
+
+Production URL: <url>
+PR: <pr url>
+EOF
+)"
 ```
 
 If a relevant open Issue already exists (e.g. a design-feedback tracker), comment instead: `gh issue comment <number> --body "<summary>"`. Report the Issue URL to the user.

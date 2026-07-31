@@ -1,6 +1,6 @@
 ---
 name: spec-review
-description: Review dev/engineering specs across five lenses — clarity, completeness, DX, implementation readiness, technical accuracy. Triggers: review spec clarity, check spec coverage, review spec DX, implementation readiness review, engineering spec review, doc-to-dev-spec review. /spec-review runs all; --<lens> runs one.
+description: "Review dev/engineering specs across five lenses — clarity, completeness, DX, implementation readiness, technical accuracy. Triggers: review spec clarity, check spec coverage, review spec DX, implementation readiness review, engineering spec review, doc-to-dev-spec review. /spec-review runs all; --<lens> runs one."
 ---
 
 # Spec Review
