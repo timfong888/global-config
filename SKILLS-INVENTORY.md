@@ -203,3 +203,21 @@ These are changes of substance, not compression — flagged because they alter b
   `test-skill`; remove `skills/prompt-runner/`, which is a byte-identical orphan of
   `skills/user/prompt-runner/`; and either delete `dev-spec-technical-accuracy` (v1) or give it
   frontmatter, since without it Claude Code has never loaded it.
+
+## SAT-684 — linear-agent-poller skills
+
+A second source, ported on top of the SAT-685 baseline above: `github.com/timfong888/linear-agent-poller`'s own operational skill — the `/linear-agent-poll` orchestrator command (746 lines) plus its six `profiles/*.md` files (696 lines), 1,442 lines total. Confirmed no overlap with the SAT-685 inventory before porting (`SKILLS-INVENTORY.md` had zero hits for "poller", "agent-writing", "agent-admin", "capability-image").
+
+| Skill | Ported from | Lines |
+|---|---|---|
+| `linear-agent-poll` | `linear-agent-poll.md` (orchestrator, Part A) + `agent-writing.md` + `agent-admin.md` (Part B track dispatch, condensed inline — Blocks reads one `SKILL.md` per skill, same reasoning `gdoc-review` used in SAT-685) | 746 + 204 + 218 → ~230 |
+| `linear-image-pipeline` | `capability-image.md` + `capability-image-cost.md` + `capability-image-download.md` + `capability-image-host.md` (all four stages of one pipeline; kept as its own skill since it's a reusable capability any track invokes, not track-specific) | 107 + 81 + 41 + 45 → ~90 |
+
+**What was cut, and why:**
+- The **admin track's** vault-filing and personal-task-journal sub-types depend on Tim's local Obsidian vault and journal files being mounted in the session — the same category SAT-685 already excludes wholesale ("depends on a local GUI app, local session, or personal account"). Ported as a flagged degrade-gracefully case (say the store isn't mounted, don't silently no-op) rather than porting vault/journal paths Blocks can't reach. The email sub-type (Gmail draft-only, API-based) has no such dependency and ported normally.
+- The **writing track's** long-output destination (a vault note under a fixed Obsidian path) is likewise vault-dependent; the ported skill keeps the short/long sizing rule but falls back to inline or a plain attached file when no notes vault is configured, instead of asserting a path.
+- Deprecated/dead config (`AGENT_USER_ID`, explicitly marked unused in the source) was dropped rather than carried forward as dead weight.
+
+**Correction made along the way:** `capability-image-host.md` documents Google Drive (`GOOGLEDRIVE_UPLOAD_FROM_URL`) as the durable-hosting stage before a Linear attachment. In practice that path has repeatedly failed to render **inline** in Linear even when the link is directly reachable — only a native Linear file-upload (`uploads.linear.app`) asset has been confirmed reliable for inline display. `linear-image-pipeline` now prefers native Linear upload when the session's Linear access exposes it, and documents Drive as an attachment-only fallback, unverified for inline rendering — the same kind of correction-with-a-note SAT-685 made for the dead Goldsky endpoint, rather than silently porting a known-shaky default.
+
+**Validator:** `scripts/validate_skills.py` passes clean with both skills added (no error growth against the SAT-685 baseline).
