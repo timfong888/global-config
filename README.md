@@ -30,7 +30,7 @@ worth internalising before adding one:
 
 ### Adding a skill
 
-```
+```text
 .claude/skills/<skill-name>/SKILL.md
 ```
 

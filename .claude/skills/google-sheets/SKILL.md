@@ -11,7 +11,7 @@ Primary mechanism: the **googleapis** Node SDK with OAuth (direct API, no MCP ho
 
 - Google Cloud project with Sheets API enabled → OAuth client ID (Desktop app) → downloaded as `credentials.json`.
 - `npm install googleapis @google-cloud/local-auth`
-- Conventions used by the auth module: `SCOPES = ['https://www.googleapis.com/auth/spreadsheets']`; `CREDENTIALS_PATH` = `credentials.json` in the project's cwd; `TOKEN_PATH` = `token.json` in the project's cwd. First run opens a browser for consent and writes `token.json`; every run after that reuses it (googleapis auto-refreshes). Never commit either file. Reuse one `auth.js` module per project:
+- Conventions used by the auth module: `SCOPES = ['https://www.googleapis.com/auth/spreadsheets']`. Default `CREDENTIALS_PATH`/`TOKEN_PATH` to `${XDG_CONFIG_HOME:-$HOME/.config}/gsheets/credentials.json` and `.../gsheets/token.json` — outside the project tree, so "never commit" isn't the only thing standing between these files and getting packaged or shared by accident. Create the dir with `mkdir -p -m 700` and write both files `chmod 600`. Use a project-local path only if the user explicitly confirms they want it there, and still gitignore it. First run opens a browser for consent and writes `token.json`; every run after that reuses it (googleapis auto-refreshes). Reuse one `auth.js` module per project:
 
 ```javascript
 const { authenticate } = require('@google-cloud/local-auth');
@@ -78,18 +78,18 @@ const sheetId = meta.data.sheets.find(s => s.properties.title === sheetName)?.pr
 - A1 ranges: `Sheet1!A1:Z100`; whole sheet `Sheet1` or `Sheet1!A:Z`.
 - Before calling `spreadsheets.create` for a new layout, show an ASCII table preview and get approval — don't build a layout nobody asked for.
 - Group related writes/formats into one `batchUpdate` call rather than looping single-cell calls.
-- Rate limit: 300 requests/min.
+- Quota is per-project and per-user, not a single global number — check the actual limit in Cloud Console → APIs & Services → Sheets API → Quotas rather than assuming a fixed rate.
 
 | Symptom | Fix |
 |---|---|
 | `credentials.json not found` | Re-download the OAuth client JSON from Cloud Console |
 | `token.json not found` | Normal on first run — browser opens for consent |
 | `invalid_grant` / invalid credentials | Delete `token.json`, re-authenticate |
-| Rate limit exceeded | Batch calls; add delay between loop iterations |
+| `429` / rate limit exceeded | Exponential backoff with jitter (e.g. 1s, then double each retry, cap ~60s) — don't just add a fixed delay |
 
 ## Research-then-store pattern
 
-When asked to research a topic and save results: run the research with whatever web-research tool is available, structure findings into a consistent row shape before writing, read the target sheet first to avoid duplicate entries, then `values.append` (new rows) or `values.update` (overwrite). Return the spreadsheet URL. Spot-check AI-sourced data before treating it as final.
+When asked to research a topic and save results: run the research with whatever web-research tool is available, and structure findings into a consistent row shape that includes a stable dedup key (e.g. URL, or topic+date). Read the target sheet first and check for that key, but treat the read as a best-effort check, not a guarantee — a retry or a concurrent run can still race past it. Prefer `values.update` against the range for that key (overwrite in place) over a blind `values.append`; if you must append, re-check for the key immediately before writing and skip if it's already present. Return the spreadsheet URL. Spot-check AI-sourced data before treating it as final.
 
 ## Finding a spreadsheet
 

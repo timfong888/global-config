@@ -42,6 +42,8 @@ Inline: "Claude performs better with concrete examples [1]"; for quotes, "As Smi
 
 Reference list format: `[1] Author, "Title", Publication, Date, URL`.
 
+Never infer or invent a missing author, title, publication, date, or URL to complete this format — a plausible-looking fabricated field is worse than an honest gap. Preserve whatever identifier the source actually gave (URL, tool name, search query), mark each missing field as `[unknown]` rather than omitting it silently, and flag the entry for the user to verify before treating it as a citable reference.
+
 Every claim needs a citation; every source needs a reference entry.
 
 ## PM-research specifics

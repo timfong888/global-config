@@ -12,7 +12,7 @@ from memory.** As of 2026-07-31 every historical endpoint below returns
 `{"statusCode":404,"message":"Subgraph not found..."}`, so this list is provenance, not a
 working address:
 
-```
+```text
 # last known production — 404s as of 2026-07-31, verify before use
 https://api.goldsky.com/api/public/project_cmb9tuo8r1xdw01ykb8uidk7h/subgraphs/filecoin-pay-mainnet/1.0.6/gn
 ```
@@ -25,12 +25,14 @@ https://api.goldsky.com/api/public/project_cmb9tuo8r1xdw01ykb8uidk7h/subgraphs/f
 - The **old project** `project_cmj7soo5uf4no01xw0tij21a1` was deleted.
 
 Smoke-test any candidate endpoint before building on it:
+
 ```bash
 curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
   -d '{"query":"{ _meta { block { number } } }"}'
 ```
 
 Query with POST:
+
 ```bash
 curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
   -d '{"query": "{ paymentsMetrics(first: 1) { totalRails totalActiveRails totalAccounts uniquePayers uniquePayees } }"}' | jq
@@ -38,7 +40,7 @@ curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
 
 ## Known traps
 
-- **Raw token amounts are wei-scale integers** — divide by `10^18` before displaying FIL/USDFC amounts.
+- **Raw token amounts are integers scaled by the token's own precision** — divide by `10^token.decimals`, not a hardcoded `10^18`. `tokens { decimals }` is queryable (see Operators / tokens below) — fetch it per token before scaling amounts. FIL and USDFC both happen to use 18 decimals today, but confirm that per token rather than assuming it.
 - **Never sum `account.payerRails[].totalSettledAmount`** to get a per-account settled figure — it inflates ~6x. Rail IDs (e.g. `0x0e02`, `0x0e03`, `0x0e04`) are sub-components of one settlement slot (payee / network fee / operator commission); a single Settlement event credits multiple rail rows, so summing double/triple-counts. Verified example: naive sum gave $15.70 vs. the true $2.63 (~6x inflation).
   - Correct source for a single account: `https://filecoin-pay-console.vercel.app/payer-accounts/?address=0x...`.
   - Programmatic alternative: sum `Settlement.totalNetPayeeAmount` filtered by the rail's payer, not `Rail.totalSettledAmount`.
@@ -65,7 +67,10 @@ curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" \
 
 ## Example queries
 
+Unless stated otherwise, the `first: N` queries below return a bounded top-N sample in the order shown — not an exhaustive list. To enumerate every matching entity, add cursor pagination (loop on `first`/`skip`, or `where: { id_gt: "<last id>" }`) until a page returns fewer rows than `first`.
+
 Daily metrics, last 7 days:
+
 ```graphql
 {
   dailyMetrics(first: 7, orderBy: timestamp, orderDirection: desc) {
@@ -76,18 +81,27 @@ Daily metrics, last 7 days:
 }
 ```
 
-Daily token metrics (sum these into weekly for WBR — no weekly per-token entity):
+Daily token metrics (sum these into weekly for WBR — no weekly per-token entity). `first: N` caps *total* rows across all tokens, not rows per token — with more than 4 tokens, `first: 28` cannot return a full 7 days for every token. Bound by an explicit timestamp range and paginate with a stable cursor before summing:
+
 ```graphql
 {
-  dailyTokenMetrics(first: 28, orderBy: timestamp, orderDirection: desc) {
-    date volume deposit withdrawal settledAmount commissionPaid
+  dailyTokenMetrics(
+    where: { timestamp_gte: "<week_start_unix>", timestamp_lt: "<week_end_unix>" }
+    first: 1000
+    orderBy: timestamp
+    orderDirection: asc
+  ) {
+    id date timestamp volume deposit withdrawal settledAmount commissionPaid
     activeRailsCount uniqueHolders totalLocked
     token { symbol }
   }
 }
 ```
 
-Active rails:
+If a page returns exactly `first` rows, it may be incomplete — page forward with `where: { timestamp_gte: "<week_start_unix>", timestamp_lt: "<week_end_unix>", id_gt: "<last id in page>" }` using the previous page's last `id` as the cursor, and keep summing until a page returns fewer rows than `first`.
+
+Active rails (sample, not exhaustive — see pagination note above):
+
 ```graphql
 {
   rails(where: { state: Active }, first: 100, orderBy: createdAt, orderDirection: desc) {
@@ -97,7 +111,8 @@ Active rails:
 }
 ```
 
-Recent settlements (use for correct per-payee amounts, not rail sums):
+Recent settlements (use for correct per-payee amounts, not rail sums; sample, not exhaustive):
+
 ```graphql
 {
   settlements(first: 20, orderBy: settledUpto, orderDirection: desc) {
@@ -107,7 +122,8 @@ Recent settlements (use for correct per-payee amounts, not rail sums):
 }
 ```
 
-Operators / tokens:
+Operators / tokens (top-N sample, not exhaustive):
+
 ```graphql
 { operators(first: 100, orderBy: totalRails, orderDirection: desc) { address totalRails totalTokens totalApprovals } }
 { tokens(first: 10) { name symbol decimals volume totalDeposits totalWithdrawals totalSettledAmount totalUsers userFunds operatorCommission } }

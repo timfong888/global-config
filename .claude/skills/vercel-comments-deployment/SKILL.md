@@ -5,7 +5,7 @@ description: Reviews outstanding Vercel toolbar comments, confirms proposed chan
 
 # vercel-comments-deployment
 
-Actions outstanding Vercel toolbar comments end-to-end: triage → confirm → implement → deploy → resolve → record. **The step order below is load-bearing — do not reorder or skip the confirmation gate.**
+Actions outstanding Vercel toolbar comments end-to-end: triage → confirm → implement → deploy → resolve → record. **The step order below is load-bearing — do not reorder or skip either confirmation gate (step 5 and step 8).**
 
 ## Dependencies
 
@@ -15,7 +15,7 @@ Actions outstanding Vercel toolbar comments end-to-end: triage → confirm → i
 
 ## 0. Load Vercel MCP tools
 
-```
+```text
 ToolSearch: select:mcp__claude_ai_Vercel__list_toolbar_threads,mcp__claude_ai_Vercel__get_toolbar_thread,mcp__claude_ai_Vercel__reply_to_toolbar_thread,mcp__claude_ai_Vercel__change_toolbar_thread_resolve_status,mcp__claude_ai_Vercel__get_project,mcp__claude_ai_Vercel__list_deployments
 ```
 
@@ -29,7 +29,7 @@ Check CLAUDE.md for a declared project name/URL — use it without asking. Only 
 
 ## 3. Determine approval status
 
-For threads with more than one message: scan for an explicit **"approved"** comment (case-insensitive). Found → note who approved and use it as authoritative. Not found → flag **"needs approval"**, do not execute. Single-message threads (original comment only) are approved by default.
+For threads with more than one message: scan for a standalone positive approval — a message that is "approved" (or is clearly affirmative, e.g. "Approved, thanks") — case-insensitive. A substring match is not enough: exclude negated occurrences ("not approved", "isn't approved yet") and occurrences that only quote or reference someone else's text. Found → note who approved and use it as authoritative. Not found, or only a negated/quoted occurrence → flag **"needs approval"**, do not execute. Single-message threads (original comment only) are approved by default.
 
 ## 4. Synthesize each change
 
@@ -61,7 +61,9 @@ gh pr create --title "Vercel toolbar feedback: <summary>" --body "<table of chan
 
 ## 8. Deploy to production
 
-Merge the PR (or confirm with the user if they prefer manual merge). Use `list_deployments` to confirm the production deployment completed and get the URL. If the project auto-deploys on merge to `main`, poll until status is `READY`.
+**Second hard stop.** Step 5's approval covers the source changes only — it does not authorize merging or a production deploy. Ask: "Ready to merge PR #<n> and deploy to production?" and wait for explicit confirmation before proceeding. If the user declines or doesn't respond, stop here and leave the PR open for them to merge manually.
+
+Once confirmed: merge the PR (or confirm with the user if they prefer manual merge). Use `list_deployments` to confirm the production deployment completed and get the URL. If the project auto-deploys on merge to `main`, poll until status is `READY`.
 
 ## 9. Mark threads resolved
 

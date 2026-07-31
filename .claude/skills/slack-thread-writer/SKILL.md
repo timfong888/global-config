@@ -9,13 +9,13 @@ Transform content into a scannable, action-oriented Slack thread.
 
 ## House rule
 
-Never auto-send to Slack. Produce a draft for the user to paste, or — if posting via a tool — provide the thread link plus paste-ready text and let the user send it.
+Never auto-send to Slack — a tool-driven post is still an outbound send. Default output is a paste-ready draft. Only post via a tool after the user explicitly confirms the draft (approves the text or says "send it"); even then, reply with the thread link plus the paste-ready text so the user can verify what went out.
 
 ## Slack formatting (mrkdwn, not markdown)
 
 - Bold: `*bold*` (single asterisk), not `**bold**`
 - Italic: `_italic_`; strikethrough: `~strike~`
-- Bullets: `•` or `-` — flatten nested/numbered lists, mrkdwn doesn't render them reliably
+- Bullets: `•` or `-` — flatten nested/numbered lists, including action items, to bullets; mrkdwn doesn't render numbered lists reliably
 - Links: `<https://url|label>`, not `[label](url)`
 - Backtick code spans/blocks work as in markdown
 
@@ -40,7 +40,8 @@ Keep the whole thread under ~500 words, scannable in 30 seconds. Never hide the 
 Input: "We need to integrate Filecoin Pay with onramp providers... coordinate with BD and identify which onramps to target first."
 
 Output:
-```
+
+```text
 *Enable 3 major fiat onramps to accept FIL via Filecoin Pay by Dec 1*
 
 @tim @bd-team @eng-payments
@@ -54,8 +55,8 @@ cc: #partnerships
 Users can buy FIL through major onramps and immediately use it for storage payments
 
 *ACTIONS — This week*
-1. [@tim] Draft integration requirements doc — Due Nov 8
-2. [@bd-team] Identify top 3 target onramps + intro calls — Due Nov 8
+• [@tim] Draft integration requirements doc — Due Nov 8
+• [@bd-team] Identify top 3 target onramps + intro calls — Due Nov 8
 
 *OPEN QUESTIONS*
 • Which onramps have existing Filecoin relationships?

@@ -5,14 +5,11 @@ description: Transform research content into a production-ready prompt (Create m
 
 # Prompt Engineer
 
-Two modes — detect from the input:
+Two modes. A single input can carry signals for both (a research doc can define a role, give instructions, and include examples) — resolve mode in this order, stop at the first match:
 
-| Signal | Mode |
-|---|---|
-| Has role/system definition, instructions, workflow | **Refine** — it's a draft prompt |
-| Has articles, studies, best practices, examples | **Create** — it's research content |
-| Explicit "improve/refine this prompt" | **Refine** |
-| Unclear | Ask: "Draft prompt to refine, or research to turn into a prompt?" |
+1. **Explicit user intent** — "improve/refine this prompt" → Refine; "turn this into a prompt" → Create.
+2. **Draft-prompt vs. research detection** — is the input already addressed to an agent in second person / imperative voice (a draft prompt) → **Refine**; is it findings/evidence about a topic, written for a human reader (research) → **Create**.
+3. **Still ambiguous** (e.g. a research doc that also reads like instructions) → ask: "Draft prompt to refine, or research to turn into a prompt?" Do not guess when both signals are present and intent wasn't stated.
 
 ## Refine mode
 

@@ -15,7 +15,7 @@ GitHub is the work-product layer (plan, review, execution). A linked Linear tick
 
 ## Invocation
 
-```
+```text
 /github-ticket <number> [--dev] [--repo <owner/repo>] [--linear <TICKET-ID>]
 ```
 
@@ -37,16 +37,23 @@ If `--linear <ID>` is passed, or the issue body links a Linear ticket (e.g. `lin
 ## Discover (default)
 
 1. `gh issue view <number> --repo <repo> --json number,title,body,labels,milestone,comments,state,assignees`
-2. Sub-issues are not returned by `gh issue view` — query GraphQL:
+2. Sub-issues are not returned by `gh issue view` — query GraphQL, and paginate: `first: 100` is not a guarantee, a parent can have more.
+
    ```bash
    gh api graphql -f query='
-   query($owner:String!,$repo:String!,$num:Int!){
+   query($owner:String!,$repo:String!,$num:Int!,$cursor:String){
      repository(owner:$owner,name:$repo){
-       issue(number:$num){ subIssues(first:100){ nodes { number title state } } }
+       issue(number:$num){
+         subIssues(first:100, after:$cursor){
+           nodes { number title state }
+           pageInfo { hasNextPage endCursor }
+         }
+       }
      }
-   }' -F owner=<owner> -F repo=<repo> -F num=<number>
+   }' -F owner=<owner> -F repo=<repo> -F num=<number> -F cursor=null
    ```
-   If sub-issues exist, treat the parent as an orchestration index: list them, carry over/derive per-sub-issue acceptance criteria, and plan one branch+PR per sub-issue in `--dev`. Empty result = single-issue flow, not an error.
+
+   Repeat with `cursor=<endCursor>` while `hasNextPage` is true. `number`/`title`/`state` alone can't support per-sub-issue acceptance criteria — for each sub-issue in the full paginated set, fetch `gh issue view <sub-issue-number> --repo <repo> --json body,comments` before planning. If sub-issues exist, treat the parent as an orchestration index: list them, derive per-sub-issue acceptance criteria from each fetched body/comments, and plan one branch+PR per sub-issue in `--dev`. Empty result = single-issue flow, not an error.
 3. Assess complexity: **Trivial** (single file, obvious fix) → ask "want me to just fix it and open a PR?"; **Standard** (2-5 files, clear requirements) → discovery + questions; **Complex** (multi-file, architectural, ambiguous, or has sub-issues) → full discovery, launching 2-3 parallel `Explore` agents (feature area / existing patterns / architecture-integration points for complex).
 4. Post one structured comment on the issue: Understanding (cite Linear guidance if used), Sub-Issues checklist w/ acceptance criteria, Codebase Analysis (files to modify / patterns to follow / data sources), Questions, Estimated Complexity. If there are no open questions, say so and offer to post the finalized spec immediately.
 5. Tell the user: discuss on the issue, say "lock spec" when settled, then run `--dev`.
@@ -61,14 +68,17 @@ On the user saying **"lock spec"** (a human decision — no CI gate), post a `##
 2. Scan comments for `## Finalized Spec`. None found, and no discovery comment with zero open questions → tell the user to say "lock spec" first (or run discovery if none has happened).
 3. For a parent with sub-issues, repeat steps 4-7 per sub-issue; for a single issue, run once.
 4. Branch:
+
    ```bash
    git checkout main && git pull origin main
    git checkout -b story-<number>-<slug>
    ```
+
    Slug: lowercase title, spaces→hyphens, max 40 chars, no special chars.
 5. Complex tickets: launch 2-3 `general-purpose` agents as architects (minimal-changes / clean-architecture / pragmatic-balance), present options, get user approval before implementing. Standard tickets: implement directly.
 6. Implement following codebase conventions; track progress with TodoWrite; auto-detect and run the build/test command (`package.json` scripts → `npm run build`/`npm test`; `Makefile` → `make`/`make test`; `Cargo.toml` → `cargo build`/`cargo test`; `pyproject.toml`/`setup.py` → project's documented command). Skip if none detected. Don't open the PR until the build is clean.
 7. Push and open the PR:
+
    ```bash
    git push -u origin story-<number>-<slug>
    gh pr create --repo <repo> --title "<concise title>" --body "$(cat <<'EOF'
@@ -85,6 +95,7 @@ On the user saying **"lock spec"** (a human decision — no CI gate), post a `##
    EOF
    )"
    ```
+
 8. Comment `Implemented in PR #<pr-number>.` on the issue. Add the milestone to the PR if the ticket had one.
 
 ## Manual triggers (any session, after --dev)

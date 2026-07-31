@@ -22,21 +22,24 @@ Project-level config overrides user-level for a server with the same name.
 
 ## Config shape
 
-**stdio (local process)**
+**stdio (local process)** — pin an exact version, never a mutable tag (see "Before installing or building" below):
+
 ```json
 {
   "mcpServers": {
     "server-name": {
       "command": "npx",
-      "args": ["-y", "package-name"],
+      "args": ["-y", "package-name@1.2.3"],
       "env": { "API_KEY": "${API_KEY}" }
     }
   }
 }
 ```
-Local git-clone variant: `"command": "node", "args": ["/abs/path/dist/index.js"]`.
+
+Local git-clone variant: `"command": "node", "args": ["/abs/path/dist/index.js"]` (built from a pinned tag/commit — see Install methods).
 
 **Remote (HTTP/SSE)**
+
 ```json
 {
   "mcpServers": {
@@ -49,14 +52,21 @@ Local git-clone variant: `"command": "node", "args": ["/abs/path/dist/index.js"]
 }
 ```
 
+## Before installing or building
+
+Every method below runs third-party code with your privileges. Before running any of them:
+1. Pin an exact version — npm: `npm view <pkg> versions` then use `package-name@X.Y.Z`, never an unpinned `@latest`; git: pin a tagged release or commit SHA, never a branch HEAD.
+2. Review the source (npm: `npm view <pkg> repository`, then read it; git: read the README and entry point) for anything that shells out, reads unrelated env vars, or phones home.
+3. Get explicit user confirmation before installing, building, or executing.
+
 ## Install methods
 
 | Method | When | Command |
 |---|---|---|
-| npx (preferred) | Published npm package | `npx -y package-name --help` to smoke-test; no install step |
-| npm global | Package has no npx entry | `npm install -g package-name && which package-name` |
-| Local clone | Unpublished / dev server | `git clone <url> ~/.claude/mcp-servers/<name> && npm install && npm run build`; point `args` at the built entry file |
-| Remote | Hosted/cloud MCP | No install — just validate the endpoint: `curl -H "Authorization: Bearer $KEY" <url>/health` |
+| npx (preferred) | Published npm package | `npx -y package-name@X.Y.Z --help` to smoke-test the pinned version; no install step |
+| npm global | Package has no npx entry | `npm install -g package-name@X.Y.Z && which package-name` |
+| Local clone | Unpublished / dev server | `git clone <url> ~/.claude/mcp-servers/<name> && cd ~/.claude/mcp-servers/<name> && git checkout <pinned-tag-or-sha> && npm install && npm run build`; point `args` at the built entry file |
+| Remote | Hosted/cloud MCP | No install — validate only against an approved HTTPS host you've confirmed is the real endpoint: `curl --connect-timeout 5 --max-time 15 -H "Authorization: Bearer $KEY" <url>/health` |
 
 ## Source parsing quirks
 
@@ -67,7 +77,7 @@ Local git-clone variant: `"command": "node", "args": ["/abs/path/dist/index.js"]
 
 ## Verify it loaded
 
-1. Validate JSON syntax before restarting: `python3 -m json.tool ~/.claude/settings.json > /dev/null && echo valid`.
+1. Validate JSON syntax on whichever file you actually edited (see Config locations — not necessarily `~/.claude/settings.json`) before restarting: `python3 -m json.tool "$CONFIG_FILE" > /dev/null && echo valid`.
 2. Claude Code must be restarted to pick up new/changed MCP servers — there is no hot reload.
 3. After restart, confirm the server's tools appear in the tool list (`mcp__<server-name>__*`).
 4. If tools don't appear: re-check JSON validity first (one malformed server entry can block Claude Code from starting), then confirm the command/binary actually resolves on PATH.

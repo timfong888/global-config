@@ -7,16 +7,25 @@ description: Prepares 1:1 meeting agendas by pulling context from Linear (assign
 
 ## Gather context
 
-**Linear** — issues assigned to the person: In Progress / Blocked / Overdue, completed in the last 7 days, due in the next 7 days. Watch for patterns: items stuck in review, repeat blockers.
+**Linear** — issues assigned to the person: In Progress / Blocked / Overdue, completed in the last 7 days, due in the next 7 days. `LINEAR_LIST_ISSUES` supports neither state nor date filters, so use `LINEAR_RUN_QUERY_OR_MUTATION` with a GraphQL query instead, run as separate filter branches per category rather than one combined `or`:
+
 ```bash
-composio search linear                                  # confirm the exact slug for this connection first
-composio execute LINEAR_LIST_ISSUES -d @payload.json    # filter: assignee, state, updatedAt range
+composio search linear   # confirm the exact slug for this connection first
 ```
 
-**Slack** — last 7 days: messages from the person containing "blocker"/"stuck"/"help", threads with unanswered questions from them, and any wins they shared.
+- **Active / Blocked** — `filter: { assignee: { email: { eq: "<email>" } }, state: { type: { in: ["started", "unstarted"] } } }`
+- **Overdue** — same assignee filter + `dueDate: { lt: "<today>" }`, `state: { type: { nin: ["completed", "canceled"] } }`
+- **Upcoming (next 7 days)** — same assignee filter + `dueDate: { gte: "<today>", lte: "<today+7>" }`
+- **Recently completed (last 7 days)** — same assignee filter + `completedAt: { gte: "<today-7>" }`. Use `completedAt`, not `updatedAt` — an issue can be edited without being completed. Compute the 7-day boundary explicitly in the local reporting timezone, not whatever the API defaults to.
+
+Watch for patterns: items stuck in review, repeat blockers.
+
+**Slack** — last 7 days, from this person only: messages containing "blocker"/"stuck"/"help", threads with unanswered questions from them, and any wins they shared. Always scope with `from:` — without a person filter, other people's messages land in the agenda.
+
 ```bash
 composio search slack
-composio execute SLACK_SEARCH_MESSAGES -d @payload.json  # query terms + channel/date range
+composio execute SLACK_SEARCH_MESSAGES -d @payload.json
+# query: from:<slack_handle> after:YYYY-MM-DD before:YYYY-MM-DD (blocker OR stuck OR help OR question OR win)
 ```
 
 Both lookups go through the Composio CLI, authed as `timfong888` in project `timfong888_org`. Resolve the live tool slug with `composio search <app>` before executing — do not hardcode a slug from memory.
@@ -24,6 +33,7 @@ Both lookups go through the Composio CLI, authed as `timfong888` in project `tim
 ## Generate the agenda
 
 Sections, in order:
+
 1. Quick check-in (2 min) — energy, concerns, anything on their mind.
 2. Their updates (10 min) — leave blank, let them lead.
 3. Items to discuss (10 min) — blockers pulled from Linear/Slack, each with a "what support do you need" question; plus any pending decisions.

@@ -17,6 +17,7 @@ Both modes: apply prd-review's writing-mode rules (banned jargon list, structure
 ### Extract
 
 From the raw input, pull out (preserve original language where it's already clear):
+
 - **Problem statement** — pain point, broken workflow, why it's worth solving, why now.
 - **Goals & success metrics** — desired outcomes, any stated targets.
 - **User needs (initial JTBD)** — who, plus "When [situation], I want to [motivation], so I can [outcome]."
@@ -37,19 +38,32 @@ Save to `prds/[product-name]-initial-draft-[date].md` unless told otherwise. The
 ## Mode: weave
 
 ### 1. Identify the target PRD
+
 ```bash
 find . -name "*-mrd-*.md" -o -name "*-prd-*.md" | sort
 ```
+
 Confirm the version with the user before editing — never assume the latest file found is the right one. (`mrd` = market requirements doc; shares the same versioning convention as `prd`.)
 
 ### 2. Check recent edits first
+
 Run `git diff path/to/prd-file.md` before touching it. Adopt whatever terminology, sentence rhythm, and formatting the user's last edits show — don't revert intentional changes you weren't asked to touch.
 
 ### 3. Gather the intake
-Either a dated intake file (`ls -t context/projects/*/prds/intake/*-intake-*.md | head -5`) or raw ideas pasted inline by the user.
+
+Either a dated intake file or raw ideas pasted inline by the user. Locate the most recent intake file without relying on `ls -t <glob>` — it exits non-zero when nothing matches and word-splits filenames containing spaces:
+
+```bash
+find context/projects -path "*/prds/intake/*-intake-*.md" -print0 2>/dev/null \
+  | xargs -0 ls -t 2>/dev/null | head -5
+```
+
+No result → no intake file exists yet. Say so and continue with whatever ideas the user pastes inline — don't stop the weave.
 
 ### 4. Reason through placement — this is the actual job
+
 For each intake idea, before writing anything:
+
 - **Does it already exist** in the PRD, or is it new content? What heading level does it belong at (H2/H3/H4)?
 - **Prerequisites** — what context or definitions must exist before this idea makes sense? Does it reference an undefined term?
 - **Connection** — does it extend, contradict, or sit disconnected from the surrounding sections? What bridging sentence links old to new?
@@ -57,12 +71,15 @@ For each intake idea, before writing anything:
 If prerequisites are missing, say so and ask rather than inserting the idea anyway — e.g. "This references 'Filecoin Enterprise,' which isn't defined yet. Is that Akave? I'll define it before adding this claim." Never insert an idea that would read as disconnected to someone unfamiliar with the discussion that produced it.
 
 ### 5. Execute
+
 Add prerequisite context first, then the idea, with explicit bridging language. Keep edits concise: short sentences, premise before conclusion, terms defined before their first use.
 
 ### 6. Validate
+
 Re-read the surrounding section. Does the new content read as though it belongs, to someone who wasn't in the room? Are new terms defined before use?
 
 ### 7. Report
+
 Summarize which sections were touched, what prerequisite context was added, and why — not just a diff.
 
 ## Both modes

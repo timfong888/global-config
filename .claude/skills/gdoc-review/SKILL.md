@@ -23,6 +23,7 @@ Default: Composio project `timfong888_org`, the `timfong888`-prefixed connection
 Starter rubric seeded from Tim's writing memory/CLAUDE.md (public-writing, pm-writing-agent conventions). Tim edits this list over time. Critique the prose itself — never accuse the author of using AI; name the specific problem in the sentence.
 
 **Flag these patterns:**
+
 - Throat-clearing/filler: "It's important to note that", "In today's fast-paced world", "In conclusion", restating the heading before saying anything.
 - Corporate jargon: leverage, synergy, seamless, robust, cutting-edge, game-changing, best-in-class, holistic, empower, unlock, streamline, "at scale" (when vague).
 - Generic filler vocabulary: delve, tapestry, landscape, realm, navigate (figurative), underscore, testament, beacon, "plays a vital/crucial role".
@@ -36,6 +37,7 @@ Starter rubric seeded from Tim's writing memory/CLAUDE.md (public-writing, pm-wr
 - Abstraction with no concrete instance: a paragraph that never touches a real example, name, or figure.
 
 **Check the doc for these (Tim's editorial framework):**
+
 - Directness — leads with the point/decision; flag a buried lede.
 - Evidence over assertion — every strong claim earns a number or source.
 - Scannable & actionable — structure a reader can skim.
@@ -96,7 +98,7 @@ async function addComment(page, searchText, commentText) {
 }
 ```
 
-Navigate with `?tab=<TAB_ID>` for multi-tab docs and confirm the correct tab in the snapshot before starting. If Playwright lands on a Google sign-in page, stop and ask the user to log in — do not fall back to guessing or to API-based posting. Post in batches of 3–5, snapshotting between batches. Escape single quotes in comment text.
+Navigate with `?tab=<TAB_ID>` for multi-tab docs and confirm the correct tab in the snapshot before starting. If Playwright lands on a Google sign-in page, stop and ask the user to log in — do not fall back to guessing or to API-based posting. Post in batches of 3–5, snapshotting between batches. Pass `commentText` to `.fill()` unchanged — apostrophes don't need escaping there. Only escape apostrophes/quotes where the transport actually requires it: inside a JS string literal, a shell command, or a JSON payload (e.g. the Composio CLI calls above).
 
 ## Verify
 

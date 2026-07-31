@@ -1,17 +1,38 @@
 # Skills Inventory — what was kept, merged, and dropped
 
-Decision record for the consolidation of Tim's local Claude Code skills
-(`~/Documents/remoteObsidian1025/02-AI-Tools/skills/`) into this repo for Blocks. Linear: SAT-685.
+Decision record for the consolidation of Tim's local Claude Code skills (the `02-AI-Tools/skills/`
+tree in his Obsidian vault) into this repo for Blocks. Linear: SAT-685.
 
-**Result: 42 source skills / 14,513 lines → 23 skills / 1,833 lines (-87%).**
+**Result: the 42 skills worth porting — 14,513 lines — became 23 skills / 1,833 lines (-87%).**
 Nothing was deleted from the vault; it remains the source of truth. This is an export.
+
+## How the counts add up
+
+The vault tree holds **70 directories that contain their own `SKILL.md`** (55 at the top level,
+15 more that live only under `skills/user/`). Every one is accounted for below:
+
+| | Count |
+|---|---|
+| Ported — merged into 9 consolidated skills | 28 |
+| Ported — condensed 1:1 | 14 |
+| **Ported subtotal** | **42** |
+| Not ported — local GUI / personal account | 15 |
+| Not ported — vault-filing only | 6 |
+| Not ported — superseded or stale | 5 |
+| Not ported — byte-identical duplicate (`prompt-runner`) | 1 |
+| Not ported — already in this repo (`canvas`) | 1 |
+| **Not-ported subtotal** | **28** |
+| **Total** | **70** |
+
+Two further groups sit outside that 70 because they have no `SKILL.md` of their own: three empty
+directories, and five plugin-managed symlinks. Both are described under "Not ported".
 
 ## Why anything was cut at all
 
 Blocks merges this repo's skills into *every* session — sandbox, Slack, GitHub, and Linear. Two
 properties of that make a straight copy of 70 skills the wrong answer:
 
-1. **Every skill's description is resident context in every session.** Sixty-six descriptions is a
+1. **Every skill's description is resident context in every session.** Seventy descriptions is a
    standing tax on unrelated work.
 2. **Names are a global namespace.** Blocks silently appends a number on collision
    (`review-security2`), so near-duplicate skills don't just waste space — they make the losing
@@ -80,7 +101,7 @@ on this Mac" to "author and validate skills in a repo," which is what they mean 
 None of this was deleted from the vault. It is listed so the omissions are deliberate and
 reviewable rather than silent.
 
-### Depends on a local GUI app, local session, or personal account (14)
+### Depends on a local GUI app, local session, or personal account (15)
 
 Blocks runs in a cloud sandbox where none of these exist, and a skill that cannot execute is
 pure context cost.
@@ -88,11 +109,11 @@ pure context cost.
 `things` (Things 3), `open-in-obsidian`, `move-to-obsidian`, `logseq-todo-process`,
 `logseq-weekly-sync`, `logseq-log-artifacts`, `telegram-check-filecoin`, `schedule-calendly`,
 `expensify-automation`, `playwright-cli` (needs a locally installed binary), `photo-compositing`,
-`time-block`, `sync-gdoc`, `career-coach`.
+`time-block`, `sync-gdoc`, `career-coach`, `wab-statements`.
 
-`wab-statements` is listed here but deserves its own note: it drives a browser into a mortgage
-servicer's portal, which conflicts with Tim's standing rule that agents never drive browsers into
-bank or brokerage portals. It should not be in a globally-loaded skill set.
+The last one deserves its own note: `wab-statements` drives a browser into a mortgage servicer's
+portal, which conflicts with Tim's standing rule that agents never drive browsers into bank or
+brokerage portals. It should not be in a globally-loaded skill set on that ground alone.
 
 ### Vault-filing only (6)
 
@@ -102,7 +123,12 @@ or house rule inside worth extracting.
 `mcp-inventory-updater`, `organize-mcp-to-vault`, `sync-project-skills`, `master-list-migrator`,
 `add-shared-link`, `substack-intake-agent`.
 
-### Superseded, stale, or empty (7)
+### Byte-identical duplicate (1)
+
+`prompt-runner` exists twice in the vault — once at the top level and once under `skills/user/`,
+with identical contents. Only the live copy was used as a merge source for `run-prompts`.
+
+### Superseded, stale, or empty (5 skills + 3 empty directories)
 
 - `dev-spec-technical-accuracy` (v1) — no YAML frontmatter at all, so Claude Code never loaded it;
   already unlinked from `~/.claude/skills`. Superseded by v2 **except** for its
@@ -124,8 +150,8 @@ and guarantee a name collision with the plugin-managed originals.
 
 ### Already present (1)
 
-`canvas` already exists in this repo from SAT-636. The vault's copy is older, longer, and carries
-a machine-local `mcpServers` path (`/Users/tfong/.designer/bin/designer_mcp`). Left untouched.
+`canvas` already exists in this repo from SAT-636. The vault's copy is older, longer, and pins an
+`mcpServers` command to an absolute path under the user's home directory. Left untouched.
 
 ## Corrections made along the way
 

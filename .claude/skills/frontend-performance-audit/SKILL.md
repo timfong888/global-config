@@ -1,6 +1,6 @@
 ---
 name: frontend-performance-audit
-description: Audits Next.js/React code for performance anti-patterns. Modes full (Vercel's 51-rule/8-category audit + GitHub issues), bundle (barrel imports, dynamic imports, tree-shaking), rerender (missing useMemo/useCallback, derived state). Activate on "audit performance", "nextjs audit", "check bundle", "check re-renders".
+description: Audits Next.js/React code for performance anti-patterns. Modes full (17-rule/8-category audit + GitHub issues), bundle (barrel imports, dynamic imports, tree-shaking), rerender (missing useMemo/useCallback, derived state). Activate on "audit performance", "nextjs audit", "check bundle", "check re-renders".
 ---
 
 # frontend-performance-audit
@@ -9,7 +9,7 @@ Audits Next.js/React codebases for performance anti-patterns. Read-only except f
 
 ## Modes
 
-- `full` — audit against Vercel's 51 performance rules / 8 categories; score each category; file one GitHub issue per finding.
+- `full` — audit against the 17 rules / 8 categories specified below; score each category; file one GitHub issue per finding.
 - `bundle` — barrel imports, dynamic-import candidates, tree-shaking config (deeper pass on category 2 below).
 - `rerender` — missing useMemo/useCallback, derived-state anti-patterns, over-subscribed components, React.memo candidates (deeper pass on category 5 below).
 
@@ -23,14 +23,22 @@ Bash, Read, Grep, Glob. `gh` CLI required only for `full` mode's issue creation.
 
 ```bash
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+cd "$PROJECT_ROOT"
+```
+
+Run every scan command below from `$PROJECT_ROOT` (not the invocation directory) so a subdirectory invocation still audits the whole project. Warn (don't block) if no `next.config.{js,ts,mjs}` is found.
+
+`full` mode only, also resolve the repo before scanning:
+
+```bash
 REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "")
 ```
 
-Warn (don't block) if no `next.config.{js,ts,mjs}` is found. If `full` mode can't resolve `REPO`, ask the user.
+If `REPO` can't be resolved, ask the user. Don't run this in `bundle` or `rerender` mode — they never call `gh`.
 
-## Mode: full — 8-category rule taxonomy
+## Mode: full — 17-rule / 8-category taxonomy
 
-Only these 17 rules are individually specified in the source material this skill was built from — the remainder of the claimed 51 are not enumerated anywhere and must not be invented. If asked for full 51-rule coverage, say so.
+This skill implements 17 rules across 8 categories, sourced from Vercel's performance-rules reference (linked below). That reference names a larger rule set, but only these 17 are individually specified here — the rest are not enumerated anywhere available to this skill and must not be invented. If asked for broader coverage, say so.
 
 | # | Rule ID | Category | Priority | Check |
 |---|---------|----------|----------|-------|
@@ -52,11 +60,22 @@ Only these 17 rules are individually specified in the source material this skill
 | 8.1 | advanced-use-transition | 8. Advanced Patterns | LOW | Non-urgent updates not wrapped in `startTransition` |
 | 8.2 | advanced-optimistic-updates | 8. Advanced Patterns | LOW | Missing optimistic-UI pattern where applicable |
 
-Run categories in priority order (1 → 8). For categories 2 and 5, reuse the `bundle`/`rerender` mode search commands below rather than duplicating them.
+Run categories in priority order (1 → 8). For categories 2 and 5, reuse the `bundle`/`rerender` mode search commands below rather than duplicating them. Rule 2.3 requires Next.js ≥ 13.5 — check the project's `next` version (`package.json`) before flagging a missing `optimizePackageImports` as CRITICAL; on older versions mark it not-applicable instead.
+
+### Priority mapping
+
+Map each rule's taxonomy priority to a scorecard bucket:
+
+| Rule priority | Scorecard bucket |
+|---|---|
+| CRITICAL | P0 |
+| HIGH, MEDIUM-HIGH | P1 |
+| MEDIUM | P2 |
+| LOW-MEDIUM, LOW | P3 |
 
 ### Scoring
 
-Per category, 0-100: 90-100 excellent · 70-89 good · 50-69 acceptable · 30-49 needs work · 0-29 critical.
+Per category, start at 100 and deduct once per finding by its bucket: P0 −25, P1 −15, P2 −8, P3 −4. Floor the category at 0. Round every score (category and overall) to the nearest integer, half up. Bands (post-deduction): 90-100 excellent · 70-89 good · 50-69 acceptable · 30-49 needs work · 0-29 critical. `{avg}` in the scorecard below = the mean of the 8 category scores, rounded the same way.
 
 ### Scorecard
 
@@ -69,17 +88,27 @@ Per category, 0-100: 90-100 excellent · 70-89 good · 50-69 acceptable · 30-49
 **Critical (P0):** n  **High (P1):** n  **Medium (P2):** n  **Low (P3):** n
 ```
 
-### GitHub issue per finding
+### GitHub issue per finding (idempotent)
+
+Every issue carries a stable marker (`rule-id` + `file:line`) so re-running the audit updates instead of duplicating:
+
+```bash
+MARKER="<!-- perf-audit: {rule-id} @ {file}:{line} -->"
+EXISTING=$(gh issue list --repo {REPO} --state all --search "\"$MARKER\" in:body" --json number -q '.[0].number')
+```
+
+If `$EXISTING` is non-empty, skip (or `gh issue edit $EXISTING --body ...` to refresh) — don't create. Otherwise:
 
 ```bash
 gh issue create --repo {REPO} \
   --title "[Performance] {rule-id}: {brief description}" \
   --label "performance" \
-  --body "$(cat <<'EOF'
+  --body "$(cat <<EOF
+$MARKER
 ## Rule Violated
 **Category:** {category}  **Rule:** {rule-id}  **Impact:** {CRITICAL|HIGH|MEDIUM|LOW}
 ## Location
-`{file}:{line}`
+\`{file}:{line}\`
 ## Current Code / Recommended Fix
 {before snippet} / {after snippet}
 ## Why This Matters
@@ -92,7 +121,9 @@ Reference: https://github.com/vercel-labs/agent-skills. Don't suggest replacing 
 
 ## Mode: bundle
 
-| Library | Barrel cost | Fix |
+Rough, environment-dependent reference values only (bundler, package version, and build mode all shift them) — before using them to rank or prioritize findings, measure the project's actual impact (`next build` output or `@next/bundle-analyzer`) and report that measured figure instead.
+
+| Library | Barrel cost (reference) | Fix |
 |---|---|---|
 | recharts | 200-400ms | direct: `recharts/es6/chart/LineChart` |
 | lodash | 200-300ms | `lodash-es` or direct path |
@@ -102,22 +133,25 @@ Reference: https://github.com/vercel-labs/agent-skills. Don't suggest replacing 
 | ethers | 150-250ms | consider `viem` |
 
 ```bash
-grep -rn "from 'recharts'\|from 'lodash'\|from '@mui/material'\|from 'date-fns'\|from '@heroicons/react'\|from 'lucide-react'" --include="*.ts" --include="*.tsx"
-grep -rn "import.*Chart\|import.*Editor\|import.*Map\|import.*PDF" --include="*.tsx" | grep -v "next/dynamic"
-grep -rn "dynamic(" --include="*.tsx" | wc -l
+grep -rn "from 'recharts'\|from 'lodash'\|from '@mui/material'\|from 'date-fns'\|from '@heroicons/react'\|from 'lucide-react'" --include=*.{ts,tsx,js,jsx}
+grep -rn "import.*Chart\|import.*Editor\|import.*Map\|import.*PDF" --include=*.{tsx,jsx} | grep -v "next/dynamic"
+grep -rn "dynamic(" --include=*.{tsx,jsx} | wc -l
 grep -rn "optimizePackageImports" next.config.*
 ```
 
 Dynamic-import candidates: charts, rich-text editors, PDF viewers, maps, heavy modals.
 
+`ssr: false` only works inside a Client Component — Next.js throws if the call is in a Server Component. Put it in a file (or wrapper) starting with `'use client'`:
+
 ```typescript
+'use client';
 const Dashboard = dynamic(() => import('@/components/Dashboard'), {
   loading: () => <DashboardSkeleton />,
-  ssr: false, // client-only
+  ssr: false, // client-only, requires 'use client'
 });
 ```
 
-Recommended `next.config.ts`:
+Recommended `next.config.ts` — merge into the project's existing `experimental` block, don't replace it (other experimental flags may already be set):
 
 ```typescript
 experimental: { optimizePackageImports: ['recharts', 'lodash', '@heroicons/react', 'date-fns'] }
@@ -128,13 +162,13 @@ Report: `Library | Files | Est. Impact | Priority` table, plus `Component | File
 ## Mode: rerender
 
 ```bash
-grep -rn "\.map(\|\.filter(\|\.reduce(\|\.sort(" --include="*.tsx" | grep -v "useMemo"
-grep -rn "Object\.keys\|Object\.values\|Object\.entries" --include="*.tsx" | grep -v "useMemo"
-grep -rn "onClick={() =>\|onChange={() =>\|onSubmit={() =>" --include="*.tsx"
-grep -rn "const \[.*\] = useState" --include="*.tsx" -A 2
-grep -rn "useEffect.*set" --include="*.tsx"
-grep -rn "useSelector\|useContext\|useStore" --include="*.tsx"
-grep -rn "useMemo(\|useCallback(\|React\.memo\|memo(" --include="*.tsx" | wc -l   # existing coverage
+grep -rn "\.map(\|\.filter(\|\.reduce(\|\.sort(" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
+grep -rn "Object\.keys\|Object\.values\|Object\.entries" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
+grep -rn "onClick={() =>\|onChange={() =>\|onSubmit={() =>" --include=*.{tsx,jsx}
+grep -rn "const \[.*\] = useState" --include=*.{ts,tsx,js,jsx} -A 2
+grep -rn "useEffect.*set" --include=*.{ts,tsx,js,jsx}
+grep -rn "useSelector\|useContext\|useStore" --include=*.{ts,tsx,js,jsx}
+grep -rn "useMemo(\|useCallback(\|React\.memo\|memo(" --include=*.{ts,tsx,js,jsx} | wc -l   # existing coverage
 ```
 
 Flag:
