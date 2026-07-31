@@ -5,7 +5,7 @@
 # defined in global-config.
 #
 # Required secret in this repo (Settings → Secrets → Actions):
-#   LINEAR_API_KEY — a Linear personal API key with comment:create scope.
+#   LINEAR_API — a Linear personal API key with comment:create scope.
 #     Generate one at: https://linear.app/settings/api  (Personal API keys section)
 #
 # Branch naming: the reusable workflow extracts the first Linear issue identifier
@@ -23,4 +23,4 @@ jobs:
   coderabbit-to-linear:
     uses: timfong888/global-config/.github/workflows/coderabbit-to-linear.yml@main
     secrets:
-      LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+      LINEAR_API: ${{ secrets.LINEAR_API }}

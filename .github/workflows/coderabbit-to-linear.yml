@@ -7,10 +7,11 @@
 #     coderabbit-to-linear:
 #       uses: timfong888/global-config/.github/workflows/coderabbit-to-linear.yml@main
 #       secrets:
-#         LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+#         LINEAR_API: ${{ secrets.LINEAR_API }}
 #
 # Required secret in the calling repo:
-#   LINEAR_API_KEY — a Linear personal API key with comment:create scope.
+#   LINEAR_API — a Linear personal API key with comment:create scope.
+#   Generate one at: https://linear.app/settings/api  (Personal API keys)
 #
 # Branch-name convention (case-insensitive):
 #   The workflow extracts the first token matching [A-Z]+-[0-9]+ from the PR
@@ -22,7 +23,7 @@ name: CodeRabbit Review → Linear
 on:
   workflow_call:
     secrets:
-      LINEAR_API_KEY:
+      LINEAR_API:
         required: true
 
 jobs:
@@ -51,7 +52,7 @@ jobs:
       - name: Post @blocks comment to Linear
         if: steps.extract.outputs.found == 'true'
         env:
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API }}
           LINEAR_ID:      ${{ steps.extract.outputs.linear_id }}
           PR_NUMBER:      ${{ github.event.pull_request.number }}
           PR_URL:         ${{ github.event.pull_request.html_url }}
