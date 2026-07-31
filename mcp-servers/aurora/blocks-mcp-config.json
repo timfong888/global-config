@@ -1,11 +1,6 @@
 {
-  "command": "npx",
-  "args": [
-    "--yes",
-    "--package",
-    "github:timfong888/global-config",
-    "aurora-mcp-server"
-  ],
+  "command": "aurora-mcp-server",
+  "args": [],
   "env": {
     "AURORA_API_KEY": "${env:AURORA_API_KEY}",
     "AURORA_BASE_URL": "https://ai.aur.lu/v1"
