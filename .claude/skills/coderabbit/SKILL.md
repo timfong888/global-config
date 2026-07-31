@@ -124,11 +124,15 @@ Stop the review loop when **any** of the following is true:
 
 ---
 
-## Pricing Note
+## Plan & CLI Limits
 
-The Usage-Based Add-On ($0.25/file reviewed) enables unlimited CLI reviews in agentic loops. Configure it at: **coderabbit.ai → Account Settings → Subscription & Billing → Usage-based add-on**.
+CLI reviews draw from your plan's included allowance first:
 
-Without the add-on, free-tier limits apply per account.
+- **Pro plan**: covers normal agentic loop usage (1–2 review cycles per task). Sufficient for most workflows.
+- **Free tier**: 3 reviews per hour limit.
+- **Usage-Based Add-On** ($0.25/file): only needed for very high-volume automated pipelines (e.g., CI triggering `cr review` on every commit). Configure at: **coderabbit.ai → Account Settings → Subscription & Billing → Usage-based add-on**.
+
+If you hit rate limits mid-loop, the add-on removes that cap — but on Pro you're unlikely to need it for typical agentic loop usage.
 
 ---
 
