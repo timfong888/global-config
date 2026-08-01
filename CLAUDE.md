@@ -28,6 +28,18 @@ SAT-123: Brief description of the change
 
 Individual skill files live in `.claude/skills/`. Each skill is loaded via the `Skill` tool using its directory name. Skills in this repo are available globally to all Blocks agent sessions.
 
+## Code Review (CodeRabbit)
+
+Before creating any pull request, run the CodeRabbit review skill to catch bugs, security issues, and logic errors:
+
+```
+Skill: coderabbit
+```
+
+This runs a review-fix loop (at most 2 iterations) on uncommitted changes. Fix all critical and high findings before opening the PR. Skip only if `cr doctor` reports auth/config issues — in that case note it in the PR description.
+
+The `cr` CLI is pre-installed and authenticated via the `CODERABBIT_API_KEY` environment variable in every Blocks session. If auth fails, add the key to Blocks secrets at **coderabbit.ai → Account Settings → API Keys**.
+
 ## Constraints
 
 - Work only within the `workspace` directory. Create subfolders per cloned repository.
