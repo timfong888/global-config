@@ -20,8 +20,8 @@ SAT-123: Brief description of the change
 ## Handback Rules
 
 - When a task is complete, summarize what changed and what is next in one or two sentences.
-- Do not post comments on Linear issues unless explicitly asked to do so.
-- Return reports, summaries, and analyses in the assistant response — not via Linear comment tools.
+- Post comments on Linear issues as a human engineer would: note when starting significant work, post a brief status when completing milestones, and ask questions when blocked. Keep comments concise and substantive — skip trivial one-liners.
+- Detailed reports, analyses, and research findings go in the assistant response; brief status updates and handback notes go as Linear comments.
 - Updating issue state (status, description, labels) is allowed only when explicitly instructed.
 
 ## Skills
