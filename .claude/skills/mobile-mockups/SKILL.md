@@ -106,12 +106,34 @@ for v in variants:
 
 **Never** just upload as attachments — always embed inline so mockups are visible without clicking.
 
+### Sourcing the `issueId`
+
+Every Linear MCP call below requires an `issueId`. **Never hard-code a placeholder** — obtain the ID from one of these sources (in priority order):
+
+1. **Session context (preferred)** — When an agent session is triggered by a Linear issue (e.g., via the Blocks delegation flow), the issue identifier is available in the formatted context passed to the agent (`issue_identifier` field, e.g., `"SAT-703"`). Use that value directly.
+
+2. **Prior MCP call** — If the session was not triggered by a specific issue, retrieve the issue ID programmatically before uploading:
+
+   ```python
+   # Search for the target issue
+   result = mcp__linear__linear_searchIssues(query="your search term")
+   issue_id = result["issues"][0]["id"]  # use the full UUID, not the identifier string
+
+   # Or fetch by known identifier
+   result = mcp__linear__linear_getIssueById(id="SAT-NNN")
+   issue_id = result["id"]  # full UUID
+   ```
+
+3. **Agent input parameter** — If the skill is invoked with an explicit issue ID argument, use that value.
+
+> **Note:** Linear MCP tools accept both the short identifier (e.g., `"SAT-703"`) and the full UUID. Prefer the full UUID when obtained from a prior MCP call, as it avoids an extra lookup. Use the short identifier when it comes from session context.
+
 ### Step 1 — Upload each PNG to the Linear issue
 
 ```python
-# Use the Linear MCP tool
+# issue_id comes from session context or a prior MCP call — see "Sourcing the issueId" above
 mcp__linear__linear_uploadFileToIssue(
-    issueId="SAT-NNN",
+    issueId=issue_id,
     filePath="/tmp/mockup_social-dilemmas.png",
     title="Unlock Screen — Social Dilemmas"
 )
@@ -137,7 +159,7 @@ Compose one Markdown comment with all variants, each preceded by a heading and s
 ![Unlock Screen — Moral Compass](https://uploads.linear.app/.../image.png)
 ```
 
-Post this as a single `mcp__linear__linear_createComment` call — one comment, all images inline.
+Post this as a single `mcp__linear__linear_createComment` call (passing the same `issue_id` sourced above) — one comment, all images inline.
 
 **Do not** create one comment per image. **Do not** rely on `linear_uploadFileToIssue`'s `commentBody` parameter alone — compose the full multi-image comment manually.
 
