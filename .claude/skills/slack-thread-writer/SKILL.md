@@ -37,29 +37,29 @@ Keep the whole thread under ~500 words, scannable in 30 seconds. Never hide the 
 
 ## Example
 
-Input: "We need to integrate Filecoin Pay with onramp providers... coordinate with BD and identify which onramps to target first."
+Input: "We need to integrate the payments API with third-party billing providers... coordinate with BD and identify which providers to target first."
 
 Output:
 
 ```text
-*Enable 3 major fiat onramps to accept FIL via Filecoin Pay by Dec 1*
+*Enable 3 major billing providers to integrate with the payments API by Dec 1*
 
 @tim @bd-team @eng-payments
 cc: #partnerships
 
 *CONTEXT*
-• Current onramps only support direct crypto purchases
-• Users need a seamless fiat → FIL → storage flow
+• Current billing integrations are manual and don't scale
+• Customers need a seamless checkout → billing → reconciliation flow
 
 *OUTCOME*
-Users can buy FIL through major onramps and immediately use it for storage payments
+Customers can route payments through major billing providers without engineering support
 
 *ACTIONS — This week*
 • [@tim] Draft integration requirements doc — Due Nov 8
-• [@bd-team] Identify top 3 target onramps + intro calls — Due Nov 8
+• [@bd-team] Identify top 3 target providers + intro calls — Due Nov 8
 
 *OPEN QUESTIONS*
-• Which onramps have existing Filecoin relationships?
+• Which providers have existing API partnerships?
 ```
 
 ## Quality checks

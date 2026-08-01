@@ -75,7 +75,7 @@ For each intake idea, before writing anything:
 - **Prerequisites** — what context or definitions must exist before this idea makes sense? Does it reference an undefined term?
 - **Connection** — does it extend, contradict, or sit disconnected from the surrounding sections? What bridging sentence links old to new?
 
-If prerequisites are missing, say so and ask rather than inserting the idea anyway — e.g. "This references 'Filecoin Enterprise,' which isn't defined yet. Is that Akave? I'll define it before adding this claim." Never insert an idea that would read as disconnected to someone unfamiliar with the discussion that produced it.
+If prerequisites are missing, say so and ask rather than inserting the idea anyway — e.g. "This references 'Enterprise Tier,' which isn't defined yet. Does it mean self-hosted? I'll define it before adding this claim." Never insert an idea that would read as disconnected to someone unfamiliar with the discussion that produced it.
 
 ### 5. Execute
 
