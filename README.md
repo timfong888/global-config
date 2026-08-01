@@ -40,6 +40,6 @@ global-config/
 
 ## Related Issues
 
-- Parent: Enable blocks to use the skills and capabilities of the linear-agent-poller
+- Parent: Enable Blocks to use the skills and capabilities of the linear-agent-poller
 - SAT-636: Add compact canvas skill
 - SAT-639: Initialize this repo structure (this ticket)
