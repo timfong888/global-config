@@ -168,46 +168,14 @@ keeps it throughout, per B6 in `linear-agent-poll`).
 - **Image** → `✅ Done — <what was edited, from which photo, how many angles>.` + the attached edited images. `(by Claude)`. State → In Review.
 - **Blocked / missing input** → `> question: <what you need>`, set **Urgent**, state → In Review, end the tick.
 
-Render any cross-issue reference as a clickable Markdown link —
-`[SAT-123](https://linear.app/sophia-xyz/issue/SAT-123)`, never a bare identifier.
+Cross-issue references use a clickable Markdown link, never a bare identifier —
+see `linear-agent-poll`'s link convention.
 
 ---
 
-### Legibility rules — comments and descriptions (SAT-596)
+### Legibility rules (SAT-596)
 
-These apply to **every comment and ticket description** this profile writes. The reader
-is on a phone. Five bad screens is a failed handback.
-
-**Answer first.** Line 1 = the outcome or decision. The reader should be able to stop there.
-
-**One idea per bullet, ≤ 20 words.** If a bullet needs a sub-clause, it needs two bullets.
-N items → N bullets, never N items crammed into one run-on sentence.
-
-**Bold the 2–4 load-bearing words** in each bullet so a skim-reader catches the gist.
-Don't bold full sentences.
-
-**No inline walls of code or long paths.** A file path or URL that wraps mid-sentence
-breaks mobile layout — put it on its own line or behind a Markdown link.
-
-**Depth goes in the vault note, not the comment.** The comment is the glance; the link is
-the deep-dive. If a bullet needs more than 20 words to be accurate, the extra words belong
-in the linked note.
-
-**Target size: 5–8 short lines** for a handback comment. A research summary or plan
-outline that must be inline may run longer — but each *section* must still follow these
-rules, not just the opening.
-
-**Bad example** (wall-of-text, buried lede, marathon sentence):
-
-> I went through the issue and confirmed that the configuration file located at
-> `~/development/linear-agent-poller/profiles/agent-writing.md` was updated, and also
-> checked the related `linear-agent-poll.md` orchestrator file to make sure both the
-> comment-writing and description-writing surfaces now carry the new legibility constraint
-> block that you asked for so that future handbacks are shorter and easier to read on mobile.
-
-**Good example** (answer first, one idea per bullet, bold key words, depth behind link):
-
-> ✅ **Legibility rules wired** — comments and descriptions, both surfaces.
-> - **agent-writing.md** — new rule block at end of § 4 (Report & hand back).
-> - **linear-agent-poll.md** — new rule block in B6 (applies to all tracks).
-> - Full spec: [SAT-596-ticket-legibility-prompt.md](vault link) (by Claude)
+Every comment and ticket description this profile writes follows `linear-agent-poll`'s
+B6 legibility rules (answer first, one idea per bullet ≤ 20 words, bold the load-bearing
+words, no inline code/path walls, depth behind a link, target 5–8 short lines) — the
+reader is on a phone, and a wall-of-text handback is a failed one.

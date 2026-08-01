@@ -199,8 +199,8 @@ Handback = set `stateId` to `STATE_IN_REVIEW` — never change the assignee (per
   normal. Admin output bears judgment (a filed note, a drafted reply) even when
   nothing is blocked, so it goes to **In Review**, not Done — Tim still looks.
 
-Render any cross-issue reference as a clickable Markdown link —
-`[SAT-123](https://linear.app/sophia-xyz/issue/SAT-123)`, never a bare identifier.
+Cross-issue references use a clickable Markdown link, never a bare identifier —
+see `linear-agent-poll`'s link convention.
 
 ## Acceptance criteria (SAT-349)
 
