@@ -8,6 +8,8 @@ whenToUse: Use at the end of working a Linear issue to post the handback comment
 
 Posts the closing comment and transitions the Linear workflow state after working an issue. The **state change is the handback**, not reassignment — `assigneeId` stays on `HUMAN_USER_ID` throughout; the re-set in the templates below is a defensive no-op for the common case.
 
+**State/priority ownership.** This skill is the sole owner of all `state`, `priority`, and `assigneeId` mutations on a Linear issue. Callers (`linear-worker`, any track profile) declare an outcome type and its facts; they do not set state or priority themselves.
+
 ## Inputs (provided by the caller)
 
 | Name | What it is |
@@ -21,7 +23,7 @@ Posts the closing comment and transitions the Linear workflow state after workin
 
 **Linear access.** Use the same tool path as `linear-agent-poll` (registered MCP tool → Composio `LINEAR_*` → direct GraphQL via `$LINEAR_API_KEY`).
 
-**Thread placement.** When `thread_root_id` is provided, post via `commentCreate(input: { issueId, body, parentId })` with `body` in variables (not inlined); otherwise top-level via `LINEAR_CREATE_LINEAR_COMMENT` or equivalent.
+**Thread placement.** Provide `thread_root_id` when the triggering human reply was inside a specific thread (auto-resume path — the B2 pending check in `linear-worker` identified a thread-level reply); omit it for fresh-ask issues where there is no prior thread to reply into. All three outcome types (success, needs-input, blocked) follow this same rule — the outcome type does not determine thread vs. issue placement, the source of the pending reply does. When `thread_root_id` is provided, post via `commentCreate(input: { issueId, body, parentId })` with `body` in variables (not inlined); otherwise top-level via `LINEAR_CREATE_LINEAR_COMMENT` or equivalent.
 
 ## Legibility — every comment
 
@@ -53,7 +55,7 @@ An external dependency failed (outage, exhausted quota, missing access) or a rea
 
 ### Success (default outcome)
 
-`assigneeId = HUMAN_USER_ID`, `state = STATE_IN_REVIEW` (**never** `STATE_DONE` — terminal-state rule below), `priority = normal`. Every success carries two bullets after the headline:
+`assigneeId = HUMAN_USER_ID`, `state = STATE_IN_REVIEW`, `priority = normal`. Every success carries two bullets after the headline:
 
 ```text
 ✅ Done — {summary + links}.

@@ -55,7 +55,7 @@ Use the track handed by the orchestrator. Only if genuinely ambiguous after read
 |---|---|
 | **coding** | Resolve the repo via `CODING_REPO_ROOT` from the issue's Project name — a Project not in the mapping is a config gap, ask rather than guess. State the happy path + verifiable test in plain language before branching. Branch → change → tests/lint → `coderabbit review`, apply fixes, re-run until clean (**hard merge gate, not optional**) → commit → push → `gh pr create`. **Never push to main.** Output: full clickable PR URL for `linear-handback` success template. |
 | **writing** | Classify by end deliverable: **research** (cited findings), **plan** (structure/options/recommendation), **write** (finished prose), or **image** (call `linear-image-pipeline`). Act on the most-likely reading with a stated one-line assumption rather than blocking; block only on expensive/irreversible steps. Short (≲400 words) → inline; long → linked note or attached file — don't assume an Obsidian vault path exists in a Blocks session. |
-| **admin** | Classify into exactly one sub-type: email / filing / task-list. Draft-only for any outbound message (never send). Propose-first for any batch of new items (never create until an explicit approval reply). Local-vault- or mailbox-dependent sub-types require that store mounted — if it isn't, say so and hand back rather than silently no-op'ing. |
+| **admin** | Classify into exactly one sub-type: email / filing / task-list. Draft-only for any outbound message (never send). Propose-first for any batch of new items (never create until an explicit approval reply). Local-vault- or mailbox-dependent sub-types require that the store be mounted — if it isn't, say so and hand back rather than silently no-op'ing. |
 
 **Image capability (any track):** when a ticket needs a generated or edited image, call `linear-image-pipeline` (generate → download → host → attach → cost-report) rather than reinventing the steps.
 
@@ -73,7 +73,7 @@ Update the progress file at each natural phase boundary: `python3 tests/lib/prog
 
 ## B5.5. Self-review gate
 
-Before calling `linear-handback`, re-read the ticket's completion condition (coding: the happy-path/test statement) and the track's rules, and confirm your B5 output satisfies them — one pass, not a new QA harness. Pass → proceed. Fail → either close the gap yourself (iterate on B5), or call `linear-handback` with `outcome=needs-input` or `outcome=blocked` instead (set `priority = Urgent` either way).
+Before calling `linear-handback`, re-read the ticket's completion condition (coding: the happy-path/test statement) and the track's rules, and confirm your B5 output satisfies them — one pass, not a new QA harness. Pass → proceed. Fail → either close the gap yourself (iterate on B5), or call `linear-handback` with `outcome=needs-input` or `outcome=blocked` instead — state/priority mutations are owned by `linear-handback`, not this step.
 
 ## B6. Hand back
 
