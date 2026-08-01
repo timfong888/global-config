@@ -103,7 +103,7 @@ spec (not an external API reference — that's a DX/Completeness concern, above)
   field exists. Indexes need a *justified strategy*, not one per filtered field — indexing every
   WHERE/JOIN column costs storage and write throughput for no read benefit. Expect the spec to name
   the queries each index serves, the selectivity/cardinality that makes it worth having, and the
-  column order for composite indexes (leading column = the one filtered on equality); flag an index
+  column order for composite indexes must be justified by the specific query pattern and database engine — equality filters typically lead, but range predicates, sort operations, and covering-index requirements can shift the optimal order; flag a spec that prescribes column order without naming the queries it serves; flag an index
   with no query behind it, and a query pattern with no index, equally.
 - Functional requirements numbered (FR-N), each written as preconditions → numbered
   step-by-step system behavior → validation → error handling → perf target — never a one-line

@@ -54,6 +54,7 @@ target and confirm it is still inside `design/excalidraw` before writing:
 [[ "$NAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { echo "unsafe diagram name"; exit 1; }
 OUT_DIR="$(cd "$(dirname "$SOURCE_DOC")" && pwd -P)/design/excalidraw"
 mkdir -p "$OUT_DIR"
+OUT_DIR="$(cd "$OUT_DIR" && pwd -P)"   # resolve any symlink in design/excalidraw itself
 OUT="$OUT_DIR/$NAME.excalidraw.md"
 [[ "$OUT" == "$OUT_DIR"/* ]] || { echo "output path escaped design/excalidraw"; exit 1; }
 ```
@@ -93,6 +94,8 @@ how `awk` parses its arguments:
 INPUT="$1"
 [ -f "$INPUT" ] || { echo "no such file: $INPUT"; exit 1; }
 REAL_INPUT="$(cd "$(dirname -- "$INPUT")" && pwd -P)/$(basename -- "$INPUT")"
+# Resolve any symlink in the input path itself
+[ -L "$REAL_INPUT" ] && REAL_INPUT="$(readlink -f -- "$REAL_INPUT")"
 [[ "$REAL_INPUT" == "$(pwd -P)"/* ]] || { echo "input outside workspace"; exit 1; }
 
 TMP=$(mktemp)

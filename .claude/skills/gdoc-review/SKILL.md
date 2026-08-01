@@ -69,11 +69,13 @@ breaks the quoting and makes the document able to inject shell. Build the JSON w
 every dynamic value, write it to a temp file, and pass the file:
 
 ```bash
-PAYLOAD=$(mktemp)
+TMPDIR_PRIV=$(mktemp -d)
+trap 'rm -rf "$TMPDIR_PRIV"' EXIT
+PAYLOAD="$TMPDIR_PRIV/comment.json"
 jq -n --arg id "$DOC_ID" --arg content "$COMMENT_TEXT" --arg anchor "$ANCHOR_PHRASE" \
   '{file_id: $id, content: $content, quoted_file_content_value: $anchor}' > "$PAYLOAD"
 composio execute GOOGLEDRIVE_CREATE_COMMENT -d @"$PAYLOAD"
-rm -f "$PAYLOAD"
+# TMPDIR_PRIV is removed by the trap on all exit paths (success, error, interrupt)
 ```
 
 `content` should be `"N. <comment text> (by Claude)"`; `quoted_file_content_value` is the exact
@@ -120,11 +122,18 @@ async function addComment(page, searchText, commentText, confirmHighlight) {
 
   // Gate: the selection must be visibly highlighted before the composer opens.
   // Without this check the comment can attach to the wrong text, or to nothing.
-  const shot = `/tmp/gdoc-anchor-${Date.now()}.png`;
-  await page.screenshot({ path: shot });
-  if (!(await confirmHighlight(shot, searchText))) {
-    await page.keyboard.press('Escape');
-    return { posted: false, searchText, reason: 'highlight not visible after selection' };
+  // Use a private temp dir and clean it up in a finally block on all exit paths.
+  const fs = require('fs');
+  const tmpDir = fs.mkdtempSync('/tmp/gdoc-review-');
+  try {
+    const shot = `${tmpDir}/anchor.png`;
+    await page.screenshot({ path: shot });
+    if (!(await confirmHighlight(shot, searchText))) {
+      await page.keyboard.press('Escape');
+      return { posted: false, searchText, reason: 'highlight not visible after selection' };
+    }
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
   await page.keyboard.press('Meta+Alt+m');

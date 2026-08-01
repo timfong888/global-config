@@ -93,7 +93,7 @@ DEST="$HOME/.claude/mcp-servers/$NAME"             # $NAME is slug-checked, so n
 | Method | When | Command |
 |---|---|---|
 | npx (preferred) | Published npm package | `npx -y "$PKG@$PIN" --help` to smoke-test the pinned version; no install step |
-| npm global | Package has no npx entry | `npm install -g "$PKG@$PIN" && command -v "$PKG"` |
+| npm global | Package has no npx entry | `npm install -g "$PKG@$PIN" && npm list -g --depth=0 "$PKG"` — verify with `npm view "$PKG" bin` to find the actual command name (it may differ from `$PKG` for scoped packages) |
 | Local clone | Unpublished / dev server | see below; point `args` at the built entry file |
 | Remote | Hosted/cloud MCP | No install — validate before sending any credential, see below |
 
@@ -105,8 +105,11 @@ Local clone — require an `https://` git URL, and confirm the clone landed insi
 git clone --depth 50 -- "$REPO_URL" "$DEST"
 cd "$DEST"
 [[ "$(pwd -P)" == "$(cd "$HOME/.claude/mcp-servers" && pwd -P)"/* ]] || { echo "clone escaped"; exit 1; }
+git fetch --depth=1 origin "refs/tags/$PIN:refs/tags/$PIN" 2>/dev/null \
+  || git fetch --depth=1 origin "$PIN"  # make the revision available in the shallow clone
 git checkout --detach "$PIN"          # PIN is pattern-checked, so it can't start with `-`
-npm install && npm run build
+[ -f package-lock.json ] && npm ci || npm install   # prefer lockfile for supply-chain safety
+npm run build
 ```
 
 **Validating a remote endpoint**: if the URL is user-supplied, a malicious or mistyped endpoint can collect the token. Require `https://`, then probe without credentials first, against the exact host the user explicitly confirmed (not a redirect target, not a URL scraped from an untrusted page):
@@ -139,6 +142,7 @@ curl --connect-timeout 5 --max-time 15 -H "Authorization: Bearer $KEY" -- "$ENDP
    CONFIG_FILE="$HOME/.claude.json"        # or ./.mcp.json for a project-scoped server
    python3 -m json.tool "$CONFIG_FILE" > /dev/null && echo "valid: $CONFIG_FILE"
    ```
+
 2. Claude Code must be restarted to pick up new/changed MCP servers — there is no hot reload.
 3. After restart, confirm the server's tools appear in the tool list (`mcp__<server-name>__*`).
 4. If tools don't appear: re-check JSON validity first (one malformed server entry can block Claude Code from starting), then confirm the command/binary actually resolves on PATH.

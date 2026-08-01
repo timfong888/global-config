@@ -45,7 +45,7 @@ composio execute SLACK_SEARCH_MESSAGES -d @payload.json
 # dates YYYY-MM-DD in the local reporting timezone, and both bounds are exclusive
 ```
 
-`SLACK_SEARCH_MESSAGES` returns matching messages, not the surrounding thread — a hit on a question doesn't tell you whether it was answered. For each question-shaped hit, fetch its thread with `SLACK_FETCH_MESSAGE_THREAD_FROM_A_CONVERSATION` (channel ID + `thread_ts` from the hit) and check the replies: if someone else replied after the person's message, classify it answered and leave it off the agenda; only genuinely unanswered questions go on.
+`SLACK_SEARCH_MESSAGES` returns matching messages, not the surrounding thread — a hit on a question doesn't tell you whether it was answered. For each question-shaped hit, fetch its thread with `SLACK_FETCH_MESSAGE_THREAD_FROM_A_CONVERSATION` using the channel ID and `thread_ts ?? ts` from the hit — top-level messages that haven't been replied to have no `thread_ts`, so fall back to `ts`. Check the replies: if someone else replied after the person's message, classify it answered and leave it off the agenda; only genuinely unanswered questions go on.
 
 Both lookups go through the Composio CLI, authed as `timfong888` in project `timfong888_org`. Resolve the live tool slug with `composio search <app>` before executing — do not hardcode a slug from memory.
 

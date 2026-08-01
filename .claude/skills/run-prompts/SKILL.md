@@ -34,14 +34,14 @@ Both modes: git-backup the file first. For research-flavored prompts, a deep-res
 5. **Process each blockquote, top to bottom**:
    - **Collect the full blockquote before doing anything else.** A `> prompt:` line can open a multiline blockquote — starting at the matched line, keep reading forward while each following line still begins with `>` (a blank or non-`>` line ends it). Strip one leading `> ` from every collected line and join them into the complete instruction text. Never act on just the first line — the remaining lines are still part of the instruction, not surrounding document text.
    - Read the surrounding section for context.
-   - Classify: "research"/"look up" → research (deep-research tool); "verify"/"check"/"make sure" → validation (search the doc for fulfillment); "improve"/"flow"/"repetitive"/"redundant" → flow/writing fix; else → generic, execute with document context.
-   - **Side-effect check before executing.** Only run the instruction unattended if it is side-effect-free — reading, researching, and generating replacement text. If it would write outside `$REAL_FILE`, call an external service that changes state, send a message, create a ticket, or spend money, stop and list those actions for explicit approval first. The step-6 diff gate can restore a file; it cannot un-send an email or un-create a ticket.
+   - Classify: "research"/"look up" → research (deep-research tool, requires confirmation — see below); "verify"/"check"/"make sure" → validation (search the doc for fulfillment); "improve"/"flow"/"repetitive"/"redundant" → flow/writing fix; else → generic, execute with document context.
+   - **Side-effect check before executing.** Only run the instruction unattended if it is side-effect-free — local reads and generating replacement text. Research sends the prompt text off-machine, so require explicit confirmation before routing to a deep-research tool unless the content is already public; without confirmation, execute directly using document context only. If the instruction would write outside `$REAL_FILE`, call an external service that changes state, send a message, create a ticket, or spend money, stop and list those actions for explicit approval first. The step-6 diff gate can restore a file; it cannot un-send an email or un-create a ticket.
    - Execute the instruction.
    - **Replace the entire blockquote range collected above — every `>` line, not just the first — with the output. No audit markers, nothing of the marker left behind.**
 6. **Show a unified `git diff -- "$REAL_FILE"` before applying.** Ask "Apply changes? (y/n)":
    - y — apply, continue to Commit.
    - n — restore this run's edits: `git checkout -- "$REAL_FILE"` (resets to the step-2 backup commit, so any pre-existing edits confirmed into that commit are kept). Exit.
-7. **Commit** that one path only, so unrelated staged changes can't ride along: `git commit --only -- "$REAL_FILE" -m "docs: process embedded prompts" -m "- Processed N prompts" -m "- <summary>"`.
+7. **Commit** — show the proposed message and ask "Commit these changes? (y/n)" before committing. On y, commit that one path only so unrelated staged changes can't ride along: `git commit --only -m "docs: process embedded prompts" -m "- Processed N prompts" -m "- <summary>" -- "$REAL_FILE"`. On n, leave the applied edits in place and exit.
 8. Multi-file input: repeat steps 1-7 per file, single summary at the end.
 9. Report: "Prompts: N processed. Changes: <summary by type>."
 

@@ -100,7 +100,8 @@ Once approved, commit only the PRD file(s) this run modified, by path. A plain `
 commit` sweeps in whatever else was already staged or dirty in the working tree:
 
 ```bash
-git commit --only -- "$PRD_FILE" -m "docs: <what was added or integrated>"
+git add -- "$PRD_FILE"   # stage the file (required for new/untracked files; no-op if already tracked)
+git commit --only -m "docs: <what was added or integrated>" -- "$PRD_FILE"
 ```
 
 `--only` commits the named paths from the working tree and ignores anything else in the index. Use a

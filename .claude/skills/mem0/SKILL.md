@@ -43,9 +43,10 @@ same persistent store, so replacement text gets screened exactly like new text.
   overwrite, and delete another person's memories. (`$USER` is also unstable — it collides across
   accounts sharing an OS username and splits one account across machines.) A shared literal like
   `"tim"` is the same problem with a default value, so don't use one.
-- If no authenticated identity resolves, **refuse** — no search, get_all, update, or delete. Say that
+- If no authenticated identity resolves, **refuse** — no add, search, get_all, update, or delete. Say that
   mem0 isn't authenticated and point at `composio whoami` / the provider's auth step. Failing closed
-  is required: guessing a namespace on a recall is what exposes someone else's memories.
+  is required: guessing a namespace on a recall is what exposes someone else's memories, and writing
+  to an unverified namespace can mix memories across callers.
 - Namespace only *after* the identity is established. For project- or workspace-scoped recall use
   `"<authenticated-identity>:<project-or-workspace>"`, so unrelated projects don't collide.
 - Separate from Claude Code's file-based project memory (`~/.claude/projects/.../memory/`) — mem0 is the cross-tool layer; project memory is Claude-Code-only.
