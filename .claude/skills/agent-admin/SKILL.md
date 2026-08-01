@@ -165,8 +165,8 @@ will resurface in the next scan unless Tim resolves them directly in LogSeq.
   tick is a no-op on anything already done.
 - **Headless:** any genuine missing-input/confirm moment (missing email scope,
   ambiguous sub-type, the LogSeq approval gate) is exactly **one** `> question:` +
-  reassign @timfong888 (Urgent) + end the tick. Never stall silently, never ask
-  more than once per blocker.
+  set `priority` = 1 (Urgent), `stateId` = In Review, and end the tick. Never stall
+  silently, never ask more than once per blocker.
 - **Audit:** vault file mutations → `CLAUDE-CHANGELOG.md` (same run). Email drafts
   and LogSeq proposals/creates → enumerated in the report comment (§6) — there's
   no vault file for those, so the comment *is* the audit trail.
@@ -206,7 +206,7 @@ Render any cross-issue reference as a clickable Markdown link —
 
 1. Email ticket → Gmail drafts only, 0 sends, each reported with subject+recipient
    — §2, §6.
-2. Missing input → exactly one `> question:`, reassign Tim (Urgent), end — no
+2. Missing input → exactly one `> question:`, set `priority` = 1 (Urgent), `stateId` = In Review, end — no
    silent stall — §1, §2, §5.
 3. Vault ticket → every moved/created file has a same-run `CLAUDE-CHANGELOG.md`
    entry; ambiguous notes stay in `01-Inbox/` flagged `needs_review` — §3.
