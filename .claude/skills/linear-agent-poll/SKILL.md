@@ -114,6 +114,28 @@ any Linear user account, so there is no "agent user" for it to be assigned to an
 
 ---
 
+## Status Transition Overview
+
+The following state machine governs every issue this poller touches — readable at a
+glance on the Linear board without opening the ticket:
+
+| Event | State Transition | Priority |
+|---|---|---|
+| Agent picks up issue from Agent Queue | **Agent Queue → In Progress** | unchanged |
+| Agent picks up resumed issue from floor state | **In Review / Blocked → In Progress** | unchanged |
+| Work complete — Tim needs to review | **In Progress → In Review** | normal |
+| Question Tim can answer by replying inline | **In Progress → In Review** + 🔴 Needs input comment | Urgent |
+| Work stopped — external dependency or real-world action required | **In Progress → Blocked** | Urgent |
+| Human-action spin-out issued | spin-out created in **Todo** (original → In Review) | normal |
+
+**Rules:**
+- The state transition is the handback signal — not assignee, which never moves off Tim.
+- The agent **never sets Done**; Tim promotes manually after reviewing In Review tickets.
+- Blocked is for things no typed reply can fix. Needs input (In Review + Urgent) is for
+  inline questions Tim can answer directly in a comment reply.
+
+---
+
 ## Part A — Orchestrator (the tick)
 
 ### A1. Find candidates
@@ -440,7 +462,14 @@ edited image, load the **`capability-image`** skill (Skill tool) and follow its 
 it's a capability, not a fourth track, so dispatch is unchanged ([SAT-491](https://linear.app/sophia-xyz/issue/SAT-491)).
 
 ### B4. Start work (both modes)
-- Post a comment: fresh → `🤖 On it — {track}. [model: {model}, effort: {effort}] (by Claude)` ·
+- **`LINEAR_UPDATE_ISSUE` first**: set `stateId` = `STATE_IN_PROGRESS` only — **do not set
+  `assigneeId`**. Do this **before** posting any comment — the state change is the
+  immediately visible signal to Tim that the agent has the ticket; the comment follows.
+  Assignee stays on the human user permanently; this call's only job is to move the issue
+  out of `STATE_AGENT_QUEUE` so A1 stops re-selecting it on the next tick.
+  If the issue still carries a stale `agent-ready` / `agent-needs-human` label, drop it from
+  `labelIds` (keep the routing label) — Tim never relabels.
+- **Then post a comment**: fresh → `🤖 On it — {track}. [model: {model}, effort: {effort}] (by Claude)` ·
   resume → `🤖 Resuming — got your reply. [model: {model}, effort: {effort}] (by Claude)`.
   `{model}`/`{effort}` are the values the orchestrator handed you in A3 — fill them in from
   that, not from self-introspection.
@@ -448,11 +477,6 @@ it's a capability, not a fourth track, so dispatch is unchanged ([SAT-491](https
   same comment (or a line right after it) — e.g. "Happy path: {plain-language flow}. Proof:
   {test name/path}." — so the completion condition you're about to work toward is on the
   record before B5 starts, not just something you reasoned through silently.
-- `LINEAR_UPDATE_ISSUE`: set `stateId` = `STATE_IN_PROGRESS` only — **do not set
-  `assigneeId`**. Assignee stays on the human user permanently; this call's only job is to
-  move the issue out of `STATE_AGENT_QUEUE` so A1 stops re-selecting it on the next tick.
-  If the issue still carries a stale `agent-ready` / `agent-needs-human` label, drop it from
-  `labelIds` (keep the routing label) — Tim never relabels.
 - **Progress file — initial phase plan (SAT-508 ticket 2, local only, zero Linear calls).**
   Write the issue's progress file with the SAT-546 writer:
   ```
