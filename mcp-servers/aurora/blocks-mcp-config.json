@@ -1,8 +1,12 @@
 {
-  "command": "aurora-mcp-server",
-  "args": [],
+  "command": "npx",
+  "args": [
+    "mcp-remote",
+    "https://ai.aur.lu/v1/mcp",
+    "--header",
+    "Authorization:Bearer ${AURORA_API_KEY}"
+  ],
   "env": {
-    "AURORA_API_KEY": "${env:AURORA_API_KEY}",
-    "AURORA_BASE_URL": "https://ai.aur.lu/v1"
+    "AURORA_API_KEY": "${env:AURORA_API_KEY}"
   }
 }
