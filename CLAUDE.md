@@ -32,7 +32,7 @@ Rules:
 - **State first, comment second.** Always set the Linear state transition before posting any comment — the state change is the immediately visible signal; the comment follows.
 - **Never self-certify Done.** Every completion lands in **In Review**; the user promotes to Done after reviewing.
 - Use **Blocked** only when the work truly stopped on something a typed reply alone cannot fix (external dependency, purchase, access grant). Use **Needs input** (In Review + Urgent) for a question the user can answer inline.
-- Resolve workflow state IDs from the team's configured states — never hard-code; introspect or use the workspace config (e.g. the `## Agent Poll Configuration` block in the project's CLAUDE.md, defaulting to the Satchel values in the `linear-agent-poll` skill).
+- Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace.
 
 ## Handback Rules
 
