@@ -1,0 +1,31 @@
+# Copy this file into your project repo at:
+#   .github/workflows/coderabbit-to-linear.yml
+#
+# Wires CodeRabbit and Sourcery review notifications → Linear via the reusable
+# workflow defined in global-config. When either bot reviews a PR, the workflow
+# posts an @blocks mention comment on the linked Linear issue.
+#
+# One-time setup for this repo:
+#   1. Copy this file to .github/workflows/coderabbit-to-linear.yml
+#   2. Copy github-actions/examples/.coderabbit.yml  → .coderabbit.yml
+#   3. Copy github-actions/examples/.sourcery.yaml   → .sourcery.yaml
+#   4. Add LINEAR_API secret (Settings → Secrets → Actions):
+#      a Linear personal API key from https://linear.app/settings/api
+#   5. Grant CodeRabbit access at https://app.coderabbit.ai → Repositories
+#   6. Grant Sourcery access at https://sourcery.ai → Repositories
+#
+# Branch naming: the reusable workflow extracts the first Linear issue identifier
+# (e.g. SAT-660, BLO-123) from the PR branch name. Branches without an identifier
+# are silently skipped — no noise for untracked branches.
+
+name: AI Review Bot → Linear
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  coderabbit-to-linear:
+    uses: timfong888/global-config/.github/workflows/coderabbit-to-linear.yml@main
+    secrets:
+      LINEAR_API: ${{ secrets.LINEAR_API }}
