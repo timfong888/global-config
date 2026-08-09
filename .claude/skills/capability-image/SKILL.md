@@ -42,13 +42,16 @@ is exactly why the download and host stages below exist.
 Always verify the exact endpoint ID before calling — fal.ai renames and versions models.
 Run `FAL_AI_GET_MODELS` if unsure. The IDs below are correct as of 2026-08.
 
-- **Editing / compositing an existing photo**: default to **`fal-ai/nano-banana-2/edit`**
-  (Google Nano Banana 2 — confirmed active in the connected account; general-purpose
-  image editing with strong context preservation). For higher-fidelity structure-preserving
-  edits, try **`fal-ai/flux-kontext/dev`** (FLUX.1 Kontext) — best-in-class for targeted
-  edits while keeping the scene intact, but ships under BFL's **non-commercial license**;
-  only use it if Tim has explicitly accepted that license. Fall back to Gemini
-  `GEMINI_GENERATE_IMAGE` only when fal.ai tools are unavailable.
+- **Editing / compositing an existing photo**: default to **`fal-ai/flux-kontext/dev`**
+  (FLUX.1 Kontext — purpose-built for scene-preserving photo edits; BFL non-commercial
+  license, appropriate for personal/Satchel use). For commercial or production outputs
+  use **`fal-ai/flux-kontext/pro`** (BFL commercial license). If Kontext is unavailable,
+  fall back to **`fal-ai/qwen-image-2/edit`** (Qwen-Image-Edit-2511, Apache 2.0). Use
+  `fal-ai/nano-banana-2/edit` (Google Gemini-based, proprietary) only as a last resort —
+  it works but has weaker structure preservation than Kontext. For the full prompting
+  guide and quality checklist, load the **`photo-compositing`** skill.
+  Fall back to Gemini `GEMINI_GENERATE_IMAGE` only when fal.ai tools are entirely
+  unavailable.
 - **Pure text-to-image generation** (no source photo): use **`fal-ai/flux/schnell`**
   (Apache 2.0, fast) for standard generation, or **`fal-ai/flux/dev`** (Apache 2.0,
   higher quality, slower) when the ticket calls for a high-quality result.

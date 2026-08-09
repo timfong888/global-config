@@ -48,16 +48,26 @@ Use `FAL_AI_RUN_MODEL_SYNC` via Composio for all image editing.
 Before calling, run `FAL_AI_GET_MODELS` if unsure of the current endpoint ID — fal.ai
 renames and versions models. The IDs below are correct as of 2026-08; verify at call time.
 
-| Use case | Model ID | Notes |
-|---|---|---|
-| **Default (editing)** | `fal-ai/nano-banana-2/edit` | Google Nano Banana 2 — confirmed active; strong general-purpose image editing |
-| **High-fidelity structure-preserve** | `fal-ai/flux-kontext/dev` | FLUX.1 Kontext — best-in-class for preserving context while making targeted edits; **non-commercial license** — only use if Tim has explicitly accepted BFL's license |
-| **Fallback** | `GEMINI_GENERATE_IMAGE` (Composio) | Only when fal.ai tools are unavailable |
+**FLUX.1 Kontext** is the correct model for interior design compositing — it was built
+specifically for "edit *this* photo while preserving the scene" workflows and outperforms
+general-purpose editors on structure-preserving tasks.
+
+| Model | Endpoint | License | When to use |
+|---|---|---|---|
+| **FLUX.1 Kontext [dev]** | `fal-ai/flux-kontext/dev` | BFL non-commercial | **Default for Satchel / personal use.** Best context-preservation; free to run via fal.ai |
+| **FLUX.1 Kontext [pro]** | `fal-ai/flux-kontext/pro` | BFL commercial | When production quality matters or the output is for a commercial product |
+| **FLUX.1 Fill [dev]** | `fal-ai/flux/fill` | Apache 2.0 | Inpainting/masking workflow; fully open-source |
+| **Qwen-Image-Edit-2511** | `fal-ai/qwen-image-2/edit` | Apache 2.0 | Fully open-source alternative if Kontext is unavailable; strong multimodal editor |
+| **nano-banana-2/edit** | `fal-ai/nano-banana-2/edit` | Google proprietary | Fallback only — general-purpose Gemini-based editing; weaker structure preservation |
+
+**Always verify endpoint IDs at call time** via `FAL_AI_GET_MODELS` — fal.ai renames
+and versions models. If Kontext [dev] returns an error, try Qwen-Image-Edit before
+falling back to nano-banana-2.
 
 To call the default model:
 ```
 FAL_AI_RUN_MODEL_SYNC
-  model_id: fal-ai/nano-banana-2/edit
+  model_id: fal-ai/flux-kontext/dev
   input:
     image_url: <fal.ai-hosted URL of the uploaded source photo>
     prompt: <see §3 prompt template>
