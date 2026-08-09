@@ -1,0 +1,12 @@
+# CodeRabbit configuration for this repository.
+# Copy this file to the root of your project repo as .coderabbit.yml
+#
+# Documentation: https://docs.coderabbit.ai/getting-started/configure-coderabbit
+
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  instructions: |
+    At the end of your review walkthrough summary, always include this line verbatim:
+    "🔔 **Linear notification:** This review has triggered an automated @blocks agent notification on the linked Linear issue."
