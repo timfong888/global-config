@@ -24,6 +24,17 @@ SAT-123: Brief description of the change
 - Detailed reports, analyses, and research findings go in the assistant response; brief status updates and handback notes go as Linear comments.
 - Updating issue state (status, description, labels) is allowed only when explicitly instructed.
 
+### Legibility rules — comments and descriptions (SAT-596)
+
+The reader is on a phone. Apply these to every comment and ticket description you write.
+
+- **Answer first.** Line 1 = the outcome or decision. The reader should be able to stop there.
+- **One idea per bullet, ≤ 20 words.** N items → N bullets, never a run-on sentence.
+- **Bold the 2–4 load-bearing words** in each bullet so a skim-reader catches the gist. Don't bold full sentences.
+- **No inline walls of code or long paths.** Put them on their own line or behind a Markdown link.
+- **Depth goes behind a link, not inline.** The comment is the glance; the PR/vault note is the deep-dive.
+- **Target: 5–8 short lines** per handback comment.
+
 ## Skills
 
 Individual skill files live in `.claude/skills/`. Each skill is loaded via the `Skill` tool using its directory name. Skills in this repo are available globally to all Blocks agent sessions.

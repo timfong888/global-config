@@ -1,66 +1,45 @@
 # global-config
 
-Global configuration for agents. Blocks loads this repo as the **global config repo**, so
-everything here is merged into *every* Blocks session — the sandbox, Slack, GitHub, and Linear.
+Global configuration repository for Blocks agent sessions.
 
-| Path | What it is |
-|---|---|
-| `.claude/skills/<name>/SKILL.md` | Skills. The folder name becomes the `/<name>` slash command. |
-| `.blocks/post-clone` | Runs after Blocks clones the repo into a sandbox. |
-| `mcp-servers/` | MCP servers published from this repo (currently `aurora`). |
-| `scripts/validate_skills.py` | Pre-merge check that every skill is discoverable and unique. |
-| `SKILLS-INVENTORY.md` | Decision record: what was kept, merged, and dropped, and why. |
+## Purpose
 
-## Skills
+This repository provides shared, reusable configuration that Blocks loads into every agent session. It centralises:
 
-Blocks discovers skills from `.claude/skills/`, `.codex/skills/`, and `.agents/skills/` — the
-folder prefix does not matter, and it merges dashboard skills, this global repo, and the active
-per-repo skills into one set. Reference:
-<https://docs.blocks.team/using-blocks/features/skills>
+- **Global instructions** (`CLAUDE.md`) — tone, commit conventions, handback rules, and constraints that apply to every session.
+- **Skills** (`.claude/skills/`) — individual skill files that agents can load on demand via the `Skill` tool.
 
-Because this repo loads everywhere, its skills are deliberately few and short. Two consequences
-worth internalising before adding one:
+## How Blocks Picks This Up
 
-- **Names must be globally unique.** On a collision Blocks silently renames one skill by
-  appending a number (`review-security` → `review-security2`), and the losing skill becomes
-  unreachable by the name people actually type.
-- **Every line costs context in every session.** A skill earns its place by stating what the
-  model *cannot* infer — exact IDs, endpoints, credential locations, file paths, API quirks,
-  house rules — not by narrating procedure a current model already knows.
+Blocks is configured to mount this repo as a global config source. When an agent session starts, Blocks reads `CLAUDE.md` from this repo and injects it as standing instructions. Skills in `.claude/skills/` become available to the `Skill` tool across all sessions.
 
-### Adding a skill
+## Repository Structure
 
-```text
-.claude/skills/<skill-name>/SKILL.md
+```
+global-config/
+├── CLAUDE.md               # Global agent instructions
+├── README.md               # This file
+└── .claude/
+    └── skills/             # Individual skill files
+        └── canvas/
+            └── SKILL.md    # FlutterFlow Designer canvas skill
 ```
 
-```markdown
----
-name: <skill-name>          # must equal the folder name
-description: What it does, when to use it, and the literal phrases that should trigger it.
----
+## Adding a New Skill
 
-# <Title>
+1. Create a directory under `.claude/skills/<skill-name>/`.
+2. Add a `SKILL.md` file with a YAML frontmatter block:
+   ```yaml
+   ---
+   name: <skill-name>
+   description: <one-line description used to decide relevance>
+   ---
+   ```
+3. Write the skill content below the frontmatter.
+4. Open a PR — once merged, the skill is available globally.
 
-...
-```
+## Related Issues
 
-`description` is the only text the model sees when deciding whether to load the skill, so make it
-discriminating and include real trigger phrases. Keep frontmatter to flat `key: value` scalars;
-`name`, `description`, `allowed-tools`, and `license` are the only keys the validator accepts.
-
-### Validating
-
-```bash
-python3 scripts/validate_skills.py
-```
-
-It checks that each skill has a `SKILL.md` with parseable frontmatter, that `name` matches its
-folder, that no two distinct skills across the three roots share a name (a skill symlinked into a
-second root is deduplicated by resolved path, not flagged), and that nothing references
-infrastructure this workspace has retired — Rube MCP / `rube-personal`, `composio-personal`,
-the pipedream MCP servers, and Greptile. Run it before opening a PR; it exits non-zero on any
-failure. `--selftest` exercises the frontmatter parser against known-bad inputs.
-
-Frontmatter is a strict subset of YAML: flat `key: value` scalars only. A value containing `": "`
-must be quoted, so the file parses identically whether or not PyYAML is installed.
+- Parent: Enable Blocks to use the skills and capabilities of the linear-agent-poller
+- SAT-636: Add compact canvas skill
+- SAT-639: Initialize this repo structure (this ticket)
