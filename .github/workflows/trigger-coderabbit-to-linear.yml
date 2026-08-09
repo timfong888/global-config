@@ -1,7 +1,7 @@
-# Fires whenever CodeRabbit reviews a PR in this repo (global-config).
+# Fires whenever an AI review bot (CodeRabbit or Sourcery) reviews a PR in this repo.
 # Uses the LINEAR_API secret stored in this repo's settings.
 
-name: CodeRabbit Review → Linear (global-config)
+name: AI Review Bot → Linear (global-config)
 
 on:
   pull_request_review:
