@@ -1,6 +1,6 @@
 ---
 name: linear-agent-poll
-description: One tick of the Linear agent poller — select a batch of pending issues queued in the "Agent Queue" workflow state, dispatch one subagent per issue to work them in parallel (non-coding fan-out + at most one coding), and hand each back via workflow state (never by reassigning). Workspace-agnostic — resolves IDs from the invoking project's CLAUDE.md, defaulting to Satchel.
+description: "One tick of the Linear agent poller — select a batch of pending issues queued in the Agent Queue workflow state, dispatch one subagent per issue to work them in parallel (non-coding fan-out + at most one coding), and hand each back via workflow state (never by reassigning). Workspace-agnostic — resolves IDs from the invoking project's CLAUDE.md or global-config CLAUDE.md. Use when asked to poll Linear, run a tick, or work the Agent Queue."
 whenToUse: Run when the user wants to poll and process pending Linear issues from the Agent Queue state. Use /linear-agent-poll or when asked to run a tick of the poller.
 ---
 
@@ -16,24 +16,28 @@ This command is workspace-agnostic. Resolve these variables before doing anythin
 
 1. Look for an `## Agent Poll Configuration` block in the **CLAUDE.md of the project
    you were invoked from** (the active working directory). If present, use its values.
-2. If no such block exists, use the **Satchel defaults** in the table below.
+2. If no such block exists, look for the same block in the **global-config CLAUDE.md**
+   (loaded as global context in every Blocks session). Use those values if present.
+3. If neither has a config block, **report a configuration error** — do not guess IDs
+   or query Linear against an unconfirmed team, since a wrong state/team id silently
+   mis-routes or silently no-ops every call downstream.
 
-| Variable | Meaning | Satchel default |
-|---|---|---|
-| `LINEAR_ACCOUNT` | Composio Linear connection to pin (`--account` / `account:`) | `satchel-linear` |
-| `TEAM_ID` | Linear team id | `88661a7f-d07e-4590-9724-b8f69e30556e` |
-| `TEAM_KEY` | Team prefix for identifiers | `SAT` |
-| `WORKSPACE_SLUG` | Slug for cross-issue links `linear.app/<slug>/issue/<KEY>-###` | `sophia-xyz` |
-| `STATE_AGENT_QUEUE` | **The turn signal.** A dedicated `unstarted`-type team workflow state, positioned before Todo — an issue in this *exact* state is queued for the agent; nothing else means that. **Every workspace using this command must create its own "Agent Queue" team state** (Settings → Teams → \<team\> → Workflow) and set its own id here; there is no shared cross-workspace id. | `73be9b83-4bd2-4ef1-97a7-0ff6e6ff5339` (Satchel's "Agent Queue") |
-| `AGENT_USER_ID` | **Deprecated — no longer read.** The underlying Linear seat can be retired once no workspace `CLAUDE.md` still references it. | `41903248-8c2b-41e4-a7fb-f00f4feb9ba4` (@agentfong) |
-| `HUMAN_USER_ID` | Tim's user — **informational only now.** The poller no longer writes this to `assigneeId` for turn-taking purposes; assignee stays on the human permanently (see B4/B6). | `aa3fb002-ba6c-440f-8837-cc5c92a3c748` (@timfong888) |
-| `STATE_IN_PROGRESS` | "started" state id — set here when the agent picks a queued issue up out of `STATE_AGENT_QUEUE` | `8439671f-0e5d-4a08-ba98-d3bf5b758d16` |
-| `STATE_IN_REVIEW` | state for **every successful handback** — deterministic or judgment-bearing alike (see B6 terminal-state rule: the agent never self-certifies Done). **Also an open-loop / auto-resume state (SAT-525):** from here, Tim just **replies to the agent's handback comment** and the next tick auto-resumes it (secondary path, A1+B2) — moving the state back to `STATE_AGENT_QUEUE` still works as a manual override but is no longer required. | `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` (In Review) |
-| `STATE_DONE` | "completed" state id — **never set by the agent itself**; Tim promotes a ticket to this state manually once he's reviewed it | `299e627d-3989-40c4-8aea-b9d56209fa39` |
-| `STATE_NEEDS_INPUT` | state to set on a needs-input handback; if `none`, leave the state unchanged | `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` (In Review) |
-| `STATE_BLOCKED` | state for a **Blocked handback** (SAT-553, B6) — work stopped by an external dependency or a real-world action/decision only Tim can take, as opposed to a question he can answer inline (that's Needs-input). Visually distinct from In Review on the board, which is the whole point: Tim can tell "review my finished work" apart from "I'm stuck, unblock me" at a glance. **Also a floor state for auto-resume** (A1/B2): Tim replies with the unblocking action or decision and the next tick resumes it. Must be a **real team workflow state** — introspect `team { states { nodes { id name type } } }` to find it, never invent an id; if the team has no Blocked state, set `none` and the Blocked path falls back to the Needs-input state behavior (the `⛔ Blocked` comment marker still distinguishes it). | `f68b9fad-0d13-4397-b1e0-97f6e7216e52` (Satchel's "Blocked", `started`-type — introspected, not guessed) |
-| `STATE_TODO` | the team's plain `unstarted` **Todo** state — the landing state for a **human-action Todo spin-out** (SAT-553, B6): a new issue for something Tim must execute personally. Deliberately outside *both* A1 paths (not `STATE_AGENT_QUEUE`, not a floor state), so a spin-out is never auto-dispatched to any agent. If `none`, skip spin-outs and fold the requested action into the handback comment instead. | `4dfa455d-9248-4b2b-b3de-4d0d343efe21` (Todo) |
-| `ROUTING_LABELS` | routing-label ids (coding/writing/admin); if `none`, infer the track from the description | agent-coding `b4c6b47e-0ded-4468-a68c-4d3a5b58ec33` · agent-writing `79adef88-4350-48c2-a1da-31137a2dfbc8` · agent-admin `a1a9437b-8c75-4cd5-ba6b-5c1fb4443f00` |
+| Variable | Meaning |
+|---|---|
+| `LINEAR_ACCOUNT` | Composio Linear connection to pin (`--account` / `account:`) |
+| `TEAM_ID` | Linear team id |
+| `TEAM_KEY` | Team prefix for identifiers |
+| `WORKSPACE_SLUG` | Slug for cross-issue links `linear.app/<slug>/issue/<KEY>-###` |
+| `STATE_AGENT_QUEUE` | **The turn signal.** A dedicated `unstarted`-type team workflow state, positioned before Todo — an issue in this *exact* state is queued for the agent; nothing else means that. **Every workspace using this command must create its own "Agent Queue" team state** (Settings → Teams → \<team\> → Workflow) and set its own id here; there is no shared cross-workspace id. |
+| `AGENT_USER_ID` | **Deprecated — no longer read.** The underlying Linear seat can be retired once no workspace `CLAUDE.md` still references it. |
+| `HUMAN_USER_ID` | Tim's user — **informational only now.** The poller no longer writes this to `assigneeId` for turn-taking purposes; assignee stays on the human permanently (see B4/B6). |
+| `STATE_IN_PROGRESS` | "started" state id — set here when the agent picks a queued issue up out of `STATE_AGENT_QUEUE` |
+| `STATE_IN_REVIEW` | state for **every successful handback** — deterministic or judgment-bearing alike (see B6 terminal-state rule: the agent never self-certifies Done). **Also an open-loop / auto-resume state (SAT-525):** from here, Tim just **replies to the agent's handback comment** and the next tick auto-resumes it (secondary path, A1+B2) — moving the state back to `STATE_AGENT_QUEUE` still works as a manual override but is no longer required. |
+| `STATE_DONE` | "completed" state id — **never set by the agent itself**; Tim promotes a ticket to this state manually once he's reviewed it |
+| `STATE_NEEDS_INPUT` | state to set on a needs-input handback; if `none`, leave the state unchanged |
+| `STATE_BLOCKED` | state for a **Blocked handback** (SAT-553, B6) — work stopped by an external dependency or a real-world action/decision only Tim can take, as opposed to a question he can answer inline (that's Needs-input). Visually distinct from In Review on the board. **Also a floor state for auto-resume** (A1/B2): Tim replies with the unblocking action or decision and the next tick resumes it. Must be a **real team workflow state** — introspect `team { states { nodes { id name type } } }` to find it, never invent an id; if the team has no Blocked state, set `none` and the Blocked path falls back to the Needs-input state behavior. |
+| `STATE_TODO` | the team's plain `unstarted` **Todo** state — the landing state for a **human-action Todo spin-out** (SAT-553, B6): a new issue for something Tim must execute personally. If `none`, skip spin-outs and fold the requested action into the handback comment instead. |
+| `ROUTING_LABELS` | routing-label ids (coding/writing/admin); if `none`, infer the track from the description |
 | `MODEL_LABELS` | **Optional per-ticket model override (SAT-454).** Labels under the `models` parent group let Tim be explicit about which model tier to dispatch a ticket at, instead of leaving it to the orchestrator's judgment call. Label *names* carry a version-ish suffix that isn't the literal string the Agent tool's `model:` parameter expects, so this maps label name → actual model value; if `none`/not present on a candidate, fall back to today's default (Sonnet + judgment-based escalation per the global CLAUDE.md Model Tier Selection convention) | `sonnet 5` → `sonnet` · `opus 4.8` → `opus` · `fable 5` → `fable` · `haiku` → `haiku` |
 | `EFFORT_LABELS` | **Optional per-ticket reasoning-effort override (SAT-469).** Labels under the `agent-effort` parent group (named `agent-effort`, not `effort` — Linear reserves the literal label name `effort`) let Tim be explicit about which reasoning effort to dispatch a ticket at, instead of leaving it to the orchestrator's judgment call — same mechanism as `MODEL_LABELS`, just for the Agent tool's `effort:` parameter. Label names are already the literal values the `effort:` parameter expects, so the mapping here is identity, not a translation; if `none`/not present on a candidate, fall back to today's default effort | `low` → `low` · `medium` → `medium` · `high` → `high` · `xhigh` → `xhigh` · `max` → `max` |
 | `CODING_PROJECT_LABEL` | **Project-level** label marking a Linear Project as coding-track — it has its own dedicated repo and its issues run the coding profile. A Project without it isn't coding-track, whatever labels its individual issues carry. **Not yet created in the workspace** — until Tim adds it, treat every Project referenced in `CODING_REPO_ROOT` below as coding-track. | `coding-project` (label name; id TBD) |
