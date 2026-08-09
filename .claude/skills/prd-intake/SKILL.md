@@ -75,7 +75,7 @@ For each intake idea, before writing anything:
 - **Prerequisites** — what context or definitions must exist before this idea makes sense? Does it reference an undefined term?
 - **Connection** — does it extend, contradict, or sit disconnected from the surrounding sections? What bridging sentence links old to new?
 
-If prerequisites are missing, say so and ask rather than inserting the idea anyway — e.g. "This references 'Filecoin Enterprise,' which isn't defined yet. Is that Akave? I'll define it before adding this claim." Never insert an idea that would read as disconnected to someone unfamiliar with the discussion that produced it.
+If prerequisites are missing, say so and ask rather than inserting the idea anyway — e.g. "This references 'Enterprise Tier,' which isn't defined yet. Does it mean self-hosted? I'll define it before adding this claim." Never insert an idea that would read as disconnected to someone unfamiliar with the discussion that produced it.
 
 ### 5. Execute
 
@@ -91,4 +91,18 @@ Summarize which sections were touched, what prerequisite context was added, and 
 
 ## Both modes
 
-Commit PRD file changes with a `feat:`/`docs:` prefix describing what was added or integrated, so later `git diff` checks (this skill's step 2, and prd-review) have a real baseline to learn the user's edit patterns from.
+Committing keeps a real baseline for later `git diff` checks (this skill's step 2, and prd-review) to
+learn the user's edit patterns from. Do it last, and **ask first**: show the user which PRD file(s)
+this run touched and the proposed message, and wait for explicit approval — don't commit as a matter
+of course.
+
+Once approved, commit only the PRD file(s) this run modified, by path. A plain `git add -A`/`git
+commit` sweeps in whatever else was already staged or dirty in the working tree:
+
+```bash
+git add -- "$PRD_FILE"   # stage the file (required for new/untracked files; no-op if already tracked)
+git commit --only -m "docs: <what was added or integrated>" -- "$PRD_FILE"
+```
+
+`--only` commits the named paths from the working tree and ignores anything else in the index. Use a
+`feat:` prefix instead when the change introduces new scope rather than documenting existing scope.

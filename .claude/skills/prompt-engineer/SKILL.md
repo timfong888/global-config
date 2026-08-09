@@ -13,7 +13,7 @@ Two modes. A single input can carry signals for both (a research doc can define 
 
 ## Refine mode
 
-1. **Audit** — score 1-5 on: Role Clarity, Objectives, Instructions, Examples, Context, Output Format, Quality Checks. Present as a table with the biggest 2-3 gaps. Wait for the user before rewriting.
+1. **Audit** — score 1-5 on the six framework parts (Role Clarity, Examples, Instructions, Context, Output Format, Quality Checks). For reusable skills, Objectives are evaluated as part of Instructions; for one-time briefs, flag a missing `## Objectives` section as a gap in Instructions. Present as a table with the biggest 2-3 gaps. Wait for the user before rewriting.
 2. **Refine** using the 6-part framework below.
 3. **Determine output type**: reusable skill (frontmatter, `{{ placeholders }}`, generic) vs. one-time project brief (all context embedded, no placeholders, ready to execute).
 

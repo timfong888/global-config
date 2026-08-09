@@ -21,7 +21,9 @@ GitHub is the work-product layer (plan, review, execution). A linked Linear tick
 
 Accepts `5`, `#5`, or a full issue URL (extract number + repo).
 
-**Repo resolution** (priority order): `--repo` flag > primary repo declared in CLAUDE.md > git remote of cwd. If none resolve, ask the user for `--repo <owner/repo>`.
+**Repo resolution** (priority order): `--repo` flag > repo extracted from a full issue URL > primary repo declared in CLAUDE.md > git remote of cwd. If none resolve, ask the user for `--repo <owner/repo>`.
+
+The URL-derived repo must outrank CLAUDE.md and the git remote — otherwise `https://github.com/owner/other-repo/issues/5` silently fetches issue 5 from a different repository. If `--repo` and the URL disagree, don't pick one: report the conflict and ask which the user meant.
 
 ## Flags
 
@@ -55,7 +57,7 @@ If `--linear <ID>` is passed, or the issue body links a Linear ticket (e.g. `lin
 
    Repeat with `cursor=<endCursor>` while `hasNextPage` is true. `number`/`title`/`state` alone can't support per-sub-issue acceptance criteria — for each sub-issue in the full paginated set, fetch `gh issue view <sub-issue-number> --repo <repo> --json body,comments` before planning. If sub-issues exist, treat the parent as an orchestration index: list them, derive per-sub-issue acceptance criteria from each fetched body/comments, and plan one branch+PR per sub-issue in `--dev`. Empty result = single-issue flow, not an error.
 3. Assess complexity: **Trivial** (single file, obvious fix) → ask "want me to just fix it and open a PR?"; **Standard** (2-5 files, clear requirements) → discovery + questions; **Complex** (multi-file, architectural, ambiguous, or has sub-issues) → full discovery, launching 2-3 parallel `Explore` agents (feature area / existing patterns / architecture-integration points for complex).
-4. Post one structured comment on the issue: Understanding (cite Linear guidance if used), Sub-Issues checklist w/ acceptance criteria, Codebase Analysis (files to modify / patterns to follow / data sources), Questions, Estimated Complexity. If there are no open questions, say so and offer to post the finalized spec immediately.
+4. Draft one structured comment: Understanding (cite Linear guidance if used), Sub-Issues checklist w/ acceptance criteria, Codebase Analysis (files to modify / patterns to follow / data sources), Questions, Estimated Complexity. **Show the full draft to the user and wait for explicit approval before posting it.** Posting notifies every subscriber and publishes the codebase analysis, so it's an outbound side effect, not a read — same approval gate as `gdoc-review` and `slack-thread-writer`. Once approved, post it with `gh issue comment` and report the comment URL. If there are no open questions, say so and offer to post the finalized spec immediately (also on approval).
 5. Tell the user: discuss on the issue, say "lock spec" when settled, then run `--dev`.
 
 ## Locking the spec

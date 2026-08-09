@@ -37,6 +37,8 @@ For every `<root>/*/SKILL.md` under those roots:
 
 6. **Unique across all skill roots in the repo.** A name collision across `.claude/skills/`, `.codex/skills/`, `.agents/skills/`, or between a project root and a merged/global root gets silently auto-suffixed (`name2`) by Blocks — flag collisions rather than relying on that.
 
+   The command below only sees this repo's three roots. It cannot see dashboard-defined skills, plugin skills, or another global-config repo merged into the same session, so **a clean result does not prove the slash command is unique platform-wide** — it only rules out a repo-local collision. Report it that way.
+
    ```bash
    for root in .claude/skills .codex/skills .agents/skills; do
      [ -d "$root" ] && find "$root" -mindepth 2 -maxdepth 2 -name SKILL.md -exec dirname {} \;

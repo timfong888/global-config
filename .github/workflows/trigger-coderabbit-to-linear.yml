@@ -1,0 +1,14 @@
+# Fires whenever an AI review bot (CodeRabbit or Sourcery) reviews a PR in this repo.
+# Uses the LINEAR_API secret stored in this repo's settings.
+
+name: AI Review Bot → Linear (global-config)
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  coderabbit-to-linear:
+    uses: ./.github/workflows/coderabbit-to-linear.yml
+    secrets:
+      LINEAR_API: ${{ secrets.LINEAR_API }}

@@ -32,7 +32,8 @@ Decide which of four modes the ask wants, by its **end deliverable**:
 | **research** | "What's true / what's out there?" | Cited findings — themes, evidence, gaps |
 | **plan** | "What should we do / how should this be structured?" | A structure — outline, options + trade-offs, recommendation, step sequence (NOT finished prose) |
 | **write** | "Here is the finished thing to read." | Polished prose for a specific audience |
-| **image** | "Show me the thing, edited from my photo." | Edited images — additive edits of a supplied photo, typically ≥2 different angles (a corresponding mock-up per angle when photos differ significantly) |
+| **image** | "Show me the thing, edited from my photo." | Edited images — additive edits of a supplied photo (interior design compositing via `photo-compositing` skill) |
+| **ui-mockup** | "Show me what this screen/UI should look like." | High-fidelity mobile/web UI screenshots embedded inline in Linear (via `mobile-mockups` skill) |
 
 A request can chain (research → plan → write); **label it by the final
 deliverable** and do the upstream phases as needed to get there.
@@ -52,6 +53,7 @@ Mode label IDs (group `output-mode` = `806cc6b2-8ce0-41da-87d7-0a2a2d5a893e`):
 - plan `76832ec1-f65e-41e9-8e74-1effb165dc52`
 - write `e1e58446-ec85-4193-be25-b98f3a335869`
 - image `cf7ba974-fd72-48b4-aa02-bb379d2f010e`
+- ui-mockup (label to be created — set `mode › ui-mockup` on a ticket to force this mode; infer it from description phrases like "mockup", "UI design", "screen design", "what should the UI look like")
 
 ### Scoping & assumptions (per SAT-362)
 
@@ -111,10 +113,10 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
   assumed — fabricating one is exactly the hallucination this mode exists to prevent, so
   the no-hallucinate rule wins over the never-block default here.
 - **Route to the `photo-compositing` skill.** It's built for exactly this: it feeds the
-  real photograph into Gemini's multimodal image *editing* API and makes **additive
-  edits only** — preserving the existing scene (walls, perspective, lighting, permanent
-  fixtures) and **not hallucinating** new structure. Respecting and editing the supplied
-  photo, rather than regenerating it, is the whole point of the mode.
+  real photograph into fal.ai's image editing API (`fal-ai/nano-banana-2/edit` by default)
+  and makes **additive edits only** — preserving the existing scene (walls, perspective,
+  lighting, permanent fixtures) and **not hallucinating** new structure. The skill contains
+  the full prompt template, model selection table, and quality checklist.
 - **One edited output per supplied angle — never a fabricated viewpoint.** The multiple
   angles come from the **input**, not from inventing geometry: edit *each* supplied photo
   into its own mock-up, so N source photos → N edited outputs. Because a genuine second
@@ -133,6 +135,20 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
   preserved and nothing was hallucinated before proceeding), host durably, attach the
   durable URL to the issue, and report the image cost. This mode is an
   image-capability consumer — it doesn't reinvent those stages.
+
+**ui-mockup** (the deliverable is a generated mobile/web UI design):
+- **Route to the `mobile-mockups` skill.** This mode generates high-fidelity UI screens
+  as full-size PNGs embedded inline in Linear comments — no clicking required to see them.
+  The skill covers HTML template, Playwright rendering at retina resolution, multi-variant
+  loops, and the inline comment delivery protocol.
+- **No source photo required** — UI mockups are generated from scratch based on the
+  ticket description, existing app theme, and any design references the ticket provides.
+- **Coding-agent friendly** — every mockup comes with a design spec table (colors, font
+  sizes, spacing, radius, shadows) so a coding agent can implement it directly.
+- **Check for an existing theme file.** Before writing the HTML, look for
+  `constants/theme.ts`, `tailwind.config.js`, or equivalent in the referenced repo.
+  Use the exact hex values from the theme file if readable; otherwise establish a coherent
+  palette and document it in the comment.
 
 ## 3. Size the output → choose destination
 
@@ -157,6 +173,9 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
   each edited image is **attached to the Linear issue** via the `capability-image` skill
   pipeline (durable-hosted attachment). The result comment describes what was edited and
   links the attachments.
+- **UI mockup** → PNG screenshots embedded inline via the `mobile-mockups` skill delivery
+  protocol. Images appear directly in Linear comments without clicking. A design spec
+  table follows each image set.
 
 ## 4. Report & hand back (tick step 7)
 
@@ -166,6 +185,7 @@ keeps it throughout, per B6 in `linear-agent-poll`).
 - **Short** → `✅ Done — <one-line framing>` + the full draft/answer inline. `(by Claude)`. State → In Review.
 - **Long** → `✅ Done — <3–5 line summary>. Full <research|plan|draft>: <Markdown link to the vault note>.` `(by Claude)`. State → In Review.
 - **Image** → `✅ Done — <what was edited, from which photo, how many angles>.` + the attached edited images. `(by Claude)`. State → In Review.
+- **UI mockup** → `✅ Done — <screen name>, <N> variant(s).` + embedded PNG mockups + design spec table inline. `(by Claude)`. State → In Review.
 - **Blocked / missing input** → `> question: <what you need>`, set **Urgent**, state → In Review, end the tick.
 
 Render any cross-issue reference as a clickable Markdown link —

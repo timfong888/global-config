@@ -11,17 +11,33 @@ Primary mechanism: the **googleapis** Node SDK with OAuth (direct API, no MCP ho
 
 - Google Cloud project with Sheets API enabled → OAuth client ID (Desktop app) → downloaded as `credentials.json`.
 - `npm install googleapis @google-cloud/local-auth`
-- Conventions used by the auth module: `SCOPES = ['https://www.googleapis.com/auth/spreadsheets']`. Default `CREDENTIALS_PATH`/`TOKEN_PATH` to `${XDG_CONFIG_HOME:-$HOME/.config}/gsheets/credentials.json` and `.../gsheets/token.json` — outside the project tree, so "never commit" isn't the only thing standing between these files and getting packaged or shared by accident. Create the dir with `mkdir -p -m 700` and write both files `chmod 600`. Use a project-local path only if the user explicitly confirms they want it there, and still gitignore it. First run opens a browser for consent and writes `token.json`; every run after that reuses it (googleapis auto-refreshes). Reuse one `auth.js` module per project:
+- **Scope per operation, not one token for everything.** Reads use
+  `spreadsheets.readonly`; only mutations request `spreadsheets`, and only after the user approves
+  write access for this task. Where the work is confined to files the user picks or this code
+  creates, `drive.file` is narrower than either and should be preferred. Keep a separate token file
+  per scope set so a read never silently reuses a write-capable token:
+
+  ```javascript
+  const SCOPES = {
+    read:  ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    write: ['https://www.googleapis.com/auth/spreadsheets'],
+    file:  ['https://www.googleapis.com/auth/drive.file'],
+  };
+  ```
+
+- Default `CREDENTIALS_PATH`/`TOKEN_PATH` to `${XDG_CONFIG_HOME:-$HOME/.config}/gsheets/credentials.json` and `.../gsheets/token.json` — outside the project tree, so "never commit" isn't the only thing standing between these files and getting packaged or shared by accident. Create the dir with `mkdir -p -m 700` and write both files `chmod 600`. Use a project-local path only if the user explicitly confirms they want it there, and still gitignore it. First run opens a browser for consent and writes `token.json`; every run after that reuses it (googleapis auto-refreshes). Reuse one `auth.js` module per project:
 
 ```javascript
 const { authenticate } = require('@google-cloud/local-auth');
 const { google } = require('googleapis');
 
-async function authorize() {
-  let client = await loadSavedCredentialsIfExist(); // reads TOKEN_PATH, google.auth.fromJSON(...)
+// mode: 'read' | 'write' | 'file'. Token path is per-mode, so a read cannot pick up
+// a write-capable token that an earlier mutation happened to leave behind.
+async function authorize(mode = 'read') {
+  let client = await loadSavedCredentialsIfExist(mode); // reads TOKEN_PATH(mode), google.auth.fromJSON(...)
   if (client) return client;
-  client = await authenticate({ scopes: SCOPES, keyfilePath: CREDENTIALS_PATH });
-  if (client.credentials) await saveCredentials(client); // writes refresh_token to TOKEN_PATH
+  client = await authenticate({ scopes: SCOPES[mode], keyfilePath: CREDENTIALS_PATH });
+  if (client.credentials) await saveCredentials(client, mode); // writes refresh_token to TOKEN_PATH(mode)
   return client;
 }
 ```
@@ -29,11 +45,13 @@ async function authorize() {
 ## Operations
 
 ```javascript
-const sheets = google.sheets({ version: 'v4', auth: await authorize() });
-
 // Read
-const { data } = await sheets.spreadsheets.values.get({ spreadsheetId, range: 'Sheet1!A1:E100' });
+const ro = google.sheets({ version: 'v4', auth: await authorize('read') });
+const { data } = await ro.spreadsheets.values.get({ spreadsheetId, range: 'Sheet1!A1:E100' });
 // data.values -> array of row arrays; trailing empty cells are omitted, not padded
+
+// Everything below mutates, so it needs the write scope — confirm with the user first.
+const sheets = google.sheets({ version: 'v4', auth: await authorize('write') });
 
 // Overwrite a range
 await sheets.spreadsheets.values.update({

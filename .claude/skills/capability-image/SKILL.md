@@ -37,36 +37,30 @@ Image generation runs through **Composio**:
 Both return a **hosted URL only** (no local bytes, and the URL is short-lived), which
 is exactly why the download and host stages below exist.
 
-### Model priority (SAT-531)
+### Model priority
 
-Prioritize **open-weight, commercially-safe models** over Gemini `nano-banana`, per the
-[SAT-531](https://linear.app/sophia-xyz/issue/SAT-531) research
-(`~/Documents/remoteObsidian1025/02-AI-Tools/linear-agent-system/SAT-531-open-model-alternatives.md`
-has the full comparison/sourcing; the decision itself is captured here so it's the live
-default, not something a worker has to go dig up):
+Always verify the exact endpoint ID before calling — fal.ai renames and versions models.
+Run `FAL_AI_GET_MODELS` if unsure. The IDs below are correct as of 2026-08.
 
-- **Editing / compositing an existing photo** (the harder, load-bearing case —
-  SAT-521's identity-preserving real-photo edits): default to **Qwen-Image-Edit-2511**
-  (Apache 2.0) via `fal_ai` (`fal-ai/qwen-image-2/edit` or the current equivalent
-  endpoint — confirm the exact model id at call time, fal.ai renames/versions these).
-  Only fall back to Gemini `nano-banana` if Qwen-Image-Edit-2511 errors out, isn't
-  reachable, or the ticket calls for it specifically.
-- **Pure text-to-image generation** (no existing photo to edit): default to
-  **Qwen-Image 2.0** (Apache 2.0) unconditionally. Use **FLUX.1 [schnell]** (also
-  Apache 2.0) instead only when the ticket explicitly calls for speed/predictability
-  over the small quality edge — that's an opt-in override, not a second default a
-  worker picks between on its own.
-- Both are reached through the **existing** `fal_ai` Composio tool — no new
-  integration, just a different model argument on the same call.
-- **Licensing gate:** only Apache-2.0 (or equivalently unrestricted) open-weight
-  models are defaults. **FLUX.1 Kontext [dev]** benchmarks well but ships under BFL's
-  non-commercial license — treat it as an evaluated fallback only, gated on either
-  accepting that license risk or budgeting for BFL's paid commercial license; never
-  default to it silently.
-- This is a **model-choice change, not a billing fix** — every model above, open or
-  not, is still hosted and billed through the same `fal_ai` account. If `fal_ai` calls
-  fail with a billing/lock error, that's the SAT-521/SAT-530 balance issue, not a
-  reason to fall back to Gemini.
+- **Editing / compositing an existing photo**: default to **`fal-ai/flux-kontext/dev`**
+  (FLUX.1 Kontext — purpose-built for scene-preserving photo edits; BFL non-commercial
+  license, appropriate for personal/Satchel use). For commercial or production outputs
+  use **`fal-ai/flux-kontext/pro`** (BFL commercial license). If Kontext is unavailable,
+  fall back to **`fal-ai/qwen-image-2/edit`** (Qwen-Image-Edit-2511, Apache 2.0). Use
+  `fal-ai/nano-banana-2/edit` (Google Gemini-based, proprietary) only as a last resort —
+  it works but has weaker structure preservation than Kontext. For the full prompting
+  guide and quality checklist, load the **`photo-compositing`** skill.
+  Fall back to Gemini `GEMINI_GENERATE_IMAGE` only when fal.ai tools are entirely
+  unavailable.
+- **Pure text-to-image generation** (no source photo): use **`fal-ai/flux/schnell`**
+  (Apache 2.0, fast) for standard generation, or **`fal-ai/flux/dev`** (Apache 2.0,
+  higher quality, slower) when the ticket calls for a high-quality result.
+- All models above are billed through the connected `fal_ai` Composio account. If calls
+  fail with a billing or rate-limit error, that's an account issue — do not silently fall
+  back to Gemini as a billing workaround.
+- **For photo-compositing specifically** (interior design, product placement in real
+  photos), load the dedicated **`photo-compositing`** skill — it provides detailed
+  prompting guidance and a quality checklist optimized for that use case.
 
 ## The pipeline
 
