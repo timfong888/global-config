@@ -24,10 +24,14 @@ Bash, Read, Grep, Glob. `gh` CLI required only for `full` mode's issue creation.
 ```bash
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$PROJECT_ROOT"
-EXCLUDE_DIRS='node_modules,.next,dist,build,out,coverage,.git'
+# GNU grep takes ONE glob per --exclude-dir. A comma-joined list is a single glob that
+# matches no directory, so it silently excludes nothing — pass the array, never a
+# comma-separated string.
+EXCLUDE=(--exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist \
+         --exclude-dir=build --exclude-dir=out --exclude-dir=coverage --exclude-dir=.git)
 ```
 
-Run every scan command below from `$PROJECT_ROOT` (not the invocation directory) so a subdirectory invocation still audits the whole project. Warn (don't block) if no `next.config.{js,ts,mjs}` is found. Every recursive `grep -r` in this skill must add `--exclude-dir=$EXCLUDE_DIRS` (or use `git grep`, which only scans tracked files) — without it, generated and dependency code dominates the scan and produces false findings.
+Run every scan command below from `$PROJECT_ROOT` (not the invocation directory) so a subdirectory invocation still audits the whole project. Warn (don't block) if no `next.config.{js,ts,mjs}` is found. Every recursive `grep -r` in this skill must expand `"${EXCLUDE[@]}"` (or use `git grep`, which only scans tracked files) — without it, generated and dependency code dominates the scan and produces false findings.
 
 `full` mode only, also resolve the repo before scanning:
 
@@ -95,10 +99,16 @@ Filing or editing issues is an outbound side effect, not a read. After scoring, 
 
 ### GitHub issue per finding (idempotent)
 
-Only after approval. Every issue carries a stable marker (`rule-id` + `file:line`) so re-running the audit updates instead of duplicating:
+Only after approval. Every issue carries a marker so re-running the audit updates instead of
+duplicating. The marker must **not** contain the line number — any edit earlier in the file shifts
+it and the next audit files a duplicate for the same finding. Fingerprint the rule, the file, and
+the normalized offending snippet instead (collapse whitespace, drop the trailing comma/semicolon),
+and keep the line only as display data inside the body:
 
 ```bash
-MARKER="<!-- perf-audit: {rule-id} @ {file}:{line} -->"
+FINGERPRINT=$(printf '%s\n%s\n%s' "$RULE_ID" "$FILE" "$NORMALIZED_SNIPPET" \
+  | shasum -a 256 | cut -c1-12)
+MARKER="<!-- perf-audit: $RULE_ID @ $FILE #$FINGERPRINT -->"
 EXISTING=$(gh issue list --repo "$REPO" --state all --search "\"$MARKER\" in:body" --json number -q '.[0].number')
 ```
 
@@ -118,7 +128,7 @@ execute or truncate. The quoted `'EOF'` delimiter below disables expansion insid
 ```bash
 BODY=$(mktemp)
 cat > "$BODY" <<'EOF'
-<!-- perf-audit: {rule-id} @ {file}:{line} -->
+<!-- perf-audit: {rule-id} @ {file} #{fingerprint} -->
 ## Rule Violated
 **Category:** {category}  **Rule:** {rule-id}  **Impact:** {CRITICAL|HIGH|MEDIUM|LOW}
 ## Location
@@ -152,11 +162,13 @@ Rough, environment-dependent reference values only (bundler, package version, an
 | ethers | 150-250ms | consider `viem` |
 
 ```bash
-grep -rn --exclude-dir=$EXCLUDE_DIRS "from 'recharts'\|from 'lodash'\|from '@mui/material'\|from 'date-fns'\|from '@heroicons/react'\|from 'lucide-react'" --include=*.{ts,tsx,js,jsx}
-grep -rn --exclude-dir=$EXCLUDE_DIRS "import.*Chart\|import.*Editor\|import.*Map\|import.*PDF" --include=*.{tsx,jsx} | grep -v "next/dynamic"
-grep -rn --exclude-dir=$EXCLUDE_DIRS "dynamic(" --include=*.{tsx,jsx} | wc -l
+grep -rn "${EXCLUDE[@]}" "from 'recharts'\|from 'lodash'\|from '@mui/material'\|from 'date-fns'\|from '@heroicons/react'\|from 'lucide-react'" --include=*.{ts,tsx,js,jsx}
+grep -rn "${EXCLUDE[@]}" "import.*Chart\|import.*Editor\|import.*Map\|import.*PDF" --include=*.{tsx,jsx} | grep -v "next/dynamic"
+grep -rn "${EXCLUDE[@]}" "dynamic(" --include=*.{tsx,jsx} | wc -l
 grep -rn "optimizePackageImports" next.config.*
 ```
+
+Every hit above is a **candidate**, not a finding — see the verification rule under Mode: rerender, which applies to these scans too.
 
 Dynamic-import candidates: charts, rich-text editors, PDF viewers, maps, heavy modals.
 
@@ -181,16 +193,25 @@ Report: `Library | Files | Est. Impact | Priority` table, plus `Component | File
 ## Mode: rerender
 
 ```bash
-grep -rn --exclude-dir=$EXCLUDE_DIRS "\.map(\|\.filter(\|\.reduce(\|\.sort(" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
-grep -rn --exclude-dir=$EXCLUDE_DIRS "Object\.keys\|Object\.values\|Object\.entries" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
-grep -rn --exclude-dir=$EXCLUDE_DIRS "onClick={() =>\|onChange={() =>\|onSubmit={() =>" --include=*.{tsx,jsx}
-grep -rn --exclude-dir=$EXCLUDE_DIRS "const \[.*\] = useState" --include=*.{ts,tsx,js,jsx} -A 2
-grep -rn --exclude-dir=$EXCLUDE_DIRS "useEffect.*set" --include=*.{ts,tsx,js,jsx}
-grep -rn --exclude-dir=$EXCLUDE_DIRS "useSelector\|useContext\|useStore" --include=*.{ts,tsx,js,jsx}
-grep -rn --exclude-dir=$EXCLUDE_DIRS "useMemo(\|useCallback(\|React\.memo\|memo(" --include=*.{ts,tsx,js,jsx} | wc -l   # existing coverage
+grep -rn "${EXCLUDE[@]}" "\.map(\|\.filter(\|\.reduce(\|\.sort(" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
+grep -rn "${EXCLUDE[@]}" "Object\.keys\|Object\.values\|Object\.entries" --include=*.{ts,tsx,js,jsx} | grep -v "useMemo"
+grep -rn "${EXCLUDE[@]}" "onClick={() =>\|onChange={() =>\|onSubmit={() =>" --include=*.{tsx,jsx}
+grep -rn "${EXCLUDE[@]}" "const \[.*\] = useState" --include=*.{ts,tsx,js,jsx} -A 2
+grep -rn "${EXCLUDE[@]}" "useEffect.*set" --include=*.{ts,tsx,js,jsx}
+grep -rn "${EXCLUDE[@]}" "useSelector\|useContext\|useStore" --include=*.{ts,tsx,js,jsx}
+grep -rn "${EXCLUDE[@]}" "useMemo(\|useCallback(\|React\.memo\|memo(" --include=*.{ts,tsx,js,jsx} | wc -l   # existing coverage
 ```
 
-Flag:
+**These greps produce candidates, not findings.** A line-oriented match can't establish the
+relationship each rule is about: `| grep -v "useMemo"` only inspects the matching line, so a
+`useMemo(` opened two lines above reads as missing, and the patterns also hit utilities, event
+handlers, and server-only modules that never render. Before scoring a candidate or filing an issue,
+Read the surrounding code (or use an AST query — `ast-grep`, or the TS compiler API) and confirm all
+three: the file is a client/render path, the expression evaluates during render rather than inside a
+callback or module scope, and no enclosing memoization already covers it. Drop anything you can't
+confirm; don't file it as unverified.
+
+Flag (once verified):
 - Expensive `.map/.filter/.reduce/.sort` or `Object.keys/values/entries` in render, unmemoized → wrap in `useMemo`.
 - Inline arrow functions passed as props (`onClick={() => ...}`) to memoized children → `useCallback`.
 - State derived from other state via `useEffect`+`setState` → compute inline or via `useMemo` instead of storing.

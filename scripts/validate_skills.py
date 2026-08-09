@@ -7,7 +7,8 @@ into the `/<skill-name>` slash command. When two sources define the same name it
 silently appends a number (`review-security2`), so duplicate names are a real bug.
 
 Checks, per skill directory:
-  1. The directory is not a broken symlink, and SKILL.md exists and is non-empty.
+  1. The directory is not a broken symlink and does not resolve outside this
+     repo, and SKILL.md exists and is non-empty.
   2. The file opens with a `---` fenced YAML frontmatter block that closes.
   3. Frontmatter is a flat mapping of `key: value` scalars that parses. Inline
      collections, block scalars, nesting, and unbalanced quotes are rejected.
@@ -51,6 +52,16 @@ RETIRED = (
     (r"\bpipedream\b", "the pipedream MCP servers are retired"),
     (r"\bgreptile\b", "Greptile was retired 2026-05-27; use the CodeRabbit CLI"),
 )
+
+
+def within_repo(path: Path) -> bool:
+    """True when an already-resolved path is REPO_ROOT or lives under it.
+
+    A symlink committed to the repo can point anywhere. This tool runs as a
+    pre-merge gate, so a symlinked skill must not make it read a SKILL.md from
+    outside the workspace.
+    """
+    return path == REPO_ROOT or REPO_ROOT in path.parents
 
 
 class Findings:
@@ -120,6 +131,13 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str | None]:
             if ": " in value or value.endswith(":"):
                 return None, (f"line {lineno}: `{key}` contains \": \" — wrap the whole "
                               "value in quotes so it parses as text, not a mapping")
+            # An unquoted `#` at the start of the value or after whitespace opens a
+            # YAML comment: `description: # x` is null to PyYAML but would look like
+            # a non-empty string here, so the required-field check would pass on an
+            # effectively empty description.
+            if re.search(r"(?:\A|\s)#", value):
+                return None, (f"line {lineno}: `{key}` has an unquoted `#`, which YAML "
+                              "reads as a comment — quote the whole value to keep it")
             if value.count('"') % 2:
                 return None, f"line {lineno}: unbalanced \" quote in `{key}`"
         fields[key] = value
@@ -149,9 +167,14 @@ def check_skill(skill_dir: Path, out: Findings) -> str | None:
                              "(lowercase letters, digits, hyphens)")
 
     skill_md = skill_dir / "SKILL.md"
-    if skill_md.is_symlink() and not skill_md.exists():
-        out.error(skill_md, "broken symlink — target does not exist")
-        return None
+    if skill_md.is_symlink():
+        if not skill_md.exists():
+            out.error(skill_md, "broken symlink — target does not exist")
+            return None
+        if not within_repo(skill_md.resolve()):
+            out.error(skill_md, "symlink resolves outside the repository — "
+                                "refusing to read it")
+            return None
     if not skill_md.is_file():
         out.error(skill_dir, "no SKILL.md — Blocks will not discover this skill")
         return None
@@ -214,11 +237,17 @@ def selftest() -> int:
         # rather than behaving differently depending on whether PyYAML is installed.
         "bare colon-space": "---\nname: x\ndescription: Use for a: b mappings.\n---\n",
         "bare trailing colon": "---\nname: x\ndescription: Triggers:\n---\n",
+        # YAML reads both of these as comments, so the value is null (or truncated)
+        # to a real parser even though the raw line looks non-empty.
+        "comment-only value": "---\nname: x\ndescription: # nothing here\n---\n",
+        "inline comment": "---\nname: x\ndescription: A thing. # trailing note\n---\n",
     }
     good = {
         "plain": "---\nname: x\ndescription: A thing. Use when Y.\n---\n# x\n",
         "quoted": '---\nname: x\ndescription: "A: thing"\n---\n# x\n',
         "colon without space": "---\nname: x\ndescription: Ratio is 3:1 here.\n---\n# x\n",
+        "hash without space": "---\nname: x\ndescription: Use tag#1 here.\n---\n# x\n",
+        "quoted hash": '---\nname: x\ndescription: "A thing # kept"\n---\n# x\n',
     }
 
     failures = []
@@ -258,8 +287,15 @@ def main(argv: list[str]) -> int:
         for skill_dir in entries:
             # A skill symlinked into a second root is one skill wearing two hats,
             # not a collision — dedupe on the resolved path before name checking.
+            # Reject an escaping symlink before that, so neither the dedupe set
+            # nor any later read ever sees a path outside the workspace.
             if skill_dir.exists():
                 target = skill_dir.resolve()
+                if not within_repo(target):
+                    out.checked += 1
+                    out.error(skill_dir, "symlink resolves outside the repository "
+                                         f"({target}) — refusing to read it")
+                    continue
                 if target in visited:
                     continue
                 visited.add(target)

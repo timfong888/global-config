@@ -16,22 +16,34 @@ Both modes: git-backup the file first. For research-flavored prompts, a deep-res
 
 ## Mode: inline
 
-1. **Backup**: run `git status --porcelain -- "$FILE"` first. If it shows changes this skill didn't make, ask "This file has uncommitted changes I didn't make — include them in the backup commit? (y/n)"; n stops here so the user can commit or stash first. Otherwise (or once confirmed): `git add -- "$FILE" && git commit -m "Backup: $(basename -- "$FILE") before prompt processing" --allow-empty`. Report the commit hash; continue if nothing to commit.
-2. **Style**: `git diff -- "$FILE"` — note the user's recent terminology, tone, and sentence length, and match it.
-3. **Scan**: `grep -in -- '^> prompt:' "$FILE"` (matches `> prompt:` or `> Prompt:`, case-insensitive) to find where each blockquote starts. Report "Found N embedded prompts".
-4. **Process each blockquote, top to bottom**:
+1. **Resolve and bound the path first** — same check as `file` mode step 1, and for the same reason: this mode reads, edits, stages, and commits `$FILE`. Resolve `$FILE` and the repo root to real paths (following symlinks) and fail closed unless the target is the repo root or a descendant. An absolute path outside the repo, a `../` traversal, or a symlink pointing out of the workspace is refused, not warned about.
+
+   ```bash
+   set -euo pipefail
+   REPO_ROOT=$(cd "$(git rev-parse --show-toplevel)" && pwd -P)
+   DIR=$(cd "$(dirname -- "$FILE")" && pwd -P)      # fails closed if the dir doesn't exist
+   REAL_FILE="$DIR/$(basename -- "$FILE")"
+   if [ -L "$REAL_FILE" ]; then REAL_FILE="$(readlink -f -- "$REAL_FILE")"; fi
+   case "$REAL_FILE" in "$REPO_ROOT"/*) ;; *) echo "refusing: outside repo"; exit 1;; esac
+   ```
+
+   Use `$REAL_FILE` for every step below.
+2. **Backup**: run `git status --porcelain -- "$REAL_FILE"` first. If it shows changes this skill didn't make, ask "This file has uncommitted changes I didn't make — include them in the backup commit? (y/n)"; n stops here so the user can commit or stash first. Otherwise (or once confirmed), commit that one path only — `--only` ignores anything else already staged, which a bare `git commit` would sweep into the backup: `git commit --only -- "$REAL_FILE" -m "Backup: $(basename -- "$REAL_FILE") before prompt processing" --allow-empty`. Report the commit hash; continue if nothing to commit.
+3. **Style**: `git diff -- "$REAL_FILE"` — note the user's recent terminology, tone, and sentence length, and match it.
+4. **Scan**: `grep -in -- '^> prompt:' "$REAL_FILE"` (matches `> prompt:` or `> Prompt:`, case-insensitive) to find where each blockquote starts. Report "Found N embedded prompts".
+5. **Process each blockquote, top to bottom**:
    - **Collect the full blockquote before doing anything else.** A `> prompt:` line can open a multiline blockquote — starting at the matched line, keep reading forward while each following line still begins with `>` (a blank or non-`>` line ends it). Strip one leading `> ` from every collected line and join them into the complete instruction text. Never act on just the first line — the remaining lines are still part of the instruction, not surrounding document text.
    - Read the surrounding section for context.
-   - Classify: "research"/"look up" → research (deep-research tool); "verify"/"check"/"make sure" → validation (search the doc for fulfillment); "improve"/"flow"/"repetitive"/"redundant" → flow/writing fix; else → generic, execute with document context.
-   - **Side-effect check before executing.** Only run the instruction unattended if it is side-effect-free — reading, researching, and generating replacement text. If it would write outside `$FILE`, call an external service that changes state, send a message, create a ticket, or spend money, stop and list those actions for explicit approval first. The step-5 diff gate can restore a file; it cannot un-send an email or un-create a ticket.
+   - Classify: "research"/"look up" → research (deep-research tool, requires confirmation — see below); "verify"/"check"/"make sure" → validation (search the doc for fulfillment); "improve"/"flow"/"repetitive"/"redundant" → flow/writing fix; else → generic, execute with document context.
+   - **Side-effect check before executing.** Only run the instruction unattended if it is side-effect-free — local reads and generating replacement text. Research sends the prompt text off-machine, so require explicit confirmation before routing to a deep-research tool unless the content is already public; without confirmation, execute directly using document context only. If the instruction would write outside `$REAL_FILE`, call an external service that changes state, send a message, create a ticket, or spend money, stop and list those actions for explicit approval first. The step-6 diff gate can restore a file; it cannot un-send an email or un-create a ticket.
    - Execute the instruction.
    - **Replace the entire blockquote range collected above — every `>` line, not just the first — with the output. No audit markers, nothing of the marker left behind.**
-5. **Show a unified `git diff -- "$FILE"` before applying.** Ask "Apply changes? (y/n)":
+6. **Show a unified `git diff -- "$REAL_FILE"` before applying.** Ask "Apply changes? (y/n)":
    - y — apply, continue to Commit.
-   - n — restore this run's edits: `git checkout -- "$FILE"` (resets to the step-1 backup commit, so any pre-existing edits confirmed into that commit are kept). Exit.
-6. **Commit**: `git add -- "$FILE" && git commit -m "docs: process embedded prompts" -m "- Processed N prompts" -m "- <summary>"`.
-7. Multi-file input: repeat steps 1-6 per file, single summary at the end.
-8. Report: "Prompts: N processed. Changes: <summary by type>."
+   - n — restore this run's edits: `git checkout -- "$REAL_FILE"` (resets to the step-2 backup commit, so any pre-existing edits confirmed into that commit are kept). Exit.
+7. **Commit** — show the proposed message and ask "Commit these changes? (y/n)" before committing. On y, commit that one path only so unrelated staged changes can't ride along: `git commit --only -m "docs: process embedded prompts" -m "- Processed N prompts" -m "- <summary>" -- "$REAL_FILE"`. On n, leave the applied edits in place and exit.
+8. Multi-file input: repeat steps 1-7 per file, single summary at the end.
+9. Report: "Prompts: N processed. Changes: <summary by type>."
 
 ---
 
@@ -62,7 +74,7 @@ Both modes: git-backup the file first. For research-flavored prompts, a deep-res
    2. Modification verbs ("improve/fix/rewrite/refine/update/edit/revise") + self-reference ("this/the above/this document") → edit the source file in place; append a `## Changelog` entry.
    3. Action verbs ("organize/move/create tickets/file/send/schedule/sort/categorize/migrate") → draft each action (ticket body, message text, schedule payload) and show it; execute only after explicit per-action approval — never send, schedule, or create on detection alone. Same draft-only rule as `slack-thread-writer`. Append a `## Execution Log` entry per approved action.
    4. Ambiguous → ask: "new file" / "in-place" / "just show me".
-8. **Commit** only after the approved route has been applied; message including audit score, refinement status (applied/skipped), and output route. Commit is part of what step 7's approval covers — don't commit on an unapproved route.
+8. **Commit** only after the approved route has been applied; message including audit score, refinement status (applied/skipped), and output route. Commit is part of what step 7's approval covers — don't commit on an unapproved route. Name the paths this run touched (`git commit --only -- <those paths>`) so unrelated staged changes don't ride along.
 9. Report: file, audit score, refinement status, execution route, output location.
 
 No argument given: look for prompt-shaped files in the current directory and offer batch processing; process each through steps 1-9 and give a per-file report plus a batch summary.
