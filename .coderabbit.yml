@@ -2,3 +2,6 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+  instructions: |
+    At the end of your review walkthrough summary, always include this line verbatim:
+    "🔔 **Linear notification:** This review has triggered an automated @blocks agent notification on the linked Linear issue."

@@ -1,5 +1,5 @@
 # Reusable workflow: post a @blocks comment on the Linear issue linked to a PR
-# when CodeRabbit submits its review.
+# when CodeRabbit or Sourcery submits its review.
 #
 # Usage from any project repo:
 #
@@ -17,8 +17,12 @@
 #   The workflow extracts the first token matching [A-Z]+-[0-9]+ from the PR
 #   branch name, e.g. blocks/SAT-660-title → SAT-660.
 #   Branches that carry no Linear identifier are silently skipped.
+#
+# Supported review bots:
+#   - coderabbitai[bot]
+#   - sourcery-ai[bot]
 
-name: CodeRabbit Review → Linear
+name: AI Review Bot → Linear
 
 on:
   workflow_call:
@@ -30,8 +34,10 @@ jobs:
   notify-linear:
     name: Post @blocks comment to Linear
     runs-on: ubuntu-latest
-    # Only run when CodeRabbit posts a review — ignore all other reviewers.
-    if: github.event.review.user.login == 'coderabbitai[bot]'
+    # Only run when a known AI review bot posts a review.
+    if: |
+      github.event.review.user.login == 'coderabbitai[bot]' ||
+      github.event.review.user.login == 'sourcery-ai[bot]'
 
     steps:
       - name: Extract Linear issue ID from branch name
@@ -52,28 +58,37 @@ jobs:
       - name: Post @blocks comment to Linear
         if: steps.extract.outputs.found == 'true'
         env:
-          LINEAR_API_KEY: ${{ secrets.LINEAR_API }}
-          LINEAR_ID:      ${{ steps.extract.outputs.linear_id }}
-          PR_NUMBER:      ${{ github.event.pull_request.number }}
-          PR_URL:         ${{ github.event.pull_request.html_url }}
-          PR_TITLE:       ${{ github.event.pull_request.title }}
-          REVIEW_URL:     ${{ github.event.review.html_url }}
-          REVIEW_STATE:   ${{ github.event.review.state }}
-          REVIEW_BODY:    ${{ github.event.review.body }}
-          REPO:           ${{ github.repository }}
+          LINEAR_API_KEY:  ${{ secrets.LINEAR_API }}
+          LINEAR_ID:       ${{ steps.extract.outputs.linear_id }}
+          PR_NUMBER:       ${{ github.event.pull_request.number }}
+          PR_URL:          ${{ github.event.pull_request.html_url }}
+          PR_TITLE:        ${{ github.event.pull_request.title }}
+          REVIEW_URL:      ${{ github.event.review.html_url }}
+          REVIEW_STATE:    ${{ github.event.review.state }}
+          REVIEW_BODY:     ${{ github.event.review.body }}
+          REVIEWER_LOGIN:  ${{ github.event.review.user.login }}
+          REPO:            ${{ github.repository }}
         run: |
           python3 <<'PYTHON'
           import os, json, urllib.request, sys, textwrap
 
-          linear_id    = os.environ["LINEAR_ID"]
-          pr_number    = os.environ["PR_NUMBER"]
-          pr_url       = os.environ["PR_URL"]
-          pr_title     = os.environ["PR_TITLE"]
-          review_url   = os.environ["REVIEW_URL"]
-          review_state = os.environ["REVIEW_STATE"].lower()
-          review_body  = os.environ.get("REVIEW_BODY", "").strip()
-          repo         = os.environ["REPO"]
-          api_key      = os.environ["LINEAR_API_KEY"]
+          linear_id       = os.environ["LINEAR_ID"]
+          pr_number       = os.environ["PR_NUMBER"]
+          pr_url          = os.environ["PR_URL"]
+          pr_title        = os.environ["PR_TITLE"]
+          review_url      = os.environ["REVIEW_URL"]
+          review_state    = os.environ["REVIEW_STATE"].lower()
+          review_body     = os.environ.get("REVIEW_BODY", "").strip()
+          reviewer_login  = os.environ.get("REVIEWER_LOGIN", "AI reviewer")
+          repo            = os.environ["REPO"]
+          api_key         = os.environ["LINEAR_API_KEY"]
+
+          # Human-readable reviewer name
+          BOT_NAMES = {
+              "coderabbitai[bot]": "CodeRabbit",
+              "sourcery-ai[bot]":  "Sourcery",
+          }
+          reviewer_name = BOT_NAMES.get(reviewer_login, reviewer_login)
 
           # Map GitHub review state to a readable label
           state_label = {
@@ -88,17 +103,17 @@ jobs:
               review_body = review_body[:MAX_BODY].rstrip() + "\n\n*(review summary truncated — see full review at the link above)*"
 
           summary_section = (
-              f"\n\n---\n\n**CodeRabbit summary:**\n\n{review_body}"
+              f"\n\n---\n\n**{reviewer_name} summary:**\n\n{review_body}"
               if review_body else ""
           )
 
           body = textwrap.dedent(f"""\
-              @blocks CodeRabbit has completed its review on [PR #{pr_number}: {pr_title}]({pr_url}) in `{repo}`.
+              @blocks {reviewer_name} has completed its review on [PR #{pr_number}: {pr_title}]({pr_url}) in `{repo}`.
 
               **Review state:** {state_label}
               **Review:** {review_url}{summary_section}
 
-              Please review the CodeRabbit feedback and address any blocking comments before this branch is ready to merge.""")
+              Please review the {reviewer_name} feedback and address any blocking comments before this branch is ready to merge.""")
 
           # Blocks Linear user ID — ensures commentCreate fires a proper mention
           # notification (AppUserMentioned webhook) rather than plain text.
