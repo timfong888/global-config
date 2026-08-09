@@ -175,27 +175,9 @@ Render any cross-issue reference as a clickable Markdown link —
 
 ### Legibility rules — comments and descriptions (SAT-596)
 
-These apply to **every comment and ticket description** this profile writes. The reader
-is on a phone. Five bad screens is a failed handback.
-
-**Answer first.** Line 1 = the outcome or decision. The reader should be able to stop there.
-
-**One idea per bullet, ≤ 20 words.** If a bullet needs a sub-clause, it needs two bullets.
-N items → N bullets, never N items crammed into one run-on sentence.
-
-**Bold the 2–4 load-bearing words** in each bullet so a skim-reader catches the gist.
-Don't bold full sentences.
-
-**No inline walls of code or long paths.** A file path or URL that wraps mid-sentence
-breaks mobile layout — put it on its own line or behind a Markdown link.
-
-**Depth goes in the vault note, not the comment.** The comment is the glance; the link is
-the deep-dive. If a bullet needs more than 20 words to be accurate, the extra words belong
-in the linked note.
-
-**Target size: 5–8 short lines** for a handback comment. A research summary or plan
-outline that must be inline may run longer — but each *section* must still follow these
-rules, not just the opening.
+Canonical rules are in the global `CLAUDE.md` → Handback Rules → Legibility rules section.
+A research summary or plan outline that runs inline may be longer than 8 lines — but each
+*section* must still follow the per-bullet rules, not just the opening.
 
 **Bad example** (wall-of-text, buried lede, marathon sentence):
 

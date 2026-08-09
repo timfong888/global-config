@@ -25,7 +25,7 @@ This command is workspace-agnostic. Resolve these variables before doing anythin
 | `TEAM_KEY` | Team prefix for identifiers | `SAT` |
 | `WORKSPACE_SLUG` | Slug for cross-issue links `linear.app/<slug>/issue/<KEY>-###` | `sophia-xyz` |
 | `STATE_AGENT_QUEUE` | **The turn signal.** A dedicated `unstarted`-type team workflow state, positioned before Todo — an issue in this *exact* state is queued for the agent; nothing else means that. **Every workspace using this command must create its own "Agent Queue" team state** (Settings → Teams → \<team\> → Workflow) and set its own id here; there is no shared cross-workspace id. | `73be9b83-4bd2-4ef1-97a7-0ff6e6ff5339` (Satchel's "Agent Queue") |
-| `AGENT_USER_ID` | **Deprecated — no longer read by any logic in this file.** Formerly the agent's own user; assignment used to be the turn signal (see `STATE_AGENT_QUEUE` above for the replacement). The agent never writes `assigneeId` to this value anymore, anywhere. Retained here only as a historical pointer; the underlying Linear seat can be retired once no workspace CLAUDE.md still references it. | `41903248-8c2b-41e4-a7fb-f00f4feb9ba4` (@agentfong) |
+| `AGENT_USER_ID` | **Deprecated — no longer read.** The underlying Linear seat can be retired once no workspace `CLAUDE.md` still references it. | `41903248-8c2b-41e4-a7fb-f00f4feb9ba4` (@agentfong) |
 | `HUMAN_USER_ID` | Tim's user — **informational only now.** The poller no longer writes this to `assigneeId` for turn-taking purposes; assignee stays on the human permanently (see B4/B6). | `aa3fb002-ba6c-440f-8837-cc5c92a3c748` (@timfong888) |
 | `STATE_IN_PROGRESS` | "started" state id — set here when the agent picks a queued issue up out of `STATE_AGENT_QUEUE` | `8439671f-0e5d-4a08-ba98-d3bf5b758d16` |
 | `STATE_IN_REVIEW` | state for **every successful handback** — deterministic or judgment-bearing alike (see B6 terminal-state rule: the agent never self-certifies Done). **Also an open-loop / auto-resume state (SAT-525):** from here, Tim just **replies to the agent's handback comment** and the next tick auto-resumes it (secondary path, A1+B2) — moving the state back to `STATE_AGENT_QUEUE` still works as a manual override but is no longer required. | `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` (In Review) |
@@ -528,25 +528,7 @@ QA pass — no new tooling, no formal test harness, one pass through the checkli
 
 ### B6. Report & hand back (the state change is the handback)
 
-#### Legibility rules — every comment and description (SAT-596)
-
-These rules apply to **all handback comments and ticket descriptions**, across every
-track (coding, writing, admin). The reader is on a phone.
-
-- **Answer first.** Line 1 = the outcome. The reader should be able to stop there.
-- **One idea per bullet, ≤ 20 words.** N items → N bullets, never a run-on.
-- **Bold the 2–4 load-bearing words** in each bullet. Don't bold full sentences.
-- **No inline walls of code or paths.** Long paths/URLs go on their own line or behind a link.
-- **Depth behind a link, not inline.** The comment is the glance; the PR/vault note is the deep-dive.
-- **Target: 5–8 short lines** per handback comment.
-
-**Bad (wall-of-text, buried lede):**
-> I went through the ticket and verified all of the configuration changes across both files including the agent-writing profile and the orchestrator poll command file and confirmed the legibility block is present in both the writing profile's report section and the coding/admin handback section.
-
-**Good (answer first, one idea per bullet, bold key words):**
-> ✅ **Legibility rules wired** — both writing surfaces updated.
-> - **agent-writing.md** — rule block added to § 4 (Report & hand back).
-> - **linear-agent-poll.md** — rule block added to B6 (all tracks).
+> **Legibility rules (SAT-596):** apply to all handback comments and ticket descriptions, every track. Canonical rules and examples are in the global `CLAUDE.md` → Handback Rules → Legibility rules, and the `agent-writing` skill.
 
 ---
 
