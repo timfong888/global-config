@@ -7,4 +7,22 @@ npm install -g .
 echo "Verifying aurora-mcp-server..."
 aurora-mcp-server --version 2>/dev/null || true
 
+# Install CodeRabbit CLI if not already present
+if ! command -v cr &>/dev/null; then
+  echo "Installing CodeRabbit CLI..."
+  curl -fsSL https://cli.coderabbit.ai/install.sh | sh
+  echo "CodeRabbit CLI installed."
+else
+  echo "CodeRabbit CLI already installed: $(cr --version 2>/dev/null || echo 'ok')"
+fi
+
+# Authenticate headlessly using API key if provided
+if [ -n "$CODERABBIT_API_KEY" ]; then
+  echo "Authenticating CodeRabbit CLI with API key..."
+  cr auth login --api-key "$CODERABBIT_API_KEY"
+  echo "CodeRabbit CLI authenticated."
+else
+  echo "CODERABBIT_API_KEY not set — skipping CodeRabbit auth (agent will need to authenticate manually or the key must be added to Blocks secrets)."
+fi
+
 echo "Global post-clone setup complete!"

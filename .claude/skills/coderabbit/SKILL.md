@@ -5,6 +5,8 @@ description: Run CodeRabbit CLI in an agentic review-fix loop to surface bugs, s
 
 # CodeRabbit Agentic Review Loop
 
+**This is a mandatory pre-PR gate.** Run before every pull request in every Blocks session. The `cr` CLI is pre-installed in the Blocks environment via the post-clone setup script and authenticated using the `CODERABBIT_API_KEY` environment variable.
+
 Use this skill to run CodeRabbit CLI reviews in an iterative implement → review → fix cycle, stopping after at most **2 fix loops**.
 
 ## Prerequisites
@@ -22,18 +24,21 @@ curl -fsSL https://cli.coderabbit.ai/install.sh | sh
 
 ### Authentication
 
+In the Blocks environment the API key is set automatically during post-clone from the `CODERABBIT_API_KEY` secret. Always verify before running:
+
 ```bash
-# Interactive (browser)
-cr auth login
-
-# Headless / CI (API key from coderabbit.ai → Account Settings → API Keys)
-cr auth login --api-key "cr-xxxxxxxxxxxx"
-
-# Verify
+# Verify auth and CLI health
 cr doctor
+
+# If auth is missing, authenticate headlessly (Blocks/CI — no browser available)
+# API key: coderabbit.ai → Account Settings → API Keys
+cr auth login --api-key "$CODERABBIT_API_KEY"
+
+# Interactive browser-based auth (human-only; not usable in Blocks sessions)
+# cr auth login
 ```
 
-If `cr doctor` fails or the user is not authenticated, stop and ask the user to authenticate before continuing.
+If `cr doctor` fails and `CODERABBIT_API_KEY` is not set, note the auth failure in the PR description and skip the review rather than blocking the PR indefinitely. Ask the user to add the key to Blocks secrets.
 
 ---
 
