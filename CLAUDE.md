@@ -34,12 +34,18 @@ Rules:
 - Use **Blocked** only when the work truly stopped on something a typed reply alone cannot fix (external dependency, purchase, access grant). Use **Needs input** (In Review + Urgent) for a question the user can answer inline.
 - Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace.
 
+> **ENFORCEMENT:** Your **FIRST** tool call when directly delegated a ticket MUST be `mcp__linear__linear_updateIssue` with `stateId` = In Progress. Do not read the issue, analyze anything, or post any comment before this call.
+
 ## Handback Rules
 
 - When a task is complete, summarize what changed and what is next in one or two sentences.
 - Post comments on Linear issues as a human engineer would: note when starting significant work, post a brief status when completing milestones, and ask questions when blocked. Keep comments concise and substantive — skip trivial one-liners.
 - Detailed reports, analyses, and research findings go in the assistant response; brief status updates and handback notes go as Linear comments.
 - Updating issue state (status, description, labels) is allowed only when explicitly instructed — **except** for the workflow status transitions defined in the Linear Workflow Status Management section above, which happen automatically.
+
+## Linear API Notes
+
+- **`getIssueHistory` does not expose state transitions.** The MCP wrapper returns `type: "unknown"`, `from: null`, `to: null` for state-change events. To verify a state change was applied, check that `updatedAt` advanced after the `updateIssue` call — do not rely on `getIssueHistory` to confirm state transitions.
 
 ## Skills
 
