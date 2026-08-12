@@ -34,6 +34,10 @@ Rules:
 - Use **Blocked** only when the work truly stopped on something a typed reply alone cannot fix (external dependency, purchase, access grant). Use **Needs input** (In Review + Urgent) for a question the user can answer inline.
 - Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace.
 
+> **CRITICAL — pickup ordering (SAT-833):** Your **very first tool call** upon receiving a direct delegation (via `@blocks` mention or the agent poller) **MUST** be `mcp__linear__linear_updateIssue` with `stateId` set to the team's In Progress state. Do not read the issue, do not analyze anything, do not post any comment first. The state transition is the pickup signal. Sequence: (1) update state → In Progress, (2) post pickup comment, (3) begin work.
+>
+> To verify a state change was applied when `getIssueHistory` returns `type: "unknown"`: confirm that the issue's `updatedAt` timestamp advanced after the `updateIssue` call. The MCP history tool does not expose state-change details — `updatedAt` advancement is the reliable confirmation.
+
 ## Handback Rules
 
 - When a task is complete, summarize what changed and what is next in one or two sentences.

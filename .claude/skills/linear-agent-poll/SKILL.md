@@ -134,6 +134,25 @@ glance on the Linear board without opening the ticket:
 - Blocked is for things no typed reply can fix. Needs input (In Review + Urgent) is for
   inline questions Tim can answer directly in a comment reply.
 
+> **CRITICAL — pickup ordering (SAT-833):** The first `LINEAR_UPDATE_ISSUE` call (B4) that
+> sets `stateId = STATE_IN_PROGRESS` **must be the worker's very first tool call** — before
+> reading comments, before posting the pickup comment, before any other work. The state
+> change is the pickup signal; everything else follows.
+
+> **History tool limitation (SAT-833):** `mcp__linear__linear_getIssueHistory` returns
+> `type: "unknown"` with `from: null` / `to: null` for state transitions — the MCP wrapper
+> does not expose state-change details. To verify a state transition was applied, confirm
+> the issue's `updatedAt` advanced after the `updateIssue` call. Do not rely on the history
+> tool for state-transition verification.
+
+> **Pre-flight: verify Agent Queue state exists (SAT-833):** Before running the first tick
+> in a workspace, confirm `STATE_AGENT_QUEUE` is present in the team's live workflow states
+> (`mcp__linear__linear_getWorkflowStates`). If it is absent, the A1 primary query will
+> return zero candidates on every tick and the poller will be silently broken. Remedy:
+> create an "Agent Queue" state in Linear → Settings → Teams → \<team\> → Workflow (type:
+> `unstarted`, positioned before Todo), then update `STATE_AGENT_QUEUE` in this file if the
+> new state id differs from the default above.
+
 ---
 
 ## Part A — Orchestrator (the tick)
@@ -462,11 +481,12 @@ edited image, load the **`capability-image`** skill (Skill tool) and follow its 
 it's a capability, not a fourth track, so dispatch is unchanged ([SAT-491](https://linear.app/sophia-xyz/issue/SAT-491)).
 
 ### B4. Start work (both modes)
-- **`LINEAR_UPDATE_ISSUE` first**: set `stateId` = `STATE_IN_PROGRESS` only — **do not set
-  `assigneeId`**. Do this **before** posting any comment — the state change is the
-  immediately visible signal to Tim that the agent has the ticket; the comment follows.
-  Assignee stays on the human user permanently; this call's only job is to move the issue
-  out of `STATE_AGENT_QUEUE` so A1 stops re-selecting it on the next tick.
+- **`LINEAR_UPDATE_ISSUE` first — this is your very first tool call, before anything else.**
+  Set `stateId` = `STATE_IN_PROGRESS` only — **do not set `assigneeId`**. Do not read
+  comments, do not post a comment, do not fetch context first. The state change is the
+  pickup signal; the comment follows. Assignee stays on the human user permanently; this
+  call's only job is to move the issue out of `STATE_AGENT_QUEUE` so A1 stops re-selecting
+  it on the next tick.
   If the issue still carries a stale `agent-ready` / `agent-needs-human` label, drop it from
   `labelIds` (keep the routing label) — Tim never relabels.
 - **Then post a comment**: fresh → `🤖 On it — {track}. [model: {model}, effort: {effort}] (by Claude)` ·
