@@ -34,7 +34,10 @@ Rules:
 - Use **Blocked** only when the work truly stopped on something a typed reply alone cannot fix (external dependency, purchase, access grant). Use **Needs input** (In Review + Urgent) for a question the user can answer inline.
 - Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace.
 
-> **ENFORCEMENT:** Your **FIRST** tool call when directly delegated a ticket MUST be `mcp__linear__linear_updateIssue` with `stateId` = In Progress. Do not read the issue, analyze anything, or post any comment before this call.
+> **ENFORCEMENT:** Your **FIRST** tool call — of any MCP tool type — when directly delegated a ticket MUST be `mcp__linear__linear_updateIssue` with `stateId` = In Progress. Do not read the issue, analyze anything, or post any comment before this call.
+> - **Already In Progress:** proceed without a second transition call (the state change is idempotent).
+> - **Call fails:** retry once; if still failing, proceed with the work and note the failure in your pickup comment.
+> - **Scope:** applies only to direct delegation (@blocks mention, direct comment, agent poller) — exempt for background or multi-ticket workflows that incidentally touch an issue.
 
 ## Handback Rules
 
