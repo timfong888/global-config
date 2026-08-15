@@ -71,7 +71,7 @@ query IssueContext($id: String!) {
 }
 ```
 
-> **Direct `@blocks` mention sessions:** `formatted_context` carries the `issue_identifier` (e.g. `AUR-3`). Use `mcp__linear__linear_getIssueById` with that identifier to get the issue and its `parent`/`project`. If no `issue_identifier` is present, skip this step.
+> **Direct `@blocks` mention sessions:** `formatted_context` carries the `issue_identifier` (e.g. `AUR-3`). To fetch the issue, first call `mcp__linear__linear_searchIssues` with the public identifier as the query to resolve it to an internal UUID, then call `mcp__linear__linear_getIssueById` with that UUID to get the issue and its `parent`/`project`. If no `issue_identifier` is present, skip this step.
 >
 > **Poller-dispatched workers:** the orchestrator provides the issue `id` directly. The `linear-agent-poll` skill's B1 extends this fetch with agent-context block resolution and vault CLAUDE.md linking — follow B1 for the full poller fetch; this section defines the base that B1 builds on.
 
