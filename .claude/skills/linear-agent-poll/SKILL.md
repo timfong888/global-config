@@ -579,10 +579,12 @@ what the ticket *needs from Tim next*:
   `STATE_NEEDS_INPUT` and `STATE_IN_REVIEW`
   are the **same** Linear state ("In Review"), so the state alone can't tell Tim an open
   question apart from a finished handback — that's why he reported never "seeing needs-input
-  markers." The **comment body** has to carry it. Use this exact two-line shape:
-  ```
+  markers." The **comment body** has to carry it. Use this exact shape:
+  ```text
   🔴 Needs input — {one-line what you're waiting on}
-  > question: {the specific question} [model: {model}, effort: {effort}] (by Claude)
+  > question: {the specific question}
+  [Full session →](https://www.blocks.team/app/{BLOCKS_WORKSPACE_ID}/sessions/{CLAUDE_CODE_SESSION_ID})
+  [model: {model}, effort: {effort}] (by Claude)
   ```
   The `🔴 Needs input` headline is the human-visible marker; the `> question:` blockquote +
   `priority` = 1 (Urgent) are the machine-legible ones (an "open question" = a thread whose
@@ -604,6 +606,7 @@ what the ticket *needs from Tim next*:
     where/why it stopped}
   - To unblock: {the specific action or decision Tim must take, stated so he can act on it
     directly}
+  [Full session →](https://www.blocks.team/app/{BLOCKS_WORKSPACE_ID}/sessions/{CLAUDE_CODE_SESSION_ID})
   [model: {model}, effort: {effort}] (by Claude)
   ```
   Set `assigneeId` = `HUMAN_USER_ID`, `priority` = 1 (Urgent), `stateId` = `STATE_BLOCKED` —
@@ -642,6 +645,7 @@ what the ticket *needs from Tim next*:
     ✅ Done — {summary + links}.
     - What changed: {short summary}
     - Decision needed to move to Done: {none — safe to promote, or the specific check}
+    [Full session →](https://www.blocks.team/app/{BLOCKS_WORKSPACE_ID}/sessions/{CLAUDE_CODE_SESSION_ID})
     [model: {model}, effort: {effort}] (by Claude)
     ```
     **For a coding PR handback (SAT-551):** `{links}` **must** be the PR's **full clickable
@@ -656,6 +660,7 @@ what the ticket *needs from Tim next*:
     - Decision needed to move to Done: none — safe to promote once the PR is merged.
     - Review on: the GitHub PR page linked above — open it to read the diff (CodeRabbit has
       already reviewed) and merge; Linear just tracks status, review the code on GitHub.
+    [Full session →](https://www.blocks.team/app/{BLOCKS_WORKSPACE_ID}/sessions/{CLAUDE_CODE_SESSION_ID})
     [model: {model}, effort: {effort}] (by Claude)
     ```
   - Judgment-bearing (writing, admin that needs your eyes):
@@ -663,6 +668,7 @@ what the ticket *needs from Tim next*:
     ✅ Ready for review — {summary + links}.
     - What changed: {short summary}
     - Decision needed to move to Done: {what Tim needs to decide or verify}
+    [Full session →](https://www.blocks.team/app/{BLOCKS_WORKSPACE_ID}/sessions/{CLAUDE_CODE_SESSION_ID})
     [model: {model}, effort: {effort}] (by Claude)
     ```
 - **Human-action Todo spin-out (SAT-553)** — *composes with* Success above, it doesn't
