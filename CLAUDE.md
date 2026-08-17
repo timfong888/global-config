@@ -24,6 +24,24 @@ SAT-123: Brief description of the change
 - Detailed reports, analyses, and research findings go in the assistant response; brief status updates and handback notes go as Linear comments.
 - Updating issue state (status, description, labels) is allowed only when explicitly instructed.
 
+### Blocks session link (SAT-889)
+
+Every handback comment posted on a Linear issue **must include a link to the current Blocks session** as the last line before the model/effort tag. This lets Tim open the full session response directly from Linear without navigating the Blocks sidebar separately.
+
+Construct the URL from two env vars available in every Blocks session:
+
+```text
+https://www.blocks.team/app/$BLOCKS_WORKSPACE_ID/sessions/$CLAUDE_CODE_SESSION_ID
+```
+
+Add it as a Markdown link on its own line:
+
+```text
+[Full session →](https://www.blocks.team/app/$BLOCKS_WORKSPACE_ID/sessions/$CLAUDE_CODE_SESSION_ID)
+```
+
+Replace `$BLOCKS_WORKSPACE_ID` and `$CLAUDE_CODE_SESSION_ID` with their actual runtime values — do not leave the `$VAR` placeholders in the comment. These env vars are always set in Blocks sessions; if either is missing, omit the link rather than posting a broken URL.
+
 ### Legibility rules — comments and descriptions (SAT-596)
 
 The reader is on a phone. Apply these to every comment and ticket description you write.
