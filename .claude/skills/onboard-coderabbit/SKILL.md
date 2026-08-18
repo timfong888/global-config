@@ -61,17 +61,16 @@ Copy into the target repo:
 
 ```bash
 TARGET=/home/user/workspace/<repo-name>
+TEMPLATES=/home/user/workspace/global-config/github-actions/examples
 
 mkdir -p "$TARGET/.github/workflows"
 
-cp workspace/global-config/github-actions/examples/on-coderabbit-review.yml \
+cp "$TEMPLATES/on-coderabbit-review.yml" \
    "$TARGET/.github/workflows/coderabbit-to-linear.yml"
 
-cp workspace/global-config/github-actions/examples/.coderabbit.yml \
-   "$TARGET/.coderabbit.yml"
+cp "$TEMPLATES/.coderabbit.yml" "$TARGET/.coderabbit.yml"
 
-cp workspace/global-config/github-actions/examples/.sourcery.yaml \
-   "$TARGET/.sourcery.yaml"
+cp "$TEMPLATES/.sourcery.yaml"  "$TARGET/.sourcery.yaml"
 ```
 
 Verify the three files exist before continuing.
