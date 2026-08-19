@@ -13,6 +13,10 @@
 #   LINEAR_API — a Linear personal API key with comment:create scope.
 #   Generate one at: https://linear.app/settings/api  (Personal API keys)
 #
+# Required repository variable in global-config (already set):
+#   BLOCKS_LINEAR_USER_ID — the Blocks agent's Linear user ID.
+#   Manage at: github.com/timfong888/global-config/settings/variables/actions
+#
 # Branch-name convention (case-insensitive):
 #   The workflow extracts the first token matching [A-Z]+-[0-9]+ from the PR
 #   branch name, e.g. blocks/SAT-660-title → SAT-660.
@@ -40,6 +44,12 @@ jobs:
       github.event.review.user.login == 'sourcery-ai[bot]'
 
     steps:
+      - name: Check out global-config (for notify-linear.py)
+        uses: actions/checkout@v4
+        with:
+          repository: timfong888/global-config
+          ref: main
+
       - name: Extract Linear issue ID from branch name
         id: extract
         run: |
@@ -58,105 +68,15 @@ jobs:
       - name: Post @blocks comment to Linear
         if: steps.extract.outputs.found == 'true'
         env:
-          LINEAR_API_KEY:  ${{ secrets.LINEAR_API }}
-          LINEAR_ID:       ${{ steps.extract.outputs.linear_id }}
-          PR_NUMBER:       ${{ github.event.pull_request.number }}
-          PR_URL:          ${{ github.event.pull_request.html_url }}
-          PR_TITLE:        ${{ github.event.pull_request.title }}
-          REVIEW_URL:      ${{ github.event.review.html_url }}
-          REVIEW_STATE:    ${{ github.event.review.state }}
-          REVIEW_BODY:     ${{ github.event.review.body }}
-          REVIEWER_LOGIN:  ${{ github.event.review.user.login }}
-          REPO:            ${{ github.repository }}
-        run: |
-          python3 <<'PYTHON'
-          import os, json, urllib.request, sys, textwrap
-
-          linear_id       = os.environ["LINEAR_ID"]
-          pr_number       = os.environ["PR_NUMBER"]
-          pr_url          = os.environ["PR_URL"]
-          pr_title        = os.environ["PR_TITLE"]
-          review_url      = os.environ["REVIEW_URL"]
-          review_state    = os.environ["REVIEW_STATE"].lower()
-          review_body     = os.environ.get("REVIEW_BODY", "").strip()
-          reviewer_login  = os.environ.get("REVIEWER_LOGIN", "AI reviewer")
-          repo            = os.environ["REPO"]
-          api_key         = os.environ["LINEAR_API_KEY"]
-
-          # Human-readable reviewer name
-          BOT_NAMES = {
-              "coderabbitai[bot]": "CodeRabbit",
-              "sourcery-ai[bot]":  "Sourcery",
-          }
-          reviewer_name = BOT_NAMES.get(reviewer_login, reviewer_login)
-
-          # Map GitHub review state to a readable label
-          state_label = {
-              "approved":          "✅ Approved",
-              "changes_requested": "🔴 Changes Requested",
-              "commented":         "💬 Commented",
-          }.get(review_state, review_state.replace("_", " ").title())
-
-          # Truncate a very long review body so the Linear comment stays readable
-          MAX_BODY = 2000
-          if len(review_body) > MAX_BODY:
-              review_body = review_body[:MAX_BODY].rstrip() + "\n\n*(review summary truncated — see full review at the link above)*"
-
-          summary_section = (
-              f"\n\n---\n\n**{reviewer_name} summary:**\n\n{review_body}"
-              if review_body else ""
-          )
-
-          body = textwrap.dedent(f"""\
-              @blocks {reviewer_name} has completed its review on [PR #{pr_number}: {pr_title}]({pr_url}) in `{repo}`.
-
-              **Review state:** {state_label}
-              **Review:** {review_url}{summary_section}
-
-              Please review the {reviewer_name} feedback and address any blocking comments before this branch is ready to merge.""")
-
-          # Blocks Linear user ID — ensures commentCreate fires a proper mention
-          # notification (AppUserMentioned webhook) rather than plain text.
-          BLOCKS_LINEAR_USER_ID = "86010372-1d6d-4dd1-90a7-98445e7a9805"
-
-          query = """
-          mutation PostComment($issueId: String!, $body: String!, $mentionedUserIds: [String!]) {
-            commentCreate(input: { issueId: $issueId, body: $body, mentionedUserIds: $mentionedUserIds }) {
-              success
-              comment { id url }
-            }
-          }
-          """
-
-          payload = json.dumps({
-              "query": query,
-              "variables": {
-                  "issueId": linear_id,
-                  "body": body,
-                  "mentionedUserIds": [BLOCKS_LINEAR_USER_ID],
-              },
-          }).encode()
-
-          req = urllib.request.Request(
-              "https://api.linear.app/graphql",
-              data=payload,
-              headers={
-                  "Authorization": api_key,
-                  "Content-Type": "application/json",
-              },
-          )
-
-          with urllib.request.urlopen(req) as resp:
-              result = json.loads(resp.read())
-
-          print(json.dumps(result, indent=2))
-
-          comment_data = result.get("data", {}).get("commentCreate", {})
-          if comment_data.get("success"):
-              comment_url = comment_data.get("comment", {}).get("url", "")
-              print(f"✅ Posted @blocks comment to Linear issue {linear_id}: {comment_url}")
-          else:
-              errors = result.get("errors", result)
-              print(f"❌ Failed to post comment to Linear: {errors}")
-              sys.exit(1)
-          PYTHON
+          LINEAR_API_KEY:        ${{ secrets.LINEAR_API }}
+          LINEAR_ID:             ${{ steps.extract.outputs.linear_id }}
+          PR_NUMBER:             ${{ github.event.pull_request.number }}
+          PR_URL:                ${{ github.event.pull_request.html_url }}
+          PR_TITLE:              ${{ github.event.pull_request.title }}
+          REVIEW_URL:            ${{ github.event.review.html_url }}
+          REVIEW_STATE:          ${{ github.event.review.state }}
+          REVIEW_BODY:           ${{ github.event.review.body }}
+          REVIEWER_LOGIN:        ${{ github.event.review.user.login }}
+          REPO:                  ${{ github.repository }}
+          BLOCKS_LINEAR_USER_ID: ${{ vars.BLOCKS_LINEAR_USER_ID }}
+        run: python3 scripts/notify-linear.py
