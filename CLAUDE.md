@@ -58,3 +58,26 @@ The `cr` CLI is pre-installed and authenticated via the `CODERABBIT_API_KEY` env
 - Always clone repositories using `mcp__blocks-internal-mcp__clone_repository_into_folder`.
 - Always create a pull request after pushing a new branch with code changes.
 - Never force push. Never skip hooks (`--no-verify`).
+
+## Agent Poll Configuration
+
+Satchel workspace values for the `linear-agent-poll` skill. The skill reads this block
+when invoked from any project that does not define its own `## Agent Poll Configuration`
+in its local `CLAUDE.md`.
+
+| Variable | Value |
+|---|---|
+| `LINEAR_ACCOUNT` | `satchel-linear` |
+| `TEAM_ID` | `88661a7f-d07e-4590-9724-b8f69e30556e` |
+| `TEAM_KEY` | `SAT` |
+| `WORKSPACE_SLUG` | `sophia-xyz` |
+| `STATE_AGENT_QUEUE` | `73be9b83-4bd2-4ef1-97a7-0ff6e6ff5339` |
+| `STATE_IN_PROGRESS` | `8439671f-0e5d-4a08-ba98-d3bf5b758d16` |
+| `STATE_IN_REVIEW` | `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` |
+| `STATE_DONE` | `299e627d-3989-40c4-8aea-b9d56209fa39` |
+| `STATE_NEEDS_INPUT` | `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` |
+| `STATE_BLOCKED` | `f68b9fad-0d13-4397-b1e0-97f6e7216e52` |
+| `STATE_TODO` | `4dfa455d-9248-4b2b-b3de-4d0d343efe21` |
+| `HUMAN_USER_ID` | `aa3fb002-ba6c-440f-8837-cc5c92a3c748` |
+| `ROUTING_LABELS` | agent-coding `b4c6b47e-0ded-4468-a68c-4d3a5b58ec33` · agent-writing `79adef88-4350-48c2-a1da-31137a2dfbc8` · agent-admin `a1a9437b-8c75-4cd5-ba6b-5c1fb4443f00` |
+| `CODING_REPO_ROOT` | `Claude and Local Agentic System` → `/home/user/workspace/global-config` |
