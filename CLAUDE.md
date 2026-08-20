@@ -59,6 +59,38 @@ The `cr` CLI is pre-installed and authenticated via the `CODERABBIT_API_KEY` env
 - Always create a pull request after pushing a new branch with code changes.
 - Never force push. Never skip hooks (`--no-verify`).
 
+## Checkpoint Protocol (SAT-922)
+
+Commit and push after each discrete sub-task so partial progress is always visible on the branch.
+
+### When to checkpoint
+
+- After completing a data/model layer
+- After completing an API endpoint or route
+- After completing the UI for a feature
+- After a test suite passes
+- Before switching tickets
+
+### Commit format
+
+```
+SAT-XXX: [milestone] brief description
+```
+
+Example: `SAT-123: [api] add expense upload endpoint`
+
+### Checkpoints must be user-facing
+
+**Work backwards from the customer experience.** A backend milestone alone is not a complete checkpoint.
+
+- If a feature has a UI requirement, **don't stop at the API** — continue until the frontend is also done before marking the milestone.
+- If the backend is not yet complete, **create a frontend mockup** (e.g., using WireMock or static fixtures) so the feature is demonstrable against a simulated backend.
+- The deliverable at each checkpoint is something the user can see and interact with — not an internal service layer.
+
+### Why
+
+Long-running sessions risk losing all progress on crash or timeout. Frequent pushes convert an overnight run from "all or nothing" into incremental, reviewable progress visible in the morning.
+
 ## Agent Poll Configuration
 
 Satchel workspace values for the `linear-agent-poll` skill. The skill reads this block
