@@ -35,6 +35,24 @@ The reader is on a phone. Apply these to every comment and ticket description yo
 - **Depth goes behind a link, not inline.** The comment is the glance; the PR/vault note is the deep-dive.
 - **Target: 5–8 short lines** per handback comment.
 
+## Blocker Detection Protocol
+
+**One blocker must not halt the overnight run.** Detect early and skip gracefully.
+
+### Blocker types
+
+- **Missing env var or API key** — required credential absent or expired
+- **Ambiguous requirement** — two valid interpretations with no way to resolve inline
+- **Dependency not complete** — branch conflict or missing upstream data
+- **Approval required mid-run** — permission prompt blocks tooling progress
+
+### Response (4 steps)
+
+1. **Log it** — create a Linear ticket with label `blocker`, describing exactly what is missing or ambiguous; include the blocked issue's identifier in the description
+2. **Skip it** — move to the next queued ticket; do not retry the blocked one this tick
+3. **Comment** — post on the blocked ticket: what stopped work + a clickable link to the new blocker ticket
+4. **Don't loop** — if a second approach also blocks, ticket it and move on; never burn the tick on one stuck issue
+
 ## Skills
 
 Individual skill files live in `.claude/skills/`. Each skill is loaded via the `Skill` tool using its directory name. Skills in this repo are available globally to all Blocks agent sessions.

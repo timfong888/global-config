@@ -513,6 +513,32 @@ conversation granular per thread:
   are nested; a `> question:` about a specific thread is nested in that thread, a fresh
   issue-level question stays top-level.
 
+### B5.1 Detect blockers early (SAT-923)
+
+**If you hit a wall during B5 that matches a blocker type, exit immediately — don't spin.**
+
+See the global `CLAUDE.md → Blocker Detection Protocol` for the full taxonomy. The four types:
+- **Missing env var or API key** — required credential absent or expired
+- **Ambiguous requirement** — two valid interpretations with no way to resolve inline
+- **Dependency not complete** — branch conflict or missing upstream data
+- **Approval required mid-run** — permission prompt blocks tooling progress
+
+**When a blocker is detected mid-work:**
+
+1. **Create a blocker ticket** — `issueCreate` with `teamId` = `TEAM_ID`, label `blocker`, title `Blocker: {one-line description}`, description including the blocked issue identifier and a clickable link back to it. Never skip this step — the ticket is the audit trail.
+2. **Comment on the blocked issue** — top-level `LINEAR_CREATE_LINEAR_COMMENT`:
+   ```text
+   ⛔ Blocked mid-work — {one-line: what stopped it}.
+   - **What happened:** {what was attempted and where it stopped}
+   - **Blocker ticket:** [SAT-NNN](https://linear.app/<WORKSPACE_SLUG>/issue/SAT-NNN)
+   - Moving to next queued issue.
+   [model: {model}, effort: {effort}] (by Claude)
+   ```
+   Set `stateId` = `STATE_BLOCKED`.
+3. **Return immediately** — return `blocked: {issue}` and stop. Do not proceed to B5.5 or B6. The worker is done with this issue for this tick. Do not retry with a different approach.
+
+**Distinction from B6 Blocked:** B6 is a post-work deliberate handback (work ran to completion but concluded "can't proceed"). B5.1 is an **early exit** when a wall is hit **during** execution — skip the work, ticket it, move on. Use B5.1 when the blocker makes further work pointless this tick; use B6 when you worked to the end and the conclusion itself is "blocked."
+
 ### B5.5. Self-review gate (before handback)
 Before posting the B6 handback, pause for **one lightweight self-check**: re-read
 the ticket's own acceptance criteria / completion condition (for coding, the
@@ -599,9 +625,12 @@ what the ticket *needs from Tim next*:
 - **Blocked (SAT-553)** — the work **stopped** on something no typed reply alone can fix: an
   external dependency failed (service outage, exhausted balance/quota, missing access or
   credentials), or a real-world action/decision only Tim can take stands between here and
-  the finish line. Post an unmistakable blocked marker whose body is **two structured
-  bullets** — what occurred, and what unblocks it — so Tim can act without re-reading the
-  thread:
+  the finish line. **If the blocker was detected mid-work (during B5), use the B5.1 early-exit
+  path instead of this one** — B5.1 creates the blocker ticket and skips to the next queued
+  issue without reaching B6. This B6 path is for when work ran to completion but the
+  conclusion itself is "blocked." Post an unmistakable blocked marker whose body is **two
+  structured bullets** — what occurred, and what unblocks it — so Tim can act without
+  re-reading the thread:
   ```
   ⛔ Blocked — {one-line: what stopped the work}
   - What happened: {bulleted summary of what occurred — what was attempted, in order, and
