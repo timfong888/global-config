@@ -56,7 +56,7 @@ general-purpose editors on structure-preserving tasks.
 | Model | Endpoint | License | When to use |
 |---|---|---|---|
 | **FLUX.1 Kontext [dev]** | `fal-ai/flux-kontext/dev` | BFL non-commercial | **Default for Satchel / personal use.** Best context-preservation; free to run via fal.ai |
-| **FLUX.1 Kontext [pro]** | `fal-ai/flux-kontext/pro` | BFL commercial | When production quality matters or the output is for a commercial product |
+| **FLUX.1 Kontext [pro]** | `fal-ai/flux-pro/kontext` | BFL commercial | When production quality matters or the output is for a commercial product |
 | **FLUX.1 Fill [dev]** | `fal-ai/flux/fill` | Apache 2.0 | Inpainting/masking workflow; fully open-source |
 | **Qwen-Image-Edit-2511** | `fal-ai/qwen-image-2/edit` | Apache 2.0 | Fully open-source alternative if Kontext is unavailable; strong multimodal editor |
 | **nano-banana-2/edit** | `fal-ai/nano-banana-2/edit` | Google proprietary | Fallback only — general-purpose Gemini-based editing; weaker structure preservation |
@@ -64,7 +64,7 @@ general-purpose editors on structure-preserving tasks.
 **Always verify endpoint IDs at call time** — fal.ai renames and versions models.
 To list available models, run in `COMPOSIO_REMOTE_WORKBENCH`:
 ```python
-required = {'fal-ai/flux-kontext/dev', 'fal-ai/flux-kontext/pro'}
+required = {'fal-ai/flux-kontext/dev', 'fal-ai/flux-pro/kontext'}
 found, cursor = set(), None
 while True:
     params = f'?cursor={cursor}' if cursor else ''
@@ -129,9 +129,9 @@ cell timeout.
 **Step 1 — Submit the job** (run in `COMPOSIO_REMOTE_WORKBENCH`):
 
 > **Note — body schema is model-specific:**
-> - `fal-ai/flux-kontext/*` and `fal-ai/qwen-image-2/edit`: use `image_url` (single string)
+> - `fal-ai/flux-kontext/*`, `fal-ai/flux-pro/kontext`, and `fal-ai/qwen-image-2/edit`: use `image_url` (single string)
 > - `fal-ai/nano-banana-2/edit`: use `image_urls` (list of strings)
-> - `fal-ai/flux/fill`: requires an additional `mask_url` field
+> - `fal-ai/flux/fill` (inpainting): requires `image_url` **and** `mask_url` — handle separately; not covered by the generic submit flow below
 
 ```python
 endpoint = 'fal-ai/flux-kontext/dev'  # adjust if using a fallback model
@@ -161,7 +161,7 @@ for attempt in range(30):
     time.sleep(5)
     status, error = proxy_execute(
         method='GET',
-        endpoint=f'https://queue.fal.run/fal-ai/flux-kontext/dev/requests/{request_id}/status',
+        endpoint=f'https://queue.fal.run/{endpoint}/requests/{request_id}/status',
         toolkit='FAL_AI'
     )
     if error or not status:
@@ -173,13 +173,15 @@ for attempt in range(30):
         raise RuntimeError(f"Job error reported — try next model in priority table: {status}")
     state = status.get('status', 'unknown')
     if state == 'COMPLETED':
-        result, error = proxy_execute(
+        result, fetch_error = proxy_execute(
             method='GET',
-            endpoint=f'https://queue.fal.run/fal-ai/flux-kontext/dev/requests/{request_id}',
+            endpoint=f'https://queue.fal.run/{endpoint}/requests/{request_id}',
             toolkit='FAL_AI'
         )
-        if error or not result:
-            raise RuntimeError(f"Result fetch failed: {error}")
+        if fetch_error or not result:
+            # Transient result fetch failure — retry this attempt rather than switching models
+            print(f"Attempt {attempt+1}: result fetch transient error ({fetch_error}), retrying...")
+            continue
         output_url = result['images'][0]['url']
         print(f"Done: {output_url}")
         break
@@ -297,7 +299,7 @@ If a check fails → revise the prompt (max one revision pass) before posting.
 - **Edit:** [what was changed]
 - **Source:** [number of source photos and angles]
 - **Preserved:** room structure, perspective, lighting direction
-- **Model:** fal-ai/flux-kontext/dev
+- **Model:** [endpoint used, e.g. fal-ai/flux-kontext/dev]
 
 ![Composite — [angle description]](https://drive.google.com/...)
 ```
