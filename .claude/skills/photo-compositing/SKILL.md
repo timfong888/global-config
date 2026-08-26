@@ -61,8 +61,14 @@ general-purpose editors on structure-preserving tasks.
 | **Qwen-Image-Edit-2511** | `fal-ai/qwen-image-2/edit` | Apache 2.0 | Fully open-source alternative if Kontext is unavailable; strong multimodal editor |
 | **nano-banana-2/edit** | `fal-ai/nano-banana-2/edit` | Google proprietary | Fallback only — general-purpose Gemini-based editing; weaker structure preservation |
 
-**Always verify endpoint IDs at call time** — fal.ai renames and versions models. If
-Kontext [dev] returns an error, try Qwen-Image-Edit before falling back to nano-banana-2.
+**Always verify endpoint IDs at call time** — fal.ai renames and versions models.
+To list available models, run in `COMPOSIO_REMOTE_WORKBENCH`:
+```python
+data, error = proxy_execute(method='GET', endpoint='https://rest.fal.ai/models', toolkit='FAL_AI')
+if error: print(f"Model listing failed: {error}")
+else: print([m['id'] for m in data.get('models', []) if 'kontext' in m.get('id', '').lower() or 'edit' in m.get('id', '').lower()])
+```
+If Kontext [dev] returns an error, try Qwen-Image-Edit before falling back to nano-banana-2.
 
 ### Uploading a source photo (Linear attachment → fal.ai-hosted URL)
 
@@ -78,18 +84,23 @@ data, error = proxy_execute(
     toolkit='FAL_AI',
     body={'file_name': 'source-photo.jpg', 'content_type': 'image/jpeg'}
 )
+if error or not data:
+    raise RuntimeError(f"Failed to get upload URL: {error}")
 upload_url = data['upload_url']
 file_url = data['file_url']
 print(f"upload_url={upload_url}")
 print(f"file_url={file_url}")
 ```
 
-**Step 2 — Upload the local file** (run via Bash tool):
+**Step 2 — Upload the local file** (run via Bash tool — check exit code):
 ```bash
-curl -s -X PUT "<upload_url>" \
+curl -sf --show-error -X PUT "<upload_url>" \
   -H "Content-Type: image/jpeg" \
-  --data-binary @/path/to/downloaded/photo.jpg
+  --data-binary @/path/to/downloaded/photo.jpg \
+  -w "\nHTTP status: %{http_code}\n" -o /dev/null
 ```
+If curl exits non-zero or the HTTP status is not 200, the upload failed — re-run
+Step 1 to get a fresh presigned URL and retry.
 
 Use `file_url` (not `upload_url`) as `image_url` in the edit call below. Adjust
 `content_type` and `-H` header for PNG files (`image/png`).
@@ -111,6 +122,8 @@ data, error = proxy_execute(
         'prompt': '<see §3 prompt template>'
     }
 )
+if error or not data:
+    raise RuntimeError(f"Job submit failed: {error}")
 request_id = data['request_id']
 print(f"request_id={request_id}")
 ```
@@ -118,6 +131,7 @@ print(f"request_id={request_id}")
 **Step 2 — Poll until complete** (separate `COMPOSIO_REMOTE_WORKBENCH` call):
 ```python
 import time
+output_url = None
 for attempt in range(30):
     time.sleep(5)
     status, error = proxy_execute(
@@ -125,6 +139,9 @@ for attempt in range(30):
         endpoint=f'https://queue.fal.run/fal-ai/flux-kontext/dev/requests/{request_id}/status',
         toolkit='FAL_AI'
     )
+    if error or not status:
+        print(f"Attempt {attempt+1}: transient error ({error}), retrying...")
+        continue
     state = status.get('status', 'unknown')
     if state == 'COMPLETED':
         result, error = proxy_execute(
@@ -132,17 +149,22 @@ for attempt in range(30):
             endpoint=f'https://queue.fal.run/fal-ai/flux-kontext/dev/requests/{request_id}',
             toolkit='FAL_AI'
         )
+        if error or not result:
+            raise RuntimeError(f"Result fetch failed: {error}")
         output_url = result['images'][0]['url']
         print(f"Done: {output_url}")
         break
     elif state == 'FAILED':
-        raise RuntimeError(f"Job failed: {status}")
+        raise RuntimeError(f"Job failed — try next model in priority table: {status}")
     print(f"Attempt {attempt+1}: {state}")
+else:
+    raise RuntimeError(f"Poll exhausted after 30 attempts — re-run this cell to continue polling (request_id={request_id})")
 ```
 
 If the poll cell times out at 180s, call `COMPOSIO_REMOTE_WORKBENCH` again with the
-same polling code — `request_id` persists across cells in the notebook. If the model
-endpoint fails, swap the endpoint path to the next model in the priority table above.
+same polling code — `request_id` persists across cells in the notebook. If the job
+returns FAILED or the model endpoint returns an error, swap the endpoint path to the
+next model in the priority table above and re-submit.
 
 ---
 

@@ -113,9 +113,10 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
   assumed — fabricating one is exactly the hallucination this mode exists to prevent, so
   the no-hallucinate rule wins over the never-block default here.
 - **Route to the `photo-compositing` skill.** It's built for exactly this: it feeds the
-  real photograph into fal.ai's image editing API (`fal-ai/nano-banana-2/edit` by default)
-  and makes **additive edits only** — preserving the existing scene (walls, perspective,
-  lighting, permanent fixtures) and **not hallucinating** new structure. The skill contains
+  real photograph into fal.ai's image editing API (`fal-ai/flux-kontext/dev` by default)
+  and makes **structure-preserving edits** (add, swap, remove, replace) — preserving
+  the existing scene (walls, perspective, lighting, permanent fixtures) and **not
+  hallucinating** new structure. The skill contains
   the full prompt template, model selection table, and quality checklist.
 - **One edited output per supplied angle — never a fabricated viewpoint.** The multiple
   angles come from the **input**, not from inventing geometry: edit *each* supplied photo
