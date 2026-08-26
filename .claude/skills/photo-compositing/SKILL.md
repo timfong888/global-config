@@ -64,9 +64,24 @@ general-purpose editors on structure-preserving tasks.
 **Always verify endpoint IDs at call time** — fal.ai renames and versions models.
 To list available models, run in `COMPOSIO_REMOTE_WORKBENCH`:
 ```python
-data, error = proxy_execute(method='GET', endpoint='https://rest.fal.ai/models', toolkit='FAL_AI')
-if error: print(f"Model listing failed: {error}")
-else: print([m['id'] for m in data.get('models', []) if 'kontext' in m.get('id', '').lower() or 'edit' in m.get('id', '').lower()])
+required = {'fal-ai/flux-kontext/dev', 'fal-ai/flux-kontext/pro'}
+found, cursor = set(), None
+while True:
+    params = f'?cursor={cursor}' if cursor else ''
+    data, error = proxy_execute(method='GET', endpoint=f'https://api.fal.ai/v1/models{params}', toolkit='FAL_AI')
+    if error or not data:
+        raise RuntimeError(f"Model catalog unavailable — aborting before generation: {error}")
+    for m in data.get('models', []):
+        eid = m.get('endpoint_id', '')
+        if 'kontext' in eid or 'edit' in eid:
+            found.add(eid)
+    cursor = data.get('next_cursor')
+    if not cursor:
+        break
+missing = required - found
+if missing:
+    raise RuntimeError(f"Required model endpoint(s) not found in catalog: {missing}")
+print(f"Verified endpoints: {found & required}")
 ```
 If Kontext [dev] returns an error, try Qwen-Image-Edit before falling back to nano-banana-2.
 
@@ -88,7 +103,7 @@ if error or not data:
     raise RuntimeError(f"Failed to get upload URL: {error}")
 upload_url = data['upload_url']
 file_url = data['file_url']
-print(f"upload_url={upload_url}")
+print("upload_url=<redacted>")
 print(f"file_url={file_url}")
 ```
 
@@ -112,15 +127,25 @@ poll into **separate** `COMPOSIO_REMOTE_WORKBENCH` calls to stay within the 180-
 cell timeout.
 
 **Step 1 — Submit the job** (run in `COMPOSIO_REMOTE_WORKBENCH`):
+
+> **Note — body schema is model-specific:**
+> - `fal-ai/flux-kontext/*` and `fal-ai/qwen-image-2/edit`: use `image_url` (single string)
+> - `fal-ai/nano-banana-2/edit`: use `image_urls` (list of strings)
+> - `fal-ai/flux/fill`: requires an additional `mask_url` field
+
 ```python
+endpoint = 'fal-ai/flux-kontext/dev'  # adjust if using a fallback model
+# Build model-specific body
+if 'nano-banana-2' in endpoint:
+    body = {'image_urls': ['<file_url from upload step>'], 'prompt': '<see §3 prompt template>'}
+else:
+    body = {'image_url': '<file_url from upload step>', 'prompt': '<see §3 prompt template>'}
+
 data, error = proxy_execute(
     method='POST',
-    endpoint='https://queue.fal.run/fal-ai/flux-kontext/dev',
+    endpoint=f'https://queue.fal.run/{endpoint}',
     toolkit='FAL_AI',
-    body={
-        'image_url': '<file_url from upload step>',
-        'prompt': '<see §3 prompt template>'
-    }
+    body=body
 )
 if error or not data:
     raise RuntimeError(f"Job submit failed: {error}")
@@ -142,6 +167,10 @@ for attempt in range(30):
     if error or not status:
         print(f"Attempt {attempt+1}: transient error ({error}), retrying...")
         continue
+    # Check for error fields even when status is COMPLETED — fal.ai can signal
+    # per-request errors inside an otherwise-successful response envelope.
+    if status.get('error') or status.get('error_type'):
+        raise RuntimeError(f"Job error reported — try next model in priority table: {status}")
     state = status.get('status', 'unknown')
     if state == 'COMPLETED':
         result, error = proxy_execute(
@@ -230,10 +259,19 @@ After generating each edited image, run the `capability-image` stages:
 > **HARD GATE — Attach step is non-optional.** The pipeline is **incomplete** unless
 > every generated image is posted as a Linear comment via
 > `mcp__linear__linear_createComment` with the durable Drive URL. Including the image
-> link only in the assistant response does **not** satisfy this requirement. If the
-> Attach step fails, retry once; if still failing, report the failure explicitly rather
-> than silently skipping. The skill is considered failed if any image completes
-> generation but is not posted as a comment.
+> link only in the assistant response does **not** satisfy this requirement.
+>
+> If the Attach step fails, retry once. If still failing:
+> 1. Run the `capability-image-cost` skill to compute the generation cost.
+> 2. Post a failure comment via `mcp__linear__linear_createComment` that includes
+>    the image URL, the failure reason, and the cost line — preserving cost data
+>    even when the image itself cannot be embedded.
+> 3. If `mcp__linear__linear_createComment` is completely unavailable (tool error on
+>    every attempt), create a minimal fallback cost comment via the assistant response
+>    and note the Linear comment failure explicitly.
+>
+> The skill is considered failed if any image completes generation but no comment
+> (full or fallback) is posted.
 
 ---
 
