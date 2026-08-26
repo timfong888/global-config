@@ -44,9 +44,10 @@ source cannot be assumed without hallucinating the subject.
 
 ## 2. Model selection
 
-Use `FAL_AI_RUN_MODEL_SYNC` via Composio for all image editing.
-Before calling, run `FAL_AI_GET_MODELS` if unsure of the current endpoint ID — fal.ai
-renames and versions models. The IDs below are correct as of 2026-08; verify at call time.
+Use `COMPOSIO_REMOTE_WORKBENCH` with `proxy_execute` to call fal.ai's queue API for all
+image editing. The direct Composio tools (`FAL_AI_RUN_MODEL_SYNC`,
+`FAL_AI_SUBMIT_ASYNC_JOB`, `FAL_AI_SUBSCRIBE_ASYNC_JOB`, `FAL_AI_UPLOAD_FILE`) are
+**restricted or incompatible** in the Blocks agent environment — do not use them.
 
 **FLUX.1 Kontext** is the correct model for interior design compositing — it was built
 specifically for "edit *this* photo while preserving the scene" workflows and outperforms
@@ -60,28 +61,88 @@ general-purpose editors on structure-preserving tasks.
 | **Qwen-Image-Edit-2511** | `fal-ai/qwen-image-2/edit` | Apache 2.0 | Fully open-source alternative if Kontext is unavailable; strong multimodal editor |
 | **nano-banana-2/edit** | `fal-ai/nano-banana-2/edit` | Google proprietary | Fallback only — general-purpose Gemini-based editing; weaker structure preservation |
 
-**Always verify endpoint IDs at call time** via `FAL_AI_GET_MODELS` — fal.ai renames
-and versions models. If Kontext [dev] returns an error, try Qwen-Image-Edit before
-falling back to nano-banana-2.
+**Always verify endpoint IDs at call time** — fal.ai renames and versions models. If
+Kontext [dev] returns an error, try Qwen-Image-Edit before falling back to nano-banana-2.
 
-To call the default model:
-```
-FAL_AI_RUN_MODEL_SYNC
-  model_id: fal-ai/flux-kontext/dev
-  input:
-    image_url: <fal.ai-hosted URL of the uploaded source photo>
-    prompt: <see §3 prompt template>
+### Uploading a source photo (Linear attachment → fal.ai-hosted URL)
+
+`mcp__linear__linear_downloadAttachment` returns a **local file path** (e.g.
+`/home/user/workspace/...`), not a URL or S3 key. To make the photo available to
+fal.ai models, upload it via presigned URL in two steps:
+
+**Step 1 — Get a presigned upload URL** (run in `COMPOSIO_REMOTE_WORKBENCH`):
+```python
+data, error = proxy_execute(
+    method='POST',
+    endpoint='https://rest.fal.ai/storage/upload/initiate',
+    toolkit='FAL_AI',
+    body={'file_name': 'source-photo.jpg', 'content_type': 'image/jpeg'}
+)
+upload_url = data['upload_url']
+file_url = data['file_url']
+print(f"upload_url={upload_url}")
+print(f"file_url={file_url}")
 ```
 
-To upload the source photo first (if it's a Linear attachment, not already on fal.ai):
+**Step 2 — Upload the local file** (run via Bash tool):
+```bash
+curl -s -X PUT "<upload_url>" \
+  -H "Content-Type: image/jpeg" \
+  --data-binary @/path/to/downloaded/photo.jpg
 ```
-FAL_AI_UPLOAD_FILE
-  file:
-    name: source-photo.jpg
-    mimetype: image/jpeg
-    s3key: <s3 key returned from linear download or attachment fetch>
+
+Use `file_url` (not `upload_url`) as `image_url` in the edit call below. Adjust
+`content_type` and `-H` header for PNG files (`image/png`).
+
+### Running the edit model
+
+Submit the job to fal.ai's async queue, then poll for completion. Split submit and
+poll into **separate** `COMPOSIO_REMOTE_WORKBENCH` calls to stay within the 180-second
+cell timeout.
+
+**Step 1 — Submit the job** (run in `COMPOSIO_REMOTE_WORKBENCH`):
+```python
+data, error = proxy_execute(
+    method='POST',
+    endpoint='https://queue.fal.run/fal-ai/flux-kontext/dev',
+    toolkit='FAL_AI',
+    body={
+        'image_url': '<file_url from upload step>',
+        'prompt': '<see §3 prompt template>'
+    }
+)
+request_id = data['request_id']
+print(f"request_id={request_id}")
 ```
-→ use the returned `access_url` as `image_url` in the edit call.
+
+**Step 2 — Poll until complete** (separate `COMPOSIO_REMOTE_WORKBENCH` call):
+```python
+import time
+for attempt in range(30):
+    time.sleep(5)
+    status, error = proxy_execute(
+        method='GET',
+        endpoint=f'https://queue.fal.run/fal-ai/flux-kontext/dev/requests/{request_id}/status',
+        toolkit='FAL_AI'
+    )
+    state = status.get('status', 'unknown')
+    if state == 'COMPLETED':
+        result, error = proxy_execute(
+            method='GET',
+            endpoint=f'https://queue.fal.run/fal-ai/flux-kontext/dev/requests/{request_id}',
+            toolkit='FAL_AI'
+        )
+        output_url = result['images'][0]['url']
+        print(f"Done: {output_url}")
+        break
+    elif state == 'FAILED':
+        raise RuntimeError(f"Job failed: {status}")
+    print(f"Attempt {attempt+1}: {state}")
+```
+
+If the poll cell times out at 180s, call `COMPOSIO_REMOTE_WORKBENCH` again with the
+same polling code — `request_id` persists across cells in the notebook. If the model
+endpoint fails, swap the endpoint path to the next model in the priority table above.
 
 ---
 
@@ -133,7 +194,8 @@ After generating each edited image, run the `capability-image` stages:
 
 | Stage | Action |
 |---|---|
-| **Generate** | `FAL_AI_RUN_MODEL_SYNC` per §2–3 |
+| **Upload** | Upload source photo to fal.ai via presigned URL per §2 "Uploading a source photo" |
+| **Generate** | Submit async job via `COMPOSIO_REMOTE_WORKBENCH` + `proxy_execute` per §2–3 |
 | **Download** | Load `capability-image-download` skill — download to disk for native Read review |
 | **Review** | Use Read tool to visually verify (see §5 quality checklist) |
 | **Revise if needed** | Strengthen PRESERVE section and regenerate once if structure was altered |
@@ -142,6 +204,14 @@ After generating each edited image, run the `capability-image` stages:
 | **Cost** | Load `capability-image-cost` skill — append cost line to the same comment |
 
 **One image per comment.** Multiple angles → one comment per source photo.
+
+> **HARD GATE — Attach step is non-optional.** The pipeline is **incomplete** unless
+> every generated image is posted as a Linear comment via
+> `mcp__linear__linear_createComment` with the durable Drive URL. Including the image
+> link only in the assistant response does **not** satisfy this requirement. If the
+> Attach step fails, retry once; if still failing, report the failure explicitly rather
+> than silently skipping. The skill is considered failed if any image completes
+> generation but is not posted as a comment.
 
 ---
 
@@ -167,7 +237,7 @@ If a check fails → revise the prompt (max one revision pass) before posting.
 - **Edit:** [what was changed]
 - **Source:** [number of source photos and angles]
 - **Preserved:** room structure, perspective, lighting direction
-- **Model:** fal-ai/nano-banana-2/edit
+- **Model:** fal-ai/flux-kontext/dev
 
 ![Composite — [angle description]](https://drive.google.com/...)
 ```
