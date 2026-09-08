@@ -1,6 +1,6 @@
 ---
 name: aurora-gtm-agenda
-description: Use when preparing the weekly Aurora GTM sync agenda — the Thursday GTM stand-up or the Tuesday product-and-growth pre-plan. Triggers on "create the GTM agenda", "next weekly GTM note", "prep this week's GTM sync", "what should we cover Thursday", or an invocation of /aurora-gtm-agenda. Aurora-specific; the agenda lives as a weekly issue under the Weekly GTM Syncs epic in the aurorainfra roadmap repo.
+description: Build and maintain Aurora's weekly GTM sync agenda as a GitHub issue — carry last week's actions forward, promote the substantive ones into tracked tickets, scan Slack for GTM threads that need surfacing, and draft the live agenda. Use this whenever the user mentions the GTM sync, the Thursday stand-up, the Tuesday pre-plan, the weekly GTM note or agenda, or asks what to cover this week, even if they never say the word skill or invoke /aurora-gtm-agenda.
 ---
 
 # Aurora GTM Agenda
