@@ -17,12 +17,34 @@ When committing code associated with a Linear ticket, include the ticket identif
 SAT-123: Brief description of the change
 ```
 
+## Linear Workflow Status Management
+
+When Blocks is directly delegated a Linear issue (via @blocks mention, direct comment, or the agent poller), it **automatically manages workflow status** — no explicit instruction needed:
+
+| Event | Status | Additional actions |
+|---|---|---|
+| Picks up the issue | → **In Progress** | Set state **before** posting the pickup comment |
+| Work complete, needs review | → **In Review** | — |
+| Blocked on external dependency or real-world action only the user can take | → **Blocked** | Set priority Urgent |
+| Needs inline input (a question the user can answer by replying) | → **In Review** | Set priority Urgent; include a `🔴 Needs input` marker in the comment body |
+
+Rules:
+- **State first, comment second.** Always set the Linear state transition before posting any comment — the state change is the immediately visible signal; the comment follows.
+- **Never self-certify Done.** Every completion lands in **In Review**; the user promotes to Done after reviewing.
+- Use **Blocked** only when the work truly stopped on something a typed reply alone cannot fix (external dependency, purchase, access grant). Use **Needs input** (In Review + Urgent) for a question the user can answer inline.
+- Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace.
+
+> **ENFORCEMENT:** Making **any tool call** on a directly-delegated ticket signals that work is in progress. Therefore `mcp__linear__linear_updateIssue` with `stateId` = In Progress MUST be your **first** tool call — before reading the issue, analyzing anything, or posting any comment. If you find yourself mid-task without having set In Progress, set it immediately.
+> - **Already In Progress:** proceed without a second transition call (the state change is idempotent).
+> - **Call fails:** retry once; if still failing, proceed with the work and note the failure in your pickup comment.
+> - **Scope:** applies only to direct delegation (@blocks mention, direct comment, agent poller) — exempt for background or multi-ticket workflows that incidentally touch an issue.
+
 ## Handback Rules
 
 - When a task is complete, summarize what changed and what is next in one or two sentences.
 - Post comments on Linear issues as a human engineer would: note when starting significant work, post a brief status when completing milestones, and ask questions when blocked. Keep comments concise and substantive — skip trivial one-liners.
 - Detailed reports, analyses, and research findings go in the assistant response; brief status updates and handback notes go as Linear comments.
-- Updating issue state (status, description, labels) is allowed only when explicitly instructed.
+- Updating issue state (status, description, labels) is allowed only when explicitly instructed — **except** for the workflow status transitions defined in the Linear Workflow Status Management section above, which happen automatically.
 
 ### Legibility rules — comments and descriptions (SAT-596)
 
@@ -34,6 +56,10 @@ The reader is on a phone. Apply these to every comment and ticket description yo
 - **No inline walls of code or long paths.** Put them on their own line or behind a Markdown link.
 - **Depth goes behind a link, not inline.** The comment is the glance; the PR/vault note is the deep-dive.
 - **Target: 5–8 short lines** per handback comment.
+
+## Linear API Notes
+
+- **`getIssueHistory` does not expose state transitions.** The MCP wrapper returns `type: "unknown"`, `from: null`, `to: null` for state-change events. To verify a state change was applied, check that `updatedAt` advanced after the `updateIssue` call — do not rely on `getIssueHistory` to confirm state transitions.
 
 ## Linear Hierarchical Context
 
