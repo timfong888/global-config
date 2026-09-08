@@ -35,6 +35,46 @@ The reader is on a phone. Apply these to every comment and ticket description yo
 - **Depth goes behind a link, not inline.** The comment is the glance; the PR/vault note is the deep-dive.
 - **Target: 5–8 short lines** per handback comment.
 
+## Linear Hierarchical Context
+
+When working on a Linear issue — via direct `@blocks` mention or poller dispatch — **fetch parent and project context before beginning work**. Critical context (which repo to use, architecture decisions, scope rules) often lives in the parent epic or project description and is invisible from the child issue alone.
+
+### Fetch (one call, before starting work)
+
+After identifying the issue, load its full hierarchy. Use `mcp__linear__linear_getIssueById` for the issue itself (which returns `project` and `parent` fields), then make a raw GraphQL call via the Linear MCP for the full nested parent:
+
+```graphql
+query IssueContext($id: String!) {
+  issue(id: $id) {
+    id identifier title description
+    project { id name description }
+    parent {
+      id identifier title description
+      parent { id identifier title description }
+    }
+  }
+}
+```
+
+> **Direct `@blocks` mention sessions:** `formatted_context` carries the `issue_identifier` (e.g. `AUR-3`). Use `mcp__linear__linear_getIssueById` with that identifier to get the issue and its `parent`/`project`. If no `issue_identifier` is present, skip this step.
+
+> **Poller-dispatched workers:** the orchestrator provides the issue `id` directly. The `linear-agent-poll` skill's B1 extends this fetch with agent-context block resolution and vault CLAUDE.md linking — follow B1 for the full poller fetch; this section defines the base that B1 builds on.
+
+### Stack the context (additive — nothing is dropped)
+
+Treat fetched descriptions as additional context, least-specific first:
+
+| Layer | Source |
+|---|---|
+| Project | `project.description` |
+| Grandparent | `parent.parent.description` (if present) |
+| Parent epic | `parent.description` |
+| Issue | `issue.description` + comments |
+
+All layers are **co-present and additive** — a less-specific layer is never discarded because a more-specific one exists. If two layers state genuinely contradictory hard rules on the same point, the more-specific layer wins (`issue > parent > grandparent > project`). Contradiction is the exception; additive stacking is the norm.
+
+Traverse at most **2 hops up** (parent + grandparent). Do not fetch beyond the grandparent.
+
 ## Skills
 
 Individual skill files live in `.claude/skills/`. Each skill is loaded via the `Skill` tool using its directory name. Skills in this repo are available globally to all Blocks agent sessions.

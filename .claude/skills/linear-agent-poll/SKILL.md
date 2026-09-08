@@ -250,6 +250,9 @@ You own **exactly the issue handed to you** — do not touch any other issue. Us
 tools pinned to `LINEAR_ACCOUNT`. Sign every comment `(by Claude)`; never post as Tim.
 
 ### B1. Load it (layered context — ticket > epic > project > vault > global)
+
+> **This step implements and extends the global Linear Hierarchical Context rule** defined in `global-config/CLAUDE.md` (always loaded into every Blocks session). That rule — fetch parent + grandparent + project descriptions before work, additive 2-hop stack, `issue > parent > grandparent > project` conflict precedence — is the canonical base that applies to **both** direct `@blocks` mention sessions and poller-dispatched workers. B1 extends it with poller-specific additions: agent-context fenced-block resolution (step 2), vault `CLAUDE.md` dereferencing (step 2), advisory RAG knowledge (step 4), and compaction (step 3). The base fetch and stacking rules are not re-specified here — follow the global rule for those, then layer the extensions below on top.
+
 The ticket is a *delta* against an assumed project baseline. To execute correctly, the
 worker must load not just the issue but the **project** and **epic (parent issue)** context
 and their rules. Assemble a 5-layer context stack, least- to most-specific, and prepend it
@@ -258,8 +261,8 @@ to your task input. (Design: vault note `02-AI-Tools/linear-agent-system/SAT-365
 **1 — Fetch issue + project + epic in one call.** `LINEAR_GET_LINEAR_ISSUE` already returns
 `project` and `parent` on the issue, so this is **one round-trip, not three**. Read:
 `assignee`, `description`, `labels`, `comments.nodes` (chronological), **plus**
-`project { id name description labels }` and `parent { id identifier title description }`
-(the epic). Grab the Project's `labels` too — that's what tells you whether it's a
+`project { id name description labels }`, `parent { id identifier title description }` (the epic),
+and `parent.parent { id identifier title description }` (the grandparent, per the 2-hop global rule). Grab the Project's `labels` too — that's what tells you whether it's a
 coding-track Project (`CODING_PROJECT_LABEL`) and, along with `project.name`, is what the
 coding profile keys its repo lookup on (B3, SAT-365).
 The GraphQL shape:
@@ -270,7 +273,10 @@ query IssueWithContext($id: String!) {
     labels { nodes { name } }
     comments { nodes { id body createdAt user { name } parent { id } } }  # comment `parent` id = thread structure — load-bearing for B2 per-thread pending and B5 nested replies
     project { id name description labels { nodes { name } } }  # description may carry the agent-context block / CLAUDE.md pointer; labels/name drive coding-repo resolution (B3)
-    parent  { id identifier title description }   # the "epic", same convention
+    parent  {
+      id identifier title description
+      parent { id identifier title description }  # grandparent — 2-hop per global hierarchical-context rule
+    }
   }
 }
 ```
@@ -298,6 +304,7 @@ continue — **never block the tick on a missing or invalid link**.
 | L0 Global | `~/.claude/CLAUDE.md` | already in the harness |
 | L1 Repo / vault | repo or vault `CLAUDE.md` for the cwd | already in the harness |
 | L2 Project | `project.description` **+** its linked vault `CLAUDE.md` | **fetched in B1.1, resolved in B1.2** |
+| L2.5 Grandparent | `parent.parent.description` (if present) | **fetched in B1.1** — vault-link resolution skipped; description text and hard rules stack normally and obey the `issue > parent > grandparent > project` precedence |
 | L3 Epic | `parent.description` **+** its linked `CLAUDE.md` | **fetched in B1.1, resolved in B1.2** |
 | L4 Issue | `issue.description` + `comments` | fetched in B1.1 |
 
