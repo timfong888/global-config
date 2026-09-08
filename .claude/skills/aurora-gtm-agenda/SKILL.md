@@ -55,6 +55,11 @@ Keep the format identical every week so the meeting is scannable:
 
 ## Workflow
 
+0. **Check this week's note does not already exist.** Search the repo by title for the target
+   date (`gh issue list --search "<Month D, YYYY>"`) before creating anything. Do **not** rely on
+   the epic's `subIssues` list alone — that index is eventually consistent and has returned a
+   stale count that omitted a note parented hours earlier. If a note already exists, update it
+   in place; never create a second one for the same week.
 1. **Review last week's notes.** Read the prior week's issue and make crisp what belongs under
    *Key Actions from Last Week*.
 2. **Promote substantive actions to tickets.** An action is substantive when it needs tracking or
@@ -75,6 +80,8 @@ discussion time.
 | Mistake | Fix |
 |---|---|
 | Creating a standalone issue | Every weekly note is a **sub-issue** of the Weekly GTM Syncs epic |
+| Creating a second note for a week that already has one | Title-search the repo first — `subIssues` can be stale. Update the existing note instead |
+| Overwriting what a human already drafted | Keep their lines verbatim and append; their draft is more current than anything reconstructed from Slack |
 | Carrying an action forward as prose | If it needs tracking, it is a ticket — reference it by title plus ID |
 | Filling *Live Agenda* with status updates | Status goes async; the agenda is for discussion and decisions |
 | Drafting the product sync here | Product sync is Tue/Wed and is not part of this epic |
