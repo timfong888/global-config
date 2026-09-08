@@ -55,11 +55,24 @@ Keep the format identical every week so the meeting is scannable:
 
 ## Workflow
 
-0. **Check this week's note does not already exist.** Search the repo by title for the target
-   date (`gh issue list --search "<Month D, YYYY>"`) before creating anything. Do **not** rely on
-   the epic's `subIssues` list alone — that index is eventually consistent and has returned a
-   stale count that omitted a note parented hours earlier. If a note already exists, update it
-   in place; never create a second one for the same week.
+0. **Check this week's note does not already exist.** Before creating anything, title-search the
+   configured repo for the target date:
+
+   ```bash
+   gh issue list --repo "$GTM_SYNC_REPO" --state all --search '"<Month D, YYYY>" in:title'
+   ```
+
+   All three qualifiers carry weight. `--repo` because this skill runs from the vault directory,
+   not from a checkout of the roadmap repo. `--state all` because a closed note still counts —
+   without it the search misses a duplicate that was closed as such, and recreates it. `in:title`
+   because a bare search also matches bodies and comments; searching `September` in this repo
+   returns a billing bug whose title contains no month at all. Confirm the returned title and
+   issue number really are the weekly note before touching it.
+
+   Do **not** rely on the epic's `subIssues` list alone — that index is eventually consistent and
+   has returned a stale `totalCount` that omitted a note parented hours earlier. If a note already
+   exists, **update it in place**: append your findings under its existing headings and keep every
+   human-authored line verbatim (see Common Mistakes). Never create a second note for the week.
 1. **Review last week's notes.** Read the prior week's issue and make crisp what belongs under
    *Key Actions from Last Week*.
 2. **Promote substantive actions to tickets.** An action is substantive when it needs tracking or
