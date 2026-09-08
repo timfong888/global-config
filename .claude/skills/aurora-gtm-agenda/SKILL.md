@@ -55,6 +55,24 @@ Keep the format identical every week so the meeting is scannable:
 
 ## Workflow
 
+0. **Check this week's note does not already exist.** Before creating anything, title-search the
+   configured repo for the target date:
+
+   ```bash
+   gh issue list --repo "$GTM_SYNC_REPO" --state all --search '"<Month D, YYYY>" in:title'
+   ```
+
+   All three qualifiers carry weight. `--repo` because this skill runs from the vault directory,
+   not from a checkout of the roadmap repo. `--state all` because a closed note still counts —
+   without it the search misses a duplicate that was closed as such, and recreates it. `in:title`
+   because a bare search also matches bodies and comments; searching `September` in this repo
+   returns a billing bug whose title contains no month at all. Confirm the returned title and
+   issue number really are the weekly note before touching it.
+
+   Do **not** rely on the epic's `subIssues` list alone — that index is eventually consistent and
+   has returned a stale `totalCount` that omitted a note parented hours earlier. If a note already
+   exists, **update it in place**: append your findings under its existing headings and keep every
+   human-authored line verbatim (see Common Mistakes). Never create a second note for the week.
 1. **Review last week's notes.** Read the prior week's issue and make crisp what belongs under
    *Key Actions from Last Week*.
 2. **Promote substantive actions to tickets.** An action is substantive when it needs tracking or
@@ -75,6 +93,8 @@ discussion time.
 | Mistake | Fix |
 |---|---|
 | Creating a standalone issue | Every weekly note is a **sub-issue** of the Weekly GTM Syncs epic |
+| Creating a second note for a week that already has one | Title-search the repo first — `subIssues` can be stale. Update the existing note instead |
+| Overwriting what a human already drafted | Keep their lines verbatim and append; their draft is more current than anything reconstructed from Slack |
 | Carrying an action forward as prose | If it needs tracking, it is a ticket — reference it by title plus ID |
 | Filling *Live Agenda* with status updates | Status goes async; the agenda is for discussion and decisions |
 | Drafting the product sync here | Product sync is Tue/Wed and is not part of this epic |
