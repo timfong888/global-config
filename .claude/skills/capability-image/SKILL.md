@@ -27,12 +27,20 @@ by a coding change (coding), or an image attached to a Linear issue for referenc
 
 ## Tools
 
-Image generation runs through **Composio**:
+Image generation runs through **Composio** via `COMPOSIO_REMOTE_WORKBENCH` +
+`proxy_execute`:
 
 - **`fal_ai`** — Fal.AI image generation. **Default provider** for both generation and
   editing/compositing (see model priority below).
 - **`gemini`** — Gemini image generation (`nano-banana`). **Fallback only** — use it
   when `fal_ai` is unavailable or the ticket explicitly asks for it, not as the default.
+
+> **Environment note:** The direct Composio tools (`FAL_AI_RUN_MODEL_SYNC`,
+> `FAL_AI_SUBMIT_ASYNC_JOB`, `FAL_AI_SUBSCRIBE_ASYNC_JOB`, `FAL_AI_UPLOAD_FILE`) are
+> **restricted** in the Blocks agent environment. Use `proxy_execute` via
+> `COMPOSIO_REMOTE_WORKBENCH` instead. The `photo-compositing` skill documents the
+> full async queue pattern (upload → submit → poll); follow that pattern for all
+> fal.ai calls.
 
 Both return a **hosted URL only** (no local bytes, and the URL is short-lived), which
 is exactly why the download and host stages below exist.
@@ -40,7 +48,7 @@ is exactly why the download and host stages below exist.
 ### Model priority
 
 Always verify the exact endpoint ID before calling — fal.ai renames and versions models.
-Run `FAL_AI_GET_MODELS` if unsure. The IDs below are correct as of 2026-08.
+The IDs below are correct as of 2026-08.
 
 - **Editing / compositing an existing photo**: default to **`fal-ai/flux-kontext/dev`**
   (FLUX.1 Kontext — purpose-built for scene-preserving photo edits; BFL non-commercial
