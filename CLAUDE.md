@@ -167,6 +167,44 @@ This runs a review-fix loop (at most 2 iterations) on uncommitted changes. Fix a
 
 The `cr` CLI is pre-installed and authenticated via the `CODERABBIT_API_KEY` environment variable in every Blocks session. If auth fails, add the key to Blocks secrets at **coderabbit.ai → Account Settings → API Keys**.
 
+## Post-Clone Setup
+
+Every repository may need environment setup before the agent can do useful work. Blocks runs `.blocks/post-clone` automatically after cloning — this is how dependencies, runtimes, and custom tooling get installed.
+
+**When starting work on any repo:**
+
+1. Check whether `.blocks/post-clone` exists.
+2. If it exists, it will have already run — verify the environment is functional before proceeding.
+3. If it **does not** exist and the repo requires tooling (npm packages, pip dependencies, Go modules, custom binaries, etc.), create one before beginning the task.
+
+**Script rules:**
+
+- Always begin with `#!/bin/bash` and `set -e` — without `set -e`, the agent continues even if setup fails, leading to confusing mid-task errors.
+- Keep it minimal: install only what the agent needs to work on tasks in this repo.
+- Scripts run in an **ephemeral sandbox** — installed packages do not persist across sessions. Every new session re-runs the script.
+- Make the file executable: `chmod +x .blocks/post-clone`.
+
+**Common patterns:**
+
+```bash
+#!/bin/bash
+set -e
+
+# Node.js
+npm install
+
+# Python
+pip install -r requirements.txt
+
+# Go
+go mod download
+
+# System packages
+apt-get install -y <package>
+```
+
+If a repo is missing a post-clone script and the tooling gap is blocking the current task, create the script, commit it, and continue.
+
 ## Constraints
 
 - Work only within the `workspace` directory. Create subfolders per cloned repository.
