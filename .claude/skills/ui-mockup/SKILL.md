@@ -1,10 +1,6 @@
 ---
 name: ui-mockup
-description: Generate an inline HTML before/after mockup whenever proposing or implementing UI changes. Triggered automatically on any UI proposal, component redesign, or visual revision task.
-triggers:
-  - any task involving UI changes, component redesign, layout revision, or visual improvements
-  - before creating a PR that modifies visual components
-  - when asked to "mockup", "show me", "what will it look like", or "preview" a UI change
+description: Generate an inline HTML before/after mockup whenever proposing or implementing UI changes. Triggered automatically on any UI proposal, component redesign, layout revision, or visual improvement; before creating a PR that modifies visual components; and when asked to mockup, preview, show me, or what will it look like for a UI change.
 ---
 
 # UI Mockup Skill
