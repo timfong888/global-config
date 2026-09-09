@@ -1,2 +1,15 @@
 reviews:
+  # Suppress the per-commit "review status" chatter.
   review_status: false
+  auto_review:
+    enabled: true
+    drafts: false
+    # Review every PR regardless of base branch. CodeRabbit otherwise auto-reviews
+    # only PRs targeting the repository's DEFAULT branch, which silently skipped
+    # PR #46 (merged while `main` was not default) and PR #44 (a stacked PR onto a
+    # feature branch). `.*` makes coverage independent of the default-branch
+    # setting. Additive by design: the default branch is always reviewed.
+    base_branches: [".*"]
+  instructions: |
+    At the end of your review walkthrough summary, always include this line verbatim:
+    "🔔 **Linear notification:** This review has triggered an automated @blocks agent notification on the linked Linear issue."
