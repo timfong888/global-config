@@ -181,7 +181,7 @@ with assumptions), `auto:confirm` (confirm before the expensive/irreversible ste
 ## 4. Report & hand back (tick step 7)
 
 Handback = set `stateId` to `STATE_IN_REVIEW` — never change the assignee (the human
-keeps it throughout, per B6 in `linear-agent-poll`).
+keeps it throughout — see the `linear-handback` skill).
 
 - **Short** → `✅ Done — <one-line framing>` + the full draft/answer inline. `(by Claude)`. State → In Review.
 - **Long** → `✅ Done — <3–5 line summary>. Full <research|plan|draft>: <Markdown link to the vault note>.` `(by Claude)`. State → In Review.

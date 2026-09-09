@@ -190,7 +190,7 @@ labeled sections (US-5), signed `(by Claude)`:
 
 Omit a section entirely if it's empty rather than showing it blank.
 
-Handback = set `stateId` to `STATE_IN_REVIEW` — never change the assignee (per B6 in the `linear-agent-poll` skill):
+Handback = set `stateId` to `STATE_IN_REVIEW` — never change the assignee (per the `linear-handback` skill):
 - **Pending Approval is non-empty** (the LogSeq gate, or missing scope) →
   `> question:` with the batch/ask, `priority` = 1 (Urgent), `stateId` = In
   Review. Return `needs-input: {issue}`.
