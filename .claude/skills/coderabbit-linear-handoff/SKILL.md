@@ -1,6 +1,6 @@
 ---
 name: coderabbit-linear-handoff
-description: Set up the CodeRabbit → Linear → Blocks handoff loop for a GitHub repository. Adds a GitHub Actions workflow that fires when CodeRabbit submits a PR review and posts an @blocks trigger comment on the linked Linear issue. TRIGGER on: "set up coderabbit linear handoff", "wire up coderabbit to linear", "automate coderabbit blocks loop", "add coderabbit handoff to [repo]".
+description: 'Set up the CodeRabbit → Linear → Blocks handoff loop for a GitHub repository. Adds a GitHub Actions workflow that fires when CodeRabbit submits a PR review and posts an @blocks trigger comment on the linked Linear issue. TRIGGER on: "set up coderabbit linear handoff", "wire up coderabbit to linear", "automate coderabbit blocks loop", "add coderabbit handoff to [repo]".'
 ---
 
 # CodeRabbit → Linear → Blocks Handoff Loop

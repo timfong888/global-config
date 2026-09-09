@@ -1,7 +1,6 @@
 ---
 name: interior-design
-description: Generate visual mockup recommendations for home spaces using spatial psychology principles — vertical plane reclamation, depth layering, contrast lighting, asymmetrical styling, and the 80/20 curation rule. Load when asked to recommend changes to a room or create a visual mockup for home improvement.
-whenToUse: Load when the user asks to create visual mockups, recommend changes to their home, suggest furniture arrangements, or improve a room's look. Applies to any home space (living room, bedroom, dining room, etc.).
+description: Generate visual mockup recommendations for home spaces using spatial psychology principles — vertical plane reclamation, depth layering, contrast lighting, asymmetrical styling, and the 80/20 curation rule. Load when the user asks to create visual mockups, recommend changes to their home, suggest furniture arrangements, or improve a room's look. Applies to any home space (living room, bedroom, dining room, etc.).
 ---
 
 # Interior Design: Visual Mockup Skill

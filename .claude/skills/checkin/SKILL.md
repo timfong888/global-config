@@ -1,7 +1,6 @@
 ---
 name: checkin
-description: High-level project check-in — review all tickets in a Linear project, surface blockers and stalled work, identify the nearest path to user-visible MVP value, post a project activity comment, and create blocker tickets assigned to the user. Designed for use at the start of a session or mid-flight during a long-running agent job.
-whenToUse: Run when the user invokes `/checkin`, asks for a project overview or status review, or when a long-running agent session needs to surface current progress before continuing. Works on a named Linear project or the active project inferred from the current context.
+description: High-level project check-in — review all tickets in a Linear project, surface blockers and stalled work, identify the nearest path to user-visible MVP value, post a project activity comment, and create blocker tickets assigned to the user. Use when the user invokes `/checkin`, asks for a project overview or status review, or when a long-running agent session needs to surface current progress before continuing. Works on a named Linear project or the active project inferred from context.
 ---
 
 # /checkin — Project Status Review
