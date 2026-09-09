@@ -7,14 +7,21 @@
  *
  * Environment variables:
  *   AURORA_API_KEY   - required; your Aurora bearer token
- *   AURORA_BASE_URL  - optional; defaults to https://ai.aur.lu/v1
+ *   AURORA_BASE_URL  - required; the inference endpoint, e.g. the value set in
+ *                      Blocks workspace secrets. No default: the server fails
+ *                      closed rather than reaching a hardcoded host.
  */
 
-const AURORA_BASE_URL = (process.env.AURORA_BASE_URL || "https://ai.aur.lu/v1").replace(/\/$/, "");
+const AURORA_BASE_URL = (process.env.AURORA_BASE_URL || "").replace(/\/$/, "");
 const AURORA_API_KEY = process.env.AURORA_API_KEY;
 
 if (!AURORA_API_KEY) {
   process.stderr.write("Error: AURORA_API_KEY environment variable is required\n");
+  process.exit(1);
+}
+
+if (!AURORA_BASE_URL) {
+  process.stderr.write("Error: AURORA_BASE_URL environment variable is required\n");
   process.exit(1);
 }
 
