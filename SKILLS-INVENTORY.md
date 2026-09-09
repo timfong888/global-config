@@ -210,10 +210,14 @@ A second source, ported on top of the SAT-685 baseline above: `github.com/timfon
 
 | Skill | Ported from | Lines |
 |---|---|---|
-| `linear-agent-poll` | `linear-agent-poll.md` (orchestrator, Part A) + `agent-writing.md` + `agent-admin.md` (Part B track dispatch, condensed inline — Blocks reads one `SKILL.md` per skill, same reasoning `gdoc-review` used in SAT-685) | 746 + 204 + 218 → ~230 |
+| `linear-agent-poll` | `linear-agent-poll.md` (orchestrator, Part A) + `agent-writing.md` + `agent-admin.md` (Part B track dispatch, condensed inline — Blocks reads one `SKILL.md` per skill, same reasoning `gdoc-review` used in SAT-685) | 746 + 204 + 218 → ~230; **decomposed to ~115 lines (orchestrator only) in SAT-639** |
+| `linear-worker` | extracted from `linear-agent-poll` Part B (B1–B5.5) — per-issue worker: context loading, pending detection, track routing, pickup comment, work, self-review gate; delegates handback to `linear-handback` | ~98 lines (new, SAT-639) |
+| `linear-handback` | extracted from `linear-agent-poll` B6 — handback protocol: all three outcome paths (Success/Needs-input/Blocked), Todo spin-out algorithm, terminal-state rule; callable from any track, not just the poller | ~86 lines (new, SAT-639) |
 | `linear-image-pipeline` | `capability-image.md` + `capability-image-cost.md` + `capability-image-download.md` + `capability-image-host.md` (all four stages of one pipeline; kept as its own skill since it's a reusable capability any track invokes, not track-specific) | 107 + 81 + 41 + 45 → ~90 |
 
-All six source `profiles/*.md` files are accounted for across the two rows above (three into `linear-agent-poll`, four into `linear-image-pipeline` — `capability-image.md` appears once, as the pipeline's own overview file); 746 + 204 + 218 + 107 + 81 + 41 + 45 = 1,442, matching the total in the paragraph above.
+All six source `profiles/*.md` files are accounted for across the original two rows (`linear-agent-poll` and `linear-image-pipeline` — `capability-image.md` appears once as the pipeline's overview file); 746 + 204 + 218 + 107 + 81 + 41 + 45 = 1,442, matching the total in the paragraph above. The two new rows (`linear-worker`, `linear-handback`) are extractions from the ported `linear-agent-poll`, not new source files.
+
+**SAT-639 decomposition note:** `linear-agent-poll` was slimmed from 728 lines to ~115 (orchestrator only). Per-issue worker logic (B1–B5.5) moved to `linear-worker`; handback protocol (B6) moved to `linear-handback`. Three-skill total: ~299 lines vs 728 prior — ~59% reduction. Addresses Sourcery's architectural feedback on PR #26.
 
 **What was cut, and why:**
 - The **admin track's** vault-filing and personal-task-journal sub-types depend on Tim's local Obsidian vault and journal files being mounted in the session — the same category SAT-685 already excludes wholesale ("depends on a local GUI app, local session, or personal account"). Ported as a flagged degrade-gracefully case (say the store isn't mounted, don't silently no-op) rather than porting vault/journal paths Blocks can't reach. The email sub-type (Gmail draft-only, API-based) has no such dependency and ported normally.
