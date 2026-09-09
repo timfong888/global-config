@@ -76,6 +76,37 @@ The reader is on a phone. Apply these to every comment and ticket description yo
 - **Depth goes behind a link, not inline.** The comment is the glance; the PR/vault note is the deep-dive.
 - **Target: 5–8 short lines** per handback comment.
 
+## PR and issue references
+
+Always hyperlink PR and issue references — never use raw URLs or plain `#N` numbers alone.
+
+| Context | Format |
+|---|---|
+| Referencing a PR | `[PR #N: Title](https://github.com/owner/repo/pull/N)` |
+| Referencing a commit | `[\`abc1234\`](https://github.com/owner/repo/commit/full-sha)` |
+| Referencing a Linear issue | `[SAT-N: Title](https://linear.app/.../issue/SAT-N/...)` |
+
+**Correct:**
+> PR is live at [PR #5: Add CodeRabbit → Linear workflow](https://github.com/timfong888/global-config/pull/5).
+
+**Incorrect:**
+> PR is live at **https://github.com/timfong888/global-config/pull/5**.
+> PR is live at PR #5.
+
+## Comment structure
+
+When reporting completed work back to Linear, structure comments as follows. This is the *shape*; the Legibility rules above govern the *wording*.
+
+1. One-sentence summary with hyperlinked PR/resource
+2. What was built (bulleted, concrete)
+3. Setup steps for the human (if any)
+
+## Branch naming
+
+Follow the Linear-derived convention in effect for the project:
+- Feature: `feature/<TEAM>-<N>-<slug>` or `blocks/<TEAM>-<N>-<slug>`
+- Fix: `fix/<TEAM>-<N>-<slug>`
+
 ## Linear API Notes
 
 - **`getIssueHistory` does not expose state transitions.** The MCP wrapper returns `type: "unknown"`, `from: null`, `to: null` for state-change events. To verify a state change was applied, check that `updatedAt` advanced after the `updateIssue` call — do not rely on `getIssueHistory` to confirm state transitions.
