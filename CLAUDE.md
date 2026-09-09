@@ -40,6 +40,32 @@ Rules:
 > - **Call fails:** retry once; if still failing, proceed with the work and note the failure in your pickup comment.
 > - **Scope:** applies only to direct delegation (@blocks mention, direct comment, agent poller) — exempt for background or multi-ticket workflows that incidentally touch an issue.
 
+## Blockers: keep going
+
+The rules above cover a **single delegated ticket** — move it to Blocked, assign it to the user,
+mark it Urgent. This section covers the other case: you are working a **queue or a batch** and one
+item is stuck. One blocker must not halt the whole run.
+
+**Blocker types**
+
+- **Missing env var or API key** — a required credential is absent or expired
+- **Ambiguous requirement** — two valid readings with no way to resolve inline
+- **Dependency not complete** — branch conflict, or upstream data that does not exist yet
+- **Approval required mid-run** — a permission prompt that stops tooling progress
+
+**Response**
+
+1. **Log it.** Create a Linear ticket labelled `blocker` describing exactly what is missing or
+   ambiguous, and naming the blocked issue's identifier.
+2. **Hand the blocked item back** using the transitions above — Blocked, assigned to the user,
+   Urgent — with a comment saying what stopped work and linking the blocker ticket.
+3. **Skip it.** Move to the next item. Do not retry the blocked one on this pass.
+4. **Do not loop.** If a second approach also blocks, ticket it and move on. Never spend the whole
+   run on one stuck item.
+
+Steps 1 and 3 are what distinguish a batch from a single ticket: the blocker gets its own tracked
+ticket so it is not lost, and the run continues. (SAT-923)
+
 ## Handback Rules
 
 - When a task is complete, summarize what changed and what is next in one or two sentences.
