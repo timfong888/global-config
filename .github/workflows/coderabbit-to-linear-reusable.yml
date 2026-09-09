@@ -1,0 +1,115 @@
+name: CodeRabbit → Linear Handoff (Reusable)
+
+# Reusable workflow: posts a @blocks handoff comment to the Linear issue
+# linked to a PR whenever CodeRabbit submits a review.
+#
+# Caller requirement: LINEAR_API_KEY secret must be set in the calling repo.
+# The secret value is a Linear personal API key (lin_api_xxxxx), NOT "Bearer ..." prefixed.
+
+on:
+  workflow_call:
+    inputs:
+      branch_name:
+        description: "PR head branch name (e.g. blocks/SAT-123-my-feature)"
+        required: true
+        type: string
+      pr_url:
+        description: "Full URL of the pull request"
+        required: true
+        type: string
+      pr_number:
+        description: "Pull request number"
+        required: true
+        type: string
+      repo_full_name:
+        description: "Full repository name (owner/repo)"
+        required: true
+        type: string
+      review_state:
+        description: "CodeRabbit review state (approved, changes_requested, commented)"
+        required: false
+        type: string
+        default: "commented"
+    secrets:
+      LINEAR_API_KEY:
+        required: true
+
+jobs:
+  post-linear-handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Linear issue ID from branch name
+        id: extract
+        run: |
+          BRANCH="${{ inputs.branch_name }}"
+          # Match patterns like SAT-765, BLO-123 (case-insensitive)
+          ISSUE_ID=$(echo "$BRANCH" | grep -oiE '[A-Z]+-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          echo "issue_id=$ISSUE_ID" >> "$GITHUB_OUTPUT"
+          if [ -z "$ISSUE_ID" ]; then
+            echo "No Linear issue ID found in branch: $BRANCH — skipping."
+          else
+            echo "Extracted Linear issue ID: $ISSUE_ID"
+          fi
+
+      - name: Resolve Linear issue UUID
+        id: resolve
+        if: steps.extract.outputs.issue_id != ''
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          ISSUE_ID: ${{ steps.extract.outputs.issue_id }}
+        run: |
+          RESPONSE=$(curl -sf -X POST https://api.linear.app/graphql \
+            -H "Authorization: $LINEAR_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg id "$ISSUE_ID" \
+              '{"query": "query($id: String!) { issue(id: $id) { id identifier title } }", "variables": {"id": $id}}')")
+
+          UUID=$(echo "$RESPONSE" | jq -r '.data.issue.id // empty')
+          TITLE=$(echo "$RESPONSE" | jq -r '.data.issue.title // empty')
+
+          if [ -z "$UUID" ]; then
+            echo "Could not resolve Linear issue $ISSUE_ID — response: $RESPONSE"
+            exit 1
+          fi
+
+          echo "uuid=$UUID" >> "$GITHUB_OUTPUT"
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+          echo "Resolved $ISSUE_ID → $UUID ($TITLE)"
+
+      - name: Post @blocks handoff comment to Linear
+        if: steps.resolve.outputs.uuid != ''
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          ISSUE_UUID: ${{ steps.resolve.outputs.uuid }}
+          ISSUE_ID: ${{ steps.extract.outputs.issue_id }}
+          PR_URL: ${{ inputs.pr_url }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          REPO: ${{ inputs.repo_full_name }}
+          REVIEW_STATE: ${{ inputs.review_state }}
+        run: |
+          if [ "$REVIEW_STATE" = "approved" ]; then
+            BODY="**CodeRabbit approved** [PR #${PR_NUMBER}](${PR_URL}) in \`${REPO}\` — no blocking issues found.\n\n@blocks PR is ready. Please confirm the branch is clean and merge when appropriate."
+          else
+            BODY="**CodeRabbit review complete** on [PR #${PR_NUMBER}](${PR_URL}) in \`${REPO}\`.\n\n@blocks Please review CodeRabbit's comments on the PR and implement the required changes, then push to the same branch."
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg issue_id "$ISSUE_UUID" \
+            --arg body "$BODY" \
+            '{
+              query: "mutation CreateComment($input: CommentCreateInput!) { commentCreate(input: $input) { success comment { id } } }",
+              variables: { input: { issueId: $issue_id, body: $body } }
+            }')
+
+          RESULT=$(curl -sf -X POST https://api.linear.app/graphql \
+            -H "Authorization: $LINEAR_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          SUCCESS=$(echo "$RESULT" | jq -r '.data.commentCreate.success // false')
+          if [ "$SUCCESS" = "true" ]; then
+            echo "Successfully posted handoff comment to $ISSUE_ID"
+          else
+            echo "Failed to post comment. Response: $RESULT"
+            exit 1
+          fi
