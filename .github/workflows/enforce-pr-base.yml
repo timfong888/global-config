@@ -1,0 +1,30 @@
+name: PR policy
+
+# Every PR in this repo must target `main`. Stacked PRs (one feature branch onto
+# another) fragmented history and, before `base_branches: [".*"]` was set, also
+# escaped CodeRabbit review entirely — see PR #44, which merged with
+# "CodeRabbit — Review skipped".
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  base-must-be-main:
+    name: PR base must be main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check base branch
+        env:
+          # Via env, not inline interpolation — a branch name is untrusted input.
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$BASE_REF" != "main" ]; then
+            echo "::error::This PR targets '$BASE_REF'. Every PR in this repo must target 'main'."
+            echo "Retarget it with:  gh pr edit $PR_NUMBER --base main"
+            exit 1
+          fi
+          echo "Base branch is 'main'. OK."
