@@ -24,15 +24,16 @@ When Blocks is directly delegated a Linear issue (via @blocks mention, direct co
 | Event | Status | Additional actions |
 |---|---|---|
 | Picks up the issue | → **In Progress** | Set state **before** posting the pickup comment |
-| Work complete, needs review | → **In Review** | — |
-| Blocked on external dependency or real-world action only the user can take | → **Blocked** | Set priority Urgent |
-| Needs inline input (a question the user can answer by replying) | → **In Review** | Set priority Urgent; include a `🔴 Needs input` marker in the comment body |
+| Work complete, needs review | → **In Review** | Subscribe the user, so it surfaces in their Linear Inbox |
+| Blocked on external dependency or real-world action only the user can take | → **Blocked** | Assign to the user; set priority Urgent |
+| Needs inline input (a question the user can answer by replying) | → **In Review** | Subscribe the user; set priority Urgent; include a `🔴 Needs input` marker in the comment body |
 
 Rules:
 - **State first, comment second.** Always set the Linear state transition before posting any comment — the state change is the immediately visible signal; the comment follows.
 - **Never self-certify Done.** Every completion lands in **In Review**; the user promotes to Done after reviewing.
 - Use **Blocked** only when the work truly stopped on something a typed reply alone cannot fix (external dependency, purchase, access grant). Use **Needs input** (In Review + Urgent) for a question the user can answer inline.
-- Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace.
+- Resolve workflow state IDs by introspecting the team's configured states via the Linear API (`team { states { nodes { id name type } } }`) — never hard-code an id; state ids differ per workspace. Where the workspace publishes them, prefer the `## Agent Poll Configuration` block in the project's CLAUDE.md over re-introspecting.
+- **Reaching the user is part of the transition, not a nicety.** In Review and Needs input must land in the user's Inbox, and Blocked must be owned by them — a state change they never see is not a handback. (SAT-762)
 
 > **ENFORCEMENT:** Making **any tool call** on a directly-delegated ticket signals that work is in progress. Therefore `mcp__linear__linear_updateIssue` with `stateId` = In Progress MUST be your **first** tool call — before reading the issue, analyzing anything, or posting any comment. If you find yourself mid-task without having set In Progress, set it immediately.
 > - **Already In Progress:** proceed without a second transition call (the state change is idempotent).
