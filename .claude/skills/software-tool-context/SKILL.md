@@ -1,7 +1,6 @@
 ---
 name: software-tool-context
-description: Load the context map for a specific software tool in the SAT-857 "Enable Software Tools programmatically" Epic. Resolves access method, auth details, and known failure modes before working with the tool.
-whenToUse: Invoke at the start of any task that involves programmatically accessing a third-party software tool (Boldin, etc.) that is tracked under the SAT-857 Epic. Run BEFORE attempting any API call, browser automation, or MCP interaction with the tool.
+description: 'Load the context map for a specific software tool in the SAT-857 "Enable Software Tools programmatically" Epic. Resolves access method, auth details, and known failure modes before working with the tool. Invoke at the start of any task that involves programmatically accessing a third-party software tool (Boldin, etc.) tracked under that Epic, BEFORE attempting any API call, browser automation, or MCP interaction with it.'
 ---
 
 # /software-tool-context — Load a software tool's context map
