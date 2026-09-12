@@ -20,19 +20,22 @@ If neither sign is present, call this skill.
 
 ## Inputs
 
-Resolve from the session's `<formatted_context>` or the workspace `## Agent Poll Configuration` block:
+Resolve from the workspace `## Agent Poll Configuration` block in CLAUDE.md first; fall back to `<formatted_context>` in the session. Use the Satchel defaults below only when neither source provides a value:
 
 | Input | Source |
 |---|---|
 | `issue_identifier` | `formatted_context.issue_identifier` (e.g. `SAT-1047`) |
-| `STATE_IN_REVIEW` | Config block or `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` (Satchel default) |
-| `HUMAN_USER_ID` | Config block or `aa3fb002-ba6c-440f-8837-cc5c92a3c748` (Satchel default) |
+| `STATE_IN_REVIEW` | Config block → `21d53c23-57ce-4f72-aaf1-2c6d104f6e02` (Satchel) |
+| `STATE_BLOCKED` | Config block → `f68b9fad-0d13-4397-b1e0-97f6e7216e52` (Satchel) |
+| `HUMAN_USER_ID` | Config block → `aa3fb002-ba6c-440f-8837-cc5c92a3c748` (Satchel) |
 | `BLOCKS_WORKSPACE_ID` | env var `$BLOCKS_WORKSPACE_ID` |
 | `CLAUDE_CODE_SESSION_ID` | env var `$CLAUDE_CODE_SESSION_ID` |
 | `model` | Describe the active model (e.g. `claude-sonnet-4-6`, `claude-opus-4-8`) |
 | `effort` | Describe the active effort level (e.g. `high`, `medium`) |
 
-If `issue_identifier` is not available in `<formatted_context>`, skip posting the comment but still note the omission in your response.
+If `issue_identifier` is not available in `<formatted_context>`, skip posting the comment but note the omission in your response.
+
+For non-Satchel teams, call `mcp__linear__linear_getWorkflowStates` with the team ID and match by name to get the correct state IDs.
 
 ## Steps
 
@@ -57,26 +60,31 @@ Distill the session's work into 5–8 lines following the legibility rules (CLAU
 ```
 
 Adapt the opener for non-success outcomes:
-- **Needs input:** `🔴 Needs input — {one-line question}` — set priority Urgent
-- **Blocked:** `⛔ Blocked — {one-line what stopped it}` — set priority Urgent
+- **Needs input:** `🔴 Needs input — {one-line question}` — state = `STATE_IN_REVIEW`, priority = Urgent
+- **Blocked:** `⛔ Blocked — {one-line what stopped it}` — state = `STATE_BLOCKED`, priority = Urgent
 
 Content by track:
 - **Research/analysis:** bullets summarize key findings, not methodology
 - **Admin:** bullets list what changed/created/filed
 - **Coding:** include a hyperlinked PR reference if one was created
 
-### 2. Post the comment
+### 2. Transition state and subscribe
 
-Use `mcp__linear__linear_createComment` with `issueId` = the issue identifier and `body` = the composed comment.
+**State before comment** — call `mcp__linear__linear_updateIssue` first:
 
-### 3. Transition state and subscribe
+| Outcome | `stateId` | `priority` |
+|---|---|---|
+| Success | `STATE_IN_REVIEW` | normal (3) |
+| Needs input | `STATE_IN_REVIEW` | Urgent (1) |
+| Blocked | `STATE_BLOCKED` | Urgent (1) |
 
-Call `mcp__linear__linear_updateIssue` with:
+Always include:
 - `id`: the issue identifier
-- `stateId`: `STATE_IN_REVIEW`
 - `subscriberIds`: [`HUMAN_USER_ID`]
 
-For Needs input or Blocked outcomes, also set `priority: 1` (Urgent).
+### 3. Post the comment
+
+Use `mcp__linear__linear_createComment` with `issueId` = the issue identifier and `body` = the composed comment.
 
 ### 4. Return
 
