@@ -12,11 +12,10 @@ Call this skill before ending any directly-delegated session (direct `@blocks` m
 
 **Skip only if `linear-handback` was already called this session** — that skill owns the state transition and comment in the full poller worker flow. Do not call both.
 
-Signs that `linear-handback` already ran this session:
-- The session was dispatched via the poller (`linear-agent-poll` or `linear-worker` skills were loaded)
-- A `✅ Done —` or `⛔ Blocked —` comment was already posted to the Linear issue this session
+Signs that `linear-handback` already ran and this skill should be skipped:
+- A `✅ Done —`, `✅ Ready for review —`, `⛔ Blocked —`, or `🔴 Needs input —` comment was already posted to the Linear issue this session
 
-If neither sign is present, call this skill.
+Poller-origin alone is not sufficient evidence — `linear-handback` must have actually completed and posted its outcome marker. If no outcome comment exists yet, call this skill regardless of how the session was dispatched.
 
 ## Inputs
 
@@ -60,8 +59,8 @@ Distill the session's work into 5–8 lines following the legibility rules (CLAU
 ```
 
 Adapt the opener for non-success outcomes:
-- **Needs input:** `🔴 Needs input — {one-line question}` — state = `STATE_IN_REVIEW`, priority = Urgent
-- **Blocked:** `⛔ Blocked — {one-line what stopped it}` — state = `STATE_BLOCKED`, priority = Urgent
+- **Needs input:** `🔴 Needs input — {one-line question}` — use when the question can be answered by a typed reply inline; state = `STATE_IN_REVIEW`, priority = Urgent
+- **Blocked:** `⛔ Blocked — {one-line what stopped it}` — use when work stopped on something a typed reply alone cannot fix (external dependency, missing access, purchase); state = `STATE_BLOCKED`, priority = Urgent
 
 Content by track:
 - **Research/analysis:** bullets summarize key findings, not methodology
@@ -94,5 +93,5 @@ Return `tldr-posted: {issue_identifier}` to signal completion.
 
 - **Do not paste the full session output into the comment.** The TLDR is the comment; the full detail is in the Blocks session (linked via the session URL).
 - **Do not set `STATE_DONE`.** Only Tim promotes to Done.
-- **Do not skip subscribing the user.** A state change the user never sees is not a handback (SAT-762).
+- **Do not skip subscribing the user.** A state change the user never sees is not a handback ([SAT-762](https://linear.app/sophia-xyz/issue/SAT-762)).
 - **Do not call this if `linear-handback` was already called** — that skill owns the state transition for the full poller worker path.
