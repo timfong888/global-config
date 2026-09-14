@@ -1,5 +1,9 @@
-# Fires whenever an AI review bot (CodeRabbit or Sourcery) reviews a PR in this repo.
-# Uses the LINEAR_API secret stored in this repo's settings.
+# Fires whenever CodeRabbit reviews a PR in this repo.
+# Calls the canonical reusable workflow that resolves the Linear issue UUID
+# before posting the @blocks handoff comment.
+#
+# Required secret in this repo's Actions settings:
+#   LINEAR_API — a Linear personal API key (lin_api_xxxxx, no "Bearer" prefix).
 
 name: AI Review Bot → Linear (global-config)
 
@@ -7,8 +11,17 @@ on:
   pull_request_review:
     types: [submitted]
 
+permissions: {}
+
 jobs:
   coderabbit-to-linear:
-    uses: ./.github/workflows/coderabbit-to-linear.yml
+    if: github.event.review.user.login == 'coderabbitai[bot]'
+    uses: ./.github/workflows/coderabbit-to-linear-reusable.yml
+    with:
+      branch_name: ${{ github.event.pull_request.head.ref }}
+      pr_url: ${{ github.event.pull_request.html_url }}
+      pr_number: ${{ github.event.pull_request.number }}
+      repo_full_name: ${{ github.repository }}
+      review_state: ${{ github.event.review.state }}
     secrets:
-      LINEAR_API: ${{ secrets.LINEAR_API }}
+      LINEAR_API_KEY: ${{ secrets.LINEAR_API }}
