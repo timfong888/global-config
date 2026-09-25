@@ -5,6 +5,10 @@ name: CodeRabbit → Linear Handoff (Reusable)
 #
 # Caller requirement: LINEAR_API_KEY secret must be set in the calling repo.
 # The secret value is a Linear personal API key (lin_api_xxxxx), NOT "Bearer ..." prefixed.
+#
+# Issue ID resolution order:
+#   1. Branch name — matches patterns like SAT-765, BLO-123 (primary path for Blocks PRs)
+#   2. PR body — scans for SAT-XXX identifiers as fallback (covers non-standard branch names)
 
 on:
   workflow_call:
@@ -30,6 +34,11 @@ on:
         required: false
         type: string
         default: "commented"
+      pr_body:
+        description: "PR description body — scanned for Linear issue IDs when branch name has none"
+        required: false
+        type: string
+        default: ""
     secrets:
       LINEAR_API_KEY:
         required: true
@@ -38,18 +47,29 @@ jobs:
   post-linear-handoff:
     runs-on: ubuntu-latest
     steps:
-      - name: Extract Linear issue ID from branch name
+      - name: Extract Linear issue ID from branch name or PR body
         id: extract
         run: |
           BRANCH="${{ inputs.branch_name }}"
-          # Match patterns like SAT-765, BLO-123 (case-insensitive)
+          PR_BODY="${{ inputs.pr_body }}"
+
+          # 1. Try branch name first
           ISSUE_ID=$(echo "$BRANCH" | grep -oiE '[A-Z]+-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
-          echo "issue_id=$ISSUE_ID" >> "$GITHUB_OUTPUT"
-          if [ -z "$ISSUE_ID" ]; then
-            echo "No Linear issue ID found in branch: $BRANCH — skipping."
+
+          if [ -n "$ISSUE_ID" ]; then
+            echo "Extracted Linear issue ID from branch: $ISSUE_ID"
           else
-            echo "Extracted Linear issue ID: $ISSUE_ID"
+            echo "No Linear issue ID in branch: $BRANCH — scanning PR body..."
+            # 2. Scan PR body for SAT-XXX or other TEAM-NNN patterns
+            ISSUE_ID=$(echo "$PR_BODY" | grep -oiE '[A-Z]+-[0-9]+' | grep -v '^[0-9]' | head -1 | tr '[:lower:]' '[:upper:]')
+            if [ -n "$ISSUE_ID" ]; then
+              echo "Extracted Linear issue ID from PR body: $ISSUE_ID"
+            else
+              echo "No Linear issue ID found in branch or PR body — skipping."
+            fi
           fi
+
+          echo "issue_id=$ISSUE_ID" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Linear issue UUID
         id: resolve
