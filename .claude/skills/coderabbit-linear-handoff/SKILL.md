@@ -60,6 +60,7 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       repo_full_name: ${{ github.repository }}
       review_state: ${{ github.event.review.state }}
+      pr_body: ${{ github.event.pull_request.body }}
     secrets:
       LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
 ```
