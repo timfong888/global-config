@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Existing Deck — Floor Plan (SAT-1080)</title>
+  <title>Existing Deck — Paving Plan (SAT-1080)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -19,7 +19,7 @@
       box-shadow: 0 4px 24px rgba(0,0,0,0.15);
       padding: 32px 36px 28px;
       width: 100%;
-      max-width: 820px;
+      max-width: 920px;
     }
     .title-block {
       border-bottom: 2px solid #333;
@@ -30,7 +30,8 @@
       align-items: flex-end;
     }
     .title-block h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; }
-    .title-block .meta { font-size: 10px; color: #666; line-height: 1.6; text-align: right; }
+    .title-block .subtitle { font-size: 13px; font-weight: 600; color: #555; margin-top: 3px; }
+    .title-block .meta { font-size: 10px; color: #666; line-height: 1.7; text-align: right; }
     .plan-wrap {
       display: flex;
       justify-content: center;
@@ -62,54 +63,340 @@
 <div class="sheet">
   <div class="title-block">
     <div>
-      <h1>Existing Rooftop Deck — Floor Plan</h1>
+      <h1>Existing Rooftop Deck — Paving Plan</h1>
+      <div class="subtitle">As-built survey with paving tile layout</div>
       <div style="font-size:11px;color:#555;margin-top:4px;">Potrero Hill, San Francisco, CA 94107</div>
     </div>
     <div class="meta">
-      SAT-1080 | Home Improvement Project<br>
-      Source: Field measurements + photo survey (SAT-977)<br>
-      Scale: 1 ft = 40 px &nbsp;|&nbsp; As-built, approximate
+      SAT-1080 | Home Improvement — Replace the Existing Deck<br>
+      Source: Field measurements + photo survey (SAT-977) + hand sketch<br>
+      Scale: 1 ft = 40 px &nbsp;|&nbsp; As-built, approximate<br>
+      Shape: Irregular quadrilateral (north wall longer; east wall longer)
     </div>
   </div>
 
   <div class="plan-wrap">
+    <!--
+      COORDINATE SYSTEM
+      Scale: 40 px = 1 ft
+      Deck corners:
+        NW (130, 100)   NE (746, 100)   north = 616 px ≈ 185" (est.)
+        SW  (80,1060)   SE (630,1060)   south = 550 px = 165" (confirmed)
+        East wall NE→SE ≈ 967 px ≈ 24'-0" (confirmed)
+        West wall NW→SW ≈ 961 px ≈ 23'-11" (est.)
+
+      Paving tiles (from hand sketch):
+        Large: 21" × 28"  →  70 px × 93 px
+        Small: 7" × 9½"   →  23 px × 32 px
+    -->
     <svg
-      width="756"
-      height="1180"
-      viewBox="0 0 756 1180"
+      width="900"
+      height="1340"
+      viewBox="0 0 900 1340"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Floor plan of existing rooftop deck"
+      aria-label="Roof deck paving plan — irregular quadrilateral"
     >
       <defs>
-        <!-- Composite deck hatch (diagonal boards) -->
-        <pattern id="deck" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(0)">
-          <rect width="10" height="10" fill="#e8d9c0"/>
-          <line x1="0" y1="0" x2="10" y2="0" stroke="#c8a878" stroke-width="0.8" opacity="0.6"/>
+
+        <!-- ── PAVING TILE PATTERNS ────────────────── -->
+        <!-- Large tile: 21" × 28" → 70×93px, 2px grout -->
+        <pattern id="paving-large" patternUnits="userSpaceOnUse" width="72" height="95">
+          <rect width="72" height="95" fill="#b8a898"/><!-- grout -->
+          <rect x="1.5" y="1.5" width="69" height="92" fill="#e2d6c8"/><!-- tile face -->
+          <!-- subtle vein lines for stone texture -->
+          <line x1="18" y1="1.5" x2="22" y2="93.5" stroke="#d4c8ba" stroke-width="0.4" opacity="0.5"/>
+          <line x1="45" y1="1.5" x2="50" y2="93.5" stroke="#d4c8ba" stroke-width="0.4" opacity="0.5"/>
         </pattern>
+
+        <!-- Small tile accent row: 7" × 9½" → 23×32px -->
+        <pattern id="paving-small" patternUnits="userSpaceOnUse" width="25" height="34">
+          <rect width="25" height="34" fill="#b8a898"/>
+          <rect x="1.5" y="1.5" width="22" height="31" fill="#d4cbbf"/>
+        </pattern>
+
+        <!-- Mixed paving: alternating row of large then small tiles (≈ 1 large + 3 small cols = 72px) -->
+        <!-- Simplified: alternate large rows (95px tall) with small-tile accent rows (34px tall) -->
+        <pattern id="paving-mixed" patternUnits="userSpaceOnUse" width="72" height="129">
+          <!-- row 1: large tile -->
+          <rect y="0" width="72" height="95" fill="#b8a898"/>
+          <rect x="1.5" y="1.5" width="69" height="92" fill="#e2d6c8"/>
+          <line x1="18" y1="1.5" x2="22" y2="93.5" stroke="#d4c8ba" stroke-width="0.4" opacity="0.5"/>
+          <line x1="48" y1="1.5" x2="52" y2="93.5" stroke="#d4c8ba" stroke-width="0.4" opacity="0.5"/>
+          <!-- row 2: three small tiles (7"×9½" each) = 23×3=69px wide, 32px tall -->
+          <rect y="95" width="72" height="34" fill="#b8a898"/>
+          <rect x="1.5" y="96.5" width="21" height="31" fill="#cec5b9"/>
+          <rect x="24.5" y="96.5" width="21" height="31" fill="#d0c7bb"/>
+          <rect x="47.5" y="96.5" width="21" height="31" fill="#cec5b9"/>
+        </pattern>
+
         <!-- Turf fill -->
         <pattern id="turf" patternUnits="userSpaceOnUse" width="6" height="6">
           <rect width="6" height="6" fill="#5aab5a"/>
           <line x1="0" y1="3" x2="6" y2="3" stroke="#3d8c3d" stroke-width="0.5" opacity="0.6"/>
         </pattern>
-        <!-- Arrowhead -->
-        <marker id="arr" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
-          <path d="M0,1 L7,3.5 L0,6 Z" fill="#333"/>
+
+        <!-- Paraquette cage hatch (fine grid for wire cage look) -->
+        <pattern id="cage" patternUnits="userSpaceOnUse" width="8" height="8">
+          <rect width="8" height="8" fill="#d9ecd9"/>
+          <line x1="0" y1="0" x2="0" y2="8" stroke="#7ab87a" stroke-width="0.7" opacity="0.6"/>
+          <line x1="0" y1="0" x2="8" y2="0" stroke="#7ab87a" stroke-width="0.7" opacity="0.6"/>
+        </pattern>
+
+        <!-- Dimension arrowheads -->
+        <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,1 L7,3.5 L0,6 Z" fill="#1a1a1a"/>
         </marker>
-        <marker id="arr-r" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse">
-          <path d="M0,1 L7,3.5 L0,6 Z" fill="#333"/>
+        <marker id="arr-r" markerWidth="7" markerHeight="7" refX="1" refY="3.5" orient="auto">
+          <path d="M7,1 L0,3.5 L7,6 Z" fill="#1a1a1a"/>
         </marker>
+        <marker id="arr-sm" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto">
+          <path d="M0,0.5 L5,2.5 L0,4.5 Z" fill="#555"/>
+        </marker>
+        <marker id="arr-sm-r" markerWidth="5" markerHeight="5" refX="0.5" refY="2.5" orient="auto">
+          <path d="M5,0.5 L0,2.5 L5,4.5 Z" fill="#555"/>
+        </marker>
+
+        <!-- Clip path = exact deck polygon -->
+        <clipPath id="deck-clip">
+          <polygon points="130,100 746,100 630,1060 80,1060"/>
+        </clipPath>
+
       </defs>
 
-      <!-- ─── BACKGROUND ─────────────────────────────── -->
-      <rect width="756" height="1180" fill="#f5f2ee"/>
+      <!-- ─── OVERALL BACKGROUND ──────────────────── -->
+      <rect width="900" height="1340" fill="#f5f2ee"/>
 
-      <!-- ─── COMPASS ROSE ───────────────────────────── -->
-      <g transform="translate(694,82)">
+      <!-- ─── PAVING SURFACE (clipped to deck polygon) ─── -->
+      <rect x="0" y="0" width="900" height="1300"
+            fill="url(#paving-mixed)" clip-path="url(#deck-clip)"/>
+
+      <!-- Deck outline -->
+      <polygon points="130,100 746,100 630,1060 80,1060"
+               fill="none" stroke="#555" stroke-width="2.5"/>
+
+      <!-- ─── NORTH WALL (building face) ──────────── -->
+      <rect x="130" y="100" width="616" height="18" fill="#2e2e2e"/>
+      <text x="438" y="90" text-anchor="middle" font-size="9" fill="#555"
+            letter-spacing="0.8">NORTH — BUILDING FACE</text>
+
+      <!-- ─── RAILINGS (navy metal) ─────────────────
+           East railing: diagonal NE→SE  (746→630, 118→1060)
+           West railing: diagonal NW→SW  (130→80, 118→1060)
+           South railing: horizontal SW→SE (80→630, 1053)
+      ──────────────────────────────────────────────── -->
+      <!-- East railing -->
+      <line x1="740" y1="118" x2="624" y2="1055"
+            stroke="#1e3a5c" stroke-width="9" opacity="0.85" stroke-linecap="round"/>
+      <!-- West railing -->
+      <line x1="136" y1="118" x2="86" y2="1055"
+            stroke="#1e3a5c" stroke-width="9" opacity="0.85" stroke-linecap="round"/>
+      <!-- South railing -->
+      <line x1="80" y1="1055" x2="630" y2="1055"
+            stroke="#1e3a5c" stroke-width="9" opacity="0.85" stroke-linecap="round"/>
+
+      <!-- Railing label -->
+      <text x="56" y="640" text-anchor="middle" font-size="9" fill="#888"
+            transform="rotate(-90,56,640)">WEST RAILING</text>
+      <text x="765" y="620" text-anchor="middle" font-size="9" fill="#888"
+            transform="rotate(90,765,620)">EAST RAILING — 24'-0"</text>
+      <text x="355" y="1078" text-anchor="middle" font-size="9" fill="#888">
+        SOUTH RAILING — 165" (13'-9")
+      </text>
+
+      <!-- ─── NORTH WALL FEATURES ───────────────────
+           North wall runs x=130 to x=746 at y=100–118
+      ──────────────────────────────────────────────── -->
+
+      <!-- HVAC / Cooling Tower — NW area -->
+      <circle cx="215" cy="190" r="52" fill="#cfcfcf" stroke="#999" stroke-width="2"/>
+      <circle cx="215" cy="190" r="37" fill="#bebebe" stroke="#aaa" stroke-width="1.2"
+              stroke-dasharray="5,3"/>
+      <circle cx="215" cy="190" r="8" fill="#999"/>
+      <text x="215" y="186" text-anchor="middle" font-size="8" font-weight="600" fill="#555">HVAC/</text>
+      <text x="215" y="197" text-anchor="middle" font-size="8" font-weight="600" fill="#555">COOLING</text>
+      <text x="215" y="208" text-anchor="middle" font-size="8" fill="#555">TOWER</text>
+
+      <!-- Satellite antenna — NE area (near x=700, y=148) -->
+      <g transform="translate(695,148)">
+        <line x1="-12" y1="-12" x2="12" y2="12" stroke="#444" stroke-width="2.5"/>
+        <line x1="12" y1="-12" x2="-12" y2="12" stroke="#444" stroke-width="2.5"/>
+        <line x1="0" y1="-18" x2="0" y2="18" stroke="#444" stroke-width="2.5"/>
+        <circle cx="0" cy="0" r="3" fill="#444"/>
+        <text x="0" y="30" text-anchor="middle" font-size="7" fill="#666">SAT. ANTENNA</text>
+      </g>
+
+      <!-- Sliding glass doors — center of north wall (x=340 to x=560) -->
+      <rect x="340" y="100" width="220" height="18"
+            fill="#a8d4f0" stroke="#5599cc" stroke-width="1.2"/>
+      <line x1="450" y1="100" x2="450" y2="118" stroke="#3377aa" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <line x1="395" y1="100" x2="395" y2="118" stroke="#3377aa" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <line x1="505" y1="100" x2="505" y2="118" stroke="#3377aa" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <text x="450" y="152" text-anchor="middle" font-size="8" fill="#3377aa">SLIDING GLASS DOORS (~5.5')</text>
+
+      <!-- Entry door — east wall near NE corner, door opening west into deck -->
+      <!-- East wall at y=158: x = 746 - 116*(58/960) ≈ 739 -->
+      <rect x="731" y="158" width="18" height="96" fill="#e0e0e0" stroke="#aaa" stroke-width="1.5"/>
+      <rect x="733" y="160" width="14" height="92" fill="#a8d4f0" opacity="0.45"/>
+      <!-- Door swing (arc sweeping 90° westward) -->
+      <path d="M 731,158 A 96,96 0 0 0 635,158"
+            fill="none" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="731" y1="158" x2="635" y2="158" stroke="#aaa" stroke-width="0.8" stroke-dasharray="4,3"/>
+      <text x="690" y="147" text-anchor="middle" font-size="7.5" fill="#555">ENTRY DOOR</text>
+
+      <!-- Built-in bench — west of sliding doors along north wall -->
+      <!-- x=143 to x=320, y=118 to y=173 -->
+      <rect x="143" y="118" width="178" height="54" fill="#1a3a6e" opacity="0.65" rx="2"/>
+      <rect x="145" y="120" width="174" height="14" fill="#f2e8d2" rx="1"/>
+      <text x="232" y="152" text-anchor="middle" font-size="8" fill="white" font-weight="600">
+        BUILT-IN BENCH
+      </text>
+      <text x="232" y="163" text-anchor="middle" font-size="7" fill="#cce0ff">cream cushions (~4.5')</text>
+
+      <!-- Pull-up bar frame — east of sliding doors (x=575 to x=648) -->
+      <rect x="575" y="120" width="5" height="100" fill="#555" rx="2"/>
+      <rect x="643" y="120" width="5" height="100" fill="#555" rx="2"/>
+      <rect x="575" y="120" width="73" height="5" fill="#555" rx="2"/>
+      <rect x="575" y="183" width="73" height="5" fill="#555" rx="1"/>
+      <text x="611" y="162" text-anchor="middle" font-size="7.5" fill="#333" font-weight="600">PULL-UP</text>
+      <text x="611" y="173" text-anchor="middle" font-size="7.5" fill="#333">BAR FRAME</text>
+
+      <!-- Coffee table near bench -->
+      <rect x="155" y="192" width="88" height="52" fill="#3d2a14" rx="3"/>
+      <rect x="157" y="194" width="84" height="48" fill="#5a3d1e" rx="2"/>
+      <text x="199" y="220" text-anchor="middle" font-size="8" fill="#d4b896">COFFEE</text>
+      <text x="199" y="231" text-anchor="middle" font-size="8" fill="#d4b896">TABLE</text>
+
+      <!-- ─── EAST WALL ELEMENTS ─────────────────────
+           East wall equation: x_east(y) = 746 - 116*(y-100)/960
+           y=340 → x≈732   y=420 → x≈722   y=455 → x≈717
+           y=500 → x≈711   y=640 → x≈697   y=780 → x≈680
+      ──────────────────────────────────────────────── -->
+
+      <!-- Water spigot (y=340, x_east≈732) -->
+      <rect x="720" y="328" width="16" height="22" fill="#777" stroke="#555" stroke-width="1.2" rx="2"/>
+      <line x1="728" y1="328" x2="728" y2="320" stroke="#555" stroke-width="1.5"/>
+      <circle cx="728" cy="318" r="4" fill="#888" stroke="#555" stroke-width="1"/>
+      <text x="716" y="364" text-anchor="middle" font-size="7" fill="#666">SPIGOT</text>
+
+      <!-- Hose reel (y=415, x_east≈722) -->
+      <circle cx="710" cy="415" r="22" fill="#e07b00" opacity="0.8" stroke="#b35e00" stroke-width="1.5"/>
+      <circle cx="710" cy="415" r="11" fill="#b35e00" opacity="0.7"/>
+      <circle cx="710" cy="415" r="3" fill="#7a3f00"/>
+      <text x="710" y="447" text-anchor="middle" font-size="7.5" fill="#555">HOSE REEL</text>
+
+      <!-- Planter (single, y=455-495, x_east≈717) -->
+      <rect x="662" y="455" width="46" height="40" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" rx="2"/>
+      <rect x="664" y="457" width="42" height="36" fill="#7ab87a" opacity="0.4" rx="1"/>
+      <text x="685" y="479" text-anchor="middle" font-size="7.5" fill="#555">PLANTER</text>
+
+      <!-- ─── PARAQUETTES (3) — along east wall ──────
+           Cage enclosures for parakeets, spaced along east railing
+      ──────────────────────────────────────────────── -->
+
+      <!-- Paraquette 1 (y=510-590, x_east(550)≈725; right edge of cage ~716) -->
+      <rect x="655" y="510" width="58" height="78"
+            fill="url(#cage)" stroke="#3d7a3d" stroke-width="2" rx="2"/>
+      <!-- Cage frame bars -->
+      <line x1="655" y1="540" x2="713" y2="540" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="655" y1="560" x2="713" y2="560" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="675" y1="510" x2="675" y2="588" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="694" y1="510" x2="694" y2="588" stroke="#3d7a3d" stroke-width="1.2"/>
+      <text x="684" y="503" text-anchor="middle" font-size="7.5" fill="#2a6a2a" font-weight="600">
+        PARAQUETTE
+      </text>
+      <text x="684" y="604" text-anchor="middle" font-size="7" fill="#555">1 of 3</text>
+
+      <!-- Paraquette 2 (y=650-730, x_east(690)≈700; right edge ~691) -->
+      <rect x="630" y="650" width="58" height="78"
+            fill="url(#cage)" stroke="#3d7a3d" stroke-width="2" rx="2"/>
+      <line x1="630" y1="680" x2="688" y2="680" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="630" y1="700" x2="688" y2="700" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="650" y1="650" x2="650" y2="728" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="669" y1="650" x2="669" y2="728" stroke="#3d7a3d" stroke-width="1.2"/>
+      <text x="659" y="643" text-anchor="middle" font-size="7.5" fill="#2a6a2a" font-weight="600">
+        PARAQUETTE
+      </text>
+      <text x="659" y="744" text-anchor="middle" font-size="7" fill="#555">2 of 3</text>
+
+      <!-- Paraquette 3 (y=790-870, x_east(830)≈672; right edge ~663) -->
+      <rect x="602" y="790" width="58" height="78"
+            fill="url(#cage)" stroke="#3d7a3d" stroke-width="2" rx="2"/>
+      <line x1="602" y1="820" x2="660" y2="820" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="602" y1="840" x2="660" y2="840" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="622" y1="790" x2="622" y2="868" stroke="#3d7a3d" stroke-width="1.2"/>
+      <line x1="641" y1="790" x2="641" y2="868" stroke="#3d7a3d" stroke-width="1.2"/>
+      <text x="631" y="783" text-anchor="middle" font-size="7.5" fill="#2a6a2a" font-weight="600">
+        PARAQUETTE
+      </text>
+      <text x="631" y="884" text-anchor="middle" font-size="7" fill="#555">3 of 3</text>
+
+      <!-- ─── INTERIOR ELEMENTS ─────────────────────── -->
+
+      <!-- Artificial turf — center-south ~8'×5' = 320×200px -->
+      <rect x="175" y="750" width="320" height="196" fill="url(#turf)" rx="4" opacity="0.85"/>
+      <rect x="175" y="750" width="320" height="196" fill="none" stroke="#3d8c3d" stroke-width="2" rx="4"/>
+      <text x="335" y="844" text-anchor="middle" font-size="11" font-weight="700" fill="#1e5c1e">
+        ARTIFICIAL TURF
+      </text>
+      <text x="335" y="859" text-anchor="middle" font-size="9" fill="#2e7a2e">~8' × 5' (approx)</text>
+      <!-- Corner plants on turf -->
+      <circle cx="192" cy="768" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
+      <circle cx="478" cy="768" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
+      <circle cx="192" cy="928" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
+      <circle cx="478" cy="928" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
+
+      <!-- Navy cantilever umbrella — center -->
+      <circle cx="370" cy="545" r="88" fill="#1a3a6e" opacity="0.14"
+              stroke="#1a3a6e" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <circle cx="370" cy="545" r="10" fill="#1a3a6e" opacity="0.5"/>
+      <circle cx="370" cy="545" r="5" fill="#1a3a6e"/>
+      <line x1="370" y1="457" x2="370" y2="633" stroke="#1a3a6e" stroke-width="3" opacity="0.6"/>
+      <text x="370" y="538" text-anchor="middle" font-size="9" fill="#1a3a6e" font-weight="700">NAVY</text>
+      <text x="370" y="550" text-anchor="middle" font-size="9" fill="#1a3a6e" font-weight="700">UMBRELLA</text>
+      <text x="370" y="563" text-anchor="middle" font-size="7.5" fill="#1a3a6e">cantilever (~10' canopy)</text>
+
+      <!-- Lounger NW -->
+      <rect x="140" y="465" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
+      <rect x="142" y="467" width="104" height="10" fill="#f5f0e0" rx="1"/>
+      <text x="194" y="493" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
+      <!-- Lounger NE -->
+      <rect x="450" y="465" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
+      <rect x="452" y="467" width="104" height="10" fill="#f5f0e0" rx="1"/>
+      <text x="504" y="493" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
+      <!-- Lounger SW -->
+      <rect x="140" y="617" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
+      <rect x="142" y="619" width="104" height="10" fill="#f5f0e0" rx="1"/>
+      <text x="194" y="645" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
+      <!-- Lounger SE -->
+      <rect x="450" y="617" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
+      <rect x="452" y="619" width="104" height="10" fill="#f5f0e0" rx="1"/>
+      <text x="504" y="645" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
+
+      <!-- ─── PAVING TILE CALLOUT (lower-left inset) ── -->
+      <g transform="translate(92,960)">
+        <rect x="0" y="0" width="190" height="82" fill="white" stroke="#bbb" stroke-width="1.2" rx="3"/>
+        <text x="95" y="14" text-anchor="middle" font-size="9" font-weight="700" fill="#333">
+          PAVING TILE SIZES (from sketch)
+        </text>
+        <!-- Large tile swatch (21"×28" → 70×93 at scale; draw at 1:3 reduced: 23×31) -->
+        <rect x="12" y="23" width="23" height="31" fill="#e2d6c8" stroke="#b8a898" stroke-width="1.2"/>
+        <text x="23.5" y="64" text-anchor="middle" font-size="7.5" fill="#555">LARGE</text>
+        <text x="23.5" y="74" text-anchor="middle" font-size="7.5" fill="#555">21"×28"</text>
+        <!-- Small tile swatch -->
+        <rect x="50" y="23" width="8" height="11" fill="#cec5b9" stroke="#b8a898" stroke-width="1"/>
+        <text x="54" y="64" text-anchor="middle" font-size="7.5" fill="#555">SMALL</text>
+        <text x="54" y="74" text-anchor="middle" font-size="7.5" fill="#555">7"×9½"</text>
+        <!-- layout diagram: 1 large = 3×3 small -->
+        <text x="125" y="36" text-anchor="middle" font-size="7" fill="#777">Pattern ratio:</text>
+        <text x="125" y="47" text-anchor="middle" font-size="7" fill="#777">1 large = 3×3 small</text>
+        <text x="125" y="58" text-anchor="middle" font-size="7" fill="#777">(21÷7 = 3)</text>
+      </g>
+
+      <!-- ─── COMPASS ROSE ────────────────────────── -->
+      <g transform="translate(830,88)">
         <circle r="26" fill="white" stroke="#bbb" stroke-width="1.2"/>
-        <!-- N pointer (filled) -->
         <polygon points="0,-22 -5,-4 0,-10 5,-4" fill="#1a1a1a"/>
-        <!-- S pointer (hollow) -->
         <polygon points="0,22 -5,4 0,10 5,4" fill="white" stroke="#1a1a1a" stroke-width="1"/>
         <text y="-28" text-anchor="middle" font-size="11" font-weight="700" fill="#1a1a1a">N</text>
         <text y="36" text-anchor="middle" font-size="9" fill="#666">S</text>
@@ -117,207 +404,63 @@
         <text x="34" y="4" text-anchor="middle" font-size="9" fill="#666">E</text>
       </g>
 
-      <!-- ─── DECK SURFACE (165" = 13.75ft wide, 24ft tall) ─ -->
-      <!-- Scale: 40px/ft  Width=550px  Height=960px -->
-      <!-- Deck rect: x=80, y=120 → x=630, y=1080 -->
-      <rect x="80" y="120" width="550" height="960" fill="url(#deck)"/>
+      <!-- ─── DIMENSION LINES ────────────────────────
+           South wall (confirmed): horizontal at y=1100
+           North wall (estimated): horizontal at y=75
+           East wall (confirmed): vertical ref at x=800
+           West wall (estimated): vertical ref at x=30
+      ──────────────────────────────────────────────── -->
 
-      <!-- ─── NORTH WALL (building face) — thick ─────── -->
-      <rect x="80" y="120" width="550" height="18" fill="#3a3a3a"/>
-      <!-- Wall label -->
-      <text x="355" y="112" text-anchor="middle" font-size="9" fill="#555" letter-spacing="1">NORTH — BUILDING FACE</text>
-
-      <!-- ─── RAILINGS ──────────────────────────────── -->
-      <!-- West railing -->
-      <rect x="80" y="138" width="9" height="942" fill="#1e3a5c" opacity="0.85" rx="1"/>
-      <!-- East railing -->
-      <rect x="621" y="138" width="9" height="942" fill="#1e3a5c" opacity="0.85" rx="1"/>
-      <!-- South railing -->
-      <rect x="80" y="1071" width="550" height="9" fill="#1e3a5c" opacity="0.85" rx="1"/>
-
-      <!-- Wall side labels -->
-      <text x="73" y="625" text-anchor="middle" font-size="9" fill="#888"
-            transform="rotate(-90,73,625)">WEST WALL</text>
-      <text x="641" y="625" text-anchor="middle" font-size="9" fill="#888"
-            transform="rotate(90,641,625)">EAST WALL — 24'</text>
-      <text x="355" y="1098" text-anchor="middle" font-size="9" fill="#888">SOUTH WALL — 165" (13'-9")</text>
-
-      <!-- ─── NORTH WALL FEATURES ───────────────────── -->
-
-      <!-- Cooling tower / HVAC (NW area) — large cylinder ~2.5ft dia = 50px r -->
-      <circle cx="145" cy="185" r="50" fill="#d5d5d5" stroke="#999" stroke-width="2"/>
-      <circle cx="145" cy="185" r="36" fill="#c0c0c0" stroke="#aaa" stroke-width="1"
-              stroke-dasharray="5,3"/>
-      <circle cx="145" cy="185" r="7" fill="#999"/>
-      <text x="145" y="181" text-anchor="middle" font-size="8" font-weight="600" fill="#555">HVAC/</text>
-      <text x="145" y="192" text-anchor="middle" font-size="8" font-weight="600" fill="#555">COOLING</text>
-      <text x="145" y="203" text-anchor="middle" font-size="8" fill="#555">TOWER</text>
-
-      <!-- Satellite antenna (near NE corner of building) -->
-      <g transform="translate(575,148)">
-        <line x1="-13" y1="-13" x2="13" y2="13" stroke="#444" stroke-width="2.5"/>
-        <line x1="13" y1="-13" x2="-13" y2="13" stroke="#444" stroke-width="2.5"/>
-        <line x1="0" y1="-18" x2="0" y2="18" stroke="#444" stroke-width="2.5"/>
-        <circle cx="0" cy="0" r="3" fill="#444"/>
-        <text x="0" y="30" text-anchor="middle" font-size="7" fill="#666">SAT. ANTENNA</text>
-      </g>
-
-      <!-- Sliding glass doors — center of north wall (~5ft = 200px wide) -->
-      <!-- Doors from x=255 to x=455 -->
-      <rect x="255" y="120" width="200" height="18" fill="#a8d4f0" stroke="#5599cc" stroke-width="1"/>
-      <!-- Door dividers -->
-      <line x1="355" y1="120" x2="355" y2="138" stroke="#3377aa" stroke-width="1.5" stroke-dasharray="5,3"/>
-      <line x1="305" y1="120" x2="305" y2="138" stroke="#3377aa" stroke-width="1.5" stroke-dasharray="3,3"/>
-      <line x1="405" y1="120" x2="405" y2="138" stroke="#3377aa" stroke-width="1.5" stroke-dasharray="3,3"/>
-      <text x="355" y="154" text-anchor="middle" font-size="8" fill="#3377aa">SLIDING GLASS DOORS (~5')</text>
-
-      <!-- Entry door (gray) — east end of north wall / NE area -->
-      <!-- Door at east wall, near north — 2.5ft = 100px, x=621 to 629, y=158 to y=258 -->
-      <!-- Show door on east wall, pushing inward (toward west) -->
-      <rect x="612" y="158" width="18" height="96" fill="#e8e8e8" stroke="#aaa" stroke-width="1.5"/>
-      <rect x="614" y="160" width="14" height="92" fill="#a8d4f0" opacity="0.45"/>
-      <!-- Door swing arc -->
-      <path d="M 612,158 A 96,96 0 0 0 516,158" fill="none" stroke="#aaa" stroke-width="1"
-            stroke-dasharray="4,3"/>
-      <line x1="612" y1="158" x2="516" y2="158" stroke="#aaa" stroke-width="0.8" stroke-dasharray="4,3"/>
-      <text x="568" y="148" text-anchor="middle" font-size="7.5" fill="#555">ENTRY DOOR</text>
-
-      <!-- Built-in bench seating — west of sliding doors along north wall -->
-      <!-- ~4.5ft wide × 1.5ft deep = 180px × 60px, x=89 to x=245, y=138 to y=198 -->
-      <rect x="89" y="138" width="156" height="58" fill="#1a3a6e" opacity="0.65" rx="2"/>
-      <!-- Cushion strip -->
-      <rect x="91" y="140" width="152" height="14" fill="#f2e8d2" rx="1"/>
-      <text x="167" y="172" text-anchor="middle" font-size="8" fill="white" font-weight="600">BUILT-IN BENCH</text>
-      <text x="167" y="183" text-anchor="middle" font-size="7.5" fill="#cce0ff">cream cushions (~4.5')</text>
-
-      <!-- Pull-up bar frame — east of sliding doors -->
-      <!-- ~2ft wide = 80px, x=463 to x=603, y=138 to y=240 -->
-      <rect x="462" y="140" width="5" height="100" fill="#555" rx="2"/>
-      <rect x="537" y="140" width="5" height="100" fill="#555" rx="2"/>
-      <rect x="462" y="140" width="80" height="5" fill="#555" rx="2"/>
-      <rect x="462" y="200" width="80" height="5" fill="#555" rx="1"/>
-      <text x="504" y="175" text-anchor="middle" font-size="7.5" fill="#444" font-weight="600">PULL-UP</text>
-      <text x="504" y="186" text-anchor="middle" font-size="7.5" fill="#444">BAR FRAME</text>
-
-      <!-- Coffee table near bench -->
-      <rect x="130" y="208" width="92" height="56" fill="#3d2a14" rx="3"/>
-      <rect x="132" y="210" width="88" height="52" fill="#5a3d1e" rx="2"/>
-      <text x="176" y="238" text-anchor="middle" font-size="8" fill="#d4b896">COFFEE</text>
-      <text x="176" y="249" text-anchor="middle" font-size="8" fill="#d4b896">TABLE</text>
-
-      <!-- Dining chair near entry -->
-      <rect x="492" y="248" width="46" height="46" fill="#e8e8e8" stroke="#bbb" stroke-width="1.5" rx="2"/>
-      <text x="515" y="275" text-anchor="middle" font-size="7.5" fill="#555">CHAIR</text>
-
-      <!-- ─── EAST WALL ELEMENTS ─────────────────────── -->
-
-      <!-- Water spigot -->
-      <rect x="608" y="320" width="16" height="22" fill="#777" stroke="#555" stroke-width="1.2" rx="2"/>
-      <line x1="616" y1="320" x2="616" y2="312" stroke="#555" stroke-width="1.5"/>
-      <circle cx="616" cy="310" r="4" fill="#888" stroke="#555" stroke-width="1"/>
-      <text x="604" y="358" text-anchor="middle" font-size="7" fill="#666">SPIGOT</text>
-
-      <!-- Hose reel -->
-      <circle cx="610" cy="400" r="22" fill="#e07b00" opacity="0.8" stroke="#b35e00" stroke-width="1.5"/>
-      <circle cx="610" cy="400" r="11" fill="#b35e00" opacity="0.7"/>
-      <circle cx="610" cy="400" r="3" fill="#7a3f00"/>
-      <text x="610" y="432" text-anchor="middle" font-size="7.5" fill="#555">HOSE REEL</text>
-
-      <!-- Blue bucket -->
-      <rect x="602" y="447" width="20" height="22" fill="#3a78c9" opacity="0.75" rx="2"/>
-      <text x="612" y="483" text-anchor="middle" font-size="7" fill="#666">BUCKET</text>
-
-      <!-- Planters (3 white boxes, ~2ft × 1ft = 80px × 40px) along east wall -->
-      <!-- Planter 1 -->
-      <rect x="567" y="515" width="46" height="80" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" rx="2"/>
-      <rect x="570" y="518" width="40" height="74" fill="#7ab87a" opacity="0.4" rx="1"/>
-      <text x="590" y="558" text-anchor="middle" font-size="7.5" fill="#555">PLANTER</text>
-      <!-- Planter 2 -->
-      <rect x="567" y="615" width="46" height="80" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" rx="2"/>
-      <rect x="570" y="618" width="40" height="74" fill="#7ab87a" opacity="0.4" rx="1"/>
-      <text x="590" y="658" text-anchor="middle" font-size="7.5" fill="#555">PLANTER</text>
-      <!-- Planter 3 -->
-      <rect x="567" y="715" width="46" height="80" fill="#f5f5f5" stroke="#ccc" stroke-width="1.5" rx="2"/>
-      <rect x="570" y="718" width="40" height="74" fill="#7ab87a" opacity="0.4" rx="1"/>
-      <text x="590" y="758" text-anchor="middle" font-size="7.5" fill="#555">PLANTER</text>
-
-      <!-- ─── CENTRAL ELEMENTS ───────────────────────── -->
-
-      <!-- Artificial turf — ~8ft × 5ft = 320px × 200px, center-south area -->
-      <!-- x=183 to x=503, y=740 to y=940 -->
-      <rect x="183" y="740" width="320" height="200" fill="url(#turf)" rx="4" opacity="0.85"/>
-      <rect x="183" y="740" width="320" height="200" fill="none" stroke="#3d8c3d" stroke-width="2" rx="4"/>
-      <text x="343" y="836" text-anchor="middle" font-size="11" font-weight="700" fill="#1e5c1e">ARTIFICIAL TURF</text>
-      <text x="343" y="851" text-anchor="middle" font-size="9" fill="#2e7a2e">~8' × 5' (approx)</text>
-
-      <!-- Potted plants on turf perimeter -->
-      <circle cx="200" cy="760" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
-      <circle cx="490" cy="760" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
-      <circle cx="200" cy="920" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
-      <circle cx="490" cy="920" r="12" fill="#5aab5a" stroke="#3d8c3d" stroke-width="1.2"/>
-
-      <!-- Navy umbrella — center of deck -->
-      <!-- Center at (355, 560), canopy radius ~5ft = 200px but draw ~80px for plan -->
-      <circle cx="355" cy="560" r="90" fill="#1a3a6e" opacity="0.15" stroke="#1a3a6e"
-              stroke-width="1.5" stroke-dasharray="6,3"/>
-      <!-- Post / base -->
-      <circle cx="355" cy="560" r="10" fill="#1a3a6e" opacity="0.5"/>
-      <circle cx="355" cy="560" r="5" fill="#1a3a6e"/>
-      <!-- Arm lines (cantilever style) -->
-      <line x1="355" y1="470" x2="355" y2="650" stroke="#1a3a6e" stroke-width="3" opacity="0.6"/>
-      <text x="355" y="553" text-anchor="middle" font-size="9" fill="#1a3a6e" font-weight="700">NAVY</text>
-      <text x="355" y="565" text-anchor="middle" font-size="9" fill="#1a3a6e" font-weight="700">UMBRELLA</text>
-      <text x="355" y="578" text-anchor="middle" font-size="7.5" fill="#1a3a6e">cantilever (~10' canopy)</text>
-
-      <!-- White loungers (4) — around umbrella -->
-      <!-- Lounger NW -->
-      <rect x="136" y="468" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
-      <rect x="138" y="470" width="104" height="10" fill="#f5f0e0" rx="1"/>
-      <text x="190" y="496" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
-      <!-- Lounger NE -->
-      <rect x="462" y="468" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
-      <rect x="464" y="470" width="104" height="10" fill="#f5f0e0" rx="1"/>
-      <text x="516" y="496" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
-      <!-- Lounger SW -->
-      <rect x="136" y="620" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
-      <rect x="138" y="622" width="104" height="10" fill="#f5f0e0" rx="1"/>
-      <text x="190" y="648" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
-      <!-- Lounger SE -->
-      <rect x="462" y="620" width="108" height="44" fill="#eaeaea" stroke="#bbb" stroke-width="1.5" rx="3"/>
-      <rect x="464" y="622" width="104" height="10" fill="#f5f0e0" rx="1"/>
-      <text x="516" y="648" text-anchor="middle" font-size="8" fill="#555" font-weight="600">LOUNGER</text>
-
-      <!-- ─── DIMENSION LINES ────────────────────────── -->
-
-      <!-- South wall dimension (horizontal) -->
-      <line x1="80" y1="1115" x2="630" y2="1115" stroke="#333" stroke-width="1.5"
+      <!-- South wall dimension -->
+      <line x1="80" y1="1100" x2="630" y2="1100" stroke="#1a1a1a" stroke-width="1.5"
             marker-start="url(#arr-r)" marker-end="url(#arr)"/>
-      <line x1="80" y1="1082" x2="80" y2="1120" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
-      <line x1="630" y1="1082" x2="630" y2="1120" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
-      <rect x="238" y="1105" width="234" height="18" fill="white"/>
-      <text x="355" y="1118" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">
-        165" (13'-9") — SOUTH WALL
+      <line x1="80" y1="1062" x2="80" y2="1105" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="630" y1="1062" x2="630" y2="1105" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
+      <rect x="222" y="1090" width="211" height="18" fill="white"/>
+      <text x="355" y="1103" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">
+        165" (13'-9") — SOUTH (confirmed)
       </text>
 
-      <!-- East wall dimension (vertical) -->
-      <line x1="700" y1="120" x2="700" y2="1080" stroke="#333" stroke-width="1.5"
+      <!-- North wall dimension (estimated, from sketch) -->
+      <line x1="130" y1="75" x2="746" y2="75" stroke="#555" stroke-width="1.5"
+            marker-start="url(#arr-r)" marker-end="url(#arr)" stroke-dasharray="6,0"/>
+      <line x1="130" y1="78" x2="130" y2="100" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="746" y1="78" x2="746" y2="100" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="335" y="65" width="206" height="16" fill="#f5f2ee"/>
+      <text x="438" y="77" text-anchor="middle" font-size="10.5" font-weight="600" fill="#555">
+        ~185" (15'-5") — NORTH (est.)
+      </text>
+
+      <!-- East wall dimension (confirmed, vertical ref) -->
+      <line x1="800" y1="100" x2="800" y2="1060" stroke="#1a1a1a" stroke-width="1.5"
             marker-start="url(#arr-r)" marker-end="url(#arr)"/>
-      <line x1="630" y1="120" x2="706" y2="120" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
-      <line x1="630" y1="1080" x2="706" y2="1080" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
-      <rect x="659" y="572" width="76" height="32" fill="white" transform="rotate(90,697,588)"/>
-      <text x="697" y="600" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a"
-            transform="rotate(90,697,600)">
-        24'-0" (288") — EAST WALL
+      <line x1="746" y1="100" x2="806" y2="100" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="630" y1="1060" x2="806" y2="1060" stroke="#555" stroke-width="1" stroke-dasharray="4,3"/>
+      <rect x="748" y="558" width="100" height="32" fill="white"
+            transform="rotate(90,798,574)"/>
+      <text x="798" y="580" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a"
+            transform="rotate(90,798,580)">
+        24'-0" (288") — EAST
+      </text>
+
+      <!-- West wall dimension (estimated) -->
+      <line x1="34" y1="100" x2="34" y2="1060" stroke="#555" stroke-width="1.5"
+            marker-start="url(#arr-r)" marker-end="url(#arr)" stroke-dasharray="5,2"/>
+      <line x1="130" y1="100" x2="28" y2="100" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="80" y1="1060" x2="28" y2="1060" stroke="#888" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="-14" y="556" width="96" height="26" fill="#f5f2ee"
+            transform="rotate(-90,34,569)"/>
+      <text x="34" y="574" text-anchor="middle" font-size="10.5" font-weight="600" fill="#888"
+            transform="rotate(-90,34,574)">
+        ~24' (288") — WEST (est.)
       </text>
 
       <!-- ─── SCALE BAR ──────────────────────────────── -->
-      <g transform="translate(80,1148)">
+      <g transform="translate(92,1168)">
         <text x="0" y="-4" font-size="9" fill="#777">Scale: 1 ft = 40 px</text>
-        <!-- 0 to 5ft = 200px, black-white alternating -->
         <rect x="0" y="0" width="80" height="10" fill="#333"/>
         <rect x="80" y="0" width="80" height="10" fill="white" stroke="#333" stroke-width="1"/>
         <rect x="160" y="0" width="80" height="10" fill="#333"/>
-        <!-- Tick marks -->
         <line x1="0" y1="-2" x2="0" y2="12" stroke="#333" stroke-width="1.5"/>
         <line x1="80" y1="-2" x2="80" y2="12" stroke="#333" stroke-width="1.5"/>
         <line x1="160" y1="-2" x2="160" y2="12" stroke="#333" stroke-width="1.5"/>
@@ -327,54 +470,88 @@
         <text x="160" y="22" text-anchor="middle" font-size="9" fill="#555">4'</text>
         <text x="240" y="22" text-anchor="middle" font-size="9" fill="#555">6'</text>
       </g>
+
+      <!-- ─── SHAPE NOTE ─────────────────────────────── -->
+      <g transform="translate(92,1210)">
+        <rect x="0" y="0" width="600" height="52" fill="#fffbf0" stroke="#e0c860" stroke-width="1.2" rx="3"/>
+        <text x="10" y="16" font-size="8.5" font-weight="700" fill="#7a6000">⚠ SHAPE NOTE</text>
+        <text x="10" y="30" font-size="8" fill="#555">
+          The deck is an irregular quadrilateral — NOT a rectangle.
+          North wall is longer than south; east wall longer than west.
+        </text>
+        <text x="10" y="44" font-size="8" fill="#555">
+          Dashed north dim line and west dim line indicate estimated values.
+          All four corners are field-verified for final construction docs.
+        </text>
+      </g>
+
     </svg>
   </div>
 
   <!-- Legend -->
   <div class="legend">
     <div class="legend-item">
-      <div class="swatch" style="background:#3a3a3a;border-color:#333;"></div>
-      Building wall (no railing)
+      <div class="swatch" style="background:#2e2e2e;border-color:#1a1a1a;"></div>
+      Building wall (north, no railing)
     </div>
     <div class="legend-item">
       <div class="swatch" style="background:#1e3a5c;border-color:#1e3a5c;"></div>
       Navy metal railings
     </div>
     <div class="legend-item">
-      <div class="swatch" style="background:#e8d9c0;border-color:#c8a878;"></div>
-      Dark composite decking
+      <div class="swatch" style="background:#e2d6c8;border-color:#b8a898;"></div>
+      Paving tiles — large 21"×28"
+    </div>
+    <div class="legend-item">
+      <div class="swatch" style="background:#cec5b9;border-color:#b8a898;"></div>
+      Paving tiles — small 7"×9½"
+    </div>
+    <div class="legend-item">
+      <div class="swatch" style="background:#d9ecd9;border-color:#3d7a3d;"></div>
+      Paraquette cage enclosures (×3)
     </div>
     <div class="legend-item">
       <div class="swatch" style="background:#5aab5a;border-color:#3d8c3d;"></div>
       Artificial turf / plantings
     </div>
     <div class="legend-item">
-      <div class="swatch" style="background:#1a3a6e;opacity:0.3;"></div>
-      Navy umbrella (canopy footprint, ~10')
-    </div>
-    <div class="legend-item">
-      <div class="swatch" style="background:#eaeaea;border-color:#bbb;"></div>
-      White/aluminum loungers
-    </div>
-    <div class="legend-item">
       <div class="swatch" style="background:#a8d4f0;border-color:#5599cc;"></div>
       Glazed doors / openings
     </div>
     <div class="legend-item">
-      <div class="swatch" style="background:#d5d5d5;border-color:#999;"></div>
+      <div class="swatch" style="background:#cfcfcf;border-color:#999;"></div>
       HVAC / cooling tower
+    </div>
+    <div class="legend-item">
+      <div class="swatch" style="background:#1a3a6e;opacity:0.2;"></div>
+      Navy umbrella canopy footprint (~10')
+    </div>
+    <div class="legend-item">
+      <div class="swatch" style="background:#eaeaea;border-color:#bbb;"></div>
+      White/aluminum loungers (×4)
     </div>
   </div>
 
   <!-- Notes -->
   <div class="notes">
-    <strong>Key measurements:</strong>
-    South wall 165" (13'-9") · East wall 24'-0" (288") ·
-    Deck area approx. 330 sq ft<br>
-    <strong>North:</strong> Building face — sliding glass doors (center, ~5'), built-in bench seating (west), pull-up bar frame (east), gray entry door (NE), HVAC cooling tower (NW area).<br>
-    <strong>East:</strong> White railing with 3 rectangular planters, water spigot, orange hose reel, blue bucket.<br>
-    <strong>Interior:</strong> Dark composite decking throughout; navy cantilever umbrella on central base; 4 white aluminum loungers; artificial turf patch (~8'×5'); coffee table; dining chair.<br>
-    <strong>Sources:</strong> SAT-977 (12-photo survey + field measurements) · SAT-552 (deck dimensions) · SAT-998 (project spec)
+    <strong>Confirmed measurements:</strong>
+    South wall 165" (13'-9") · East wall 24'-0" (288")<br>
+    <strong>Estimated measurements (field-verify):</strong>
+    North wall ~185" (15'-5") · West wall ~24' (288")<br>
+    <strong>Shape:</strong>
+    Irregular quadrilateral — south wall shorter than north; east wall longer than west wall. Refer to hand sketch for proportions.<br>
+    <strong>Paving tiles (from hand sketch):</strong>
+    Large format 21"×28" + small format 7"×9½". Pattern ratio 3:1 (1 large = 3×3 small). Exact layout to be finalized by installer.<br>
+    <strong>Paraquettes:</strong>
+    3 cage/perch enclosures along east railing — confirm exact dimensions and spacing with owner.<br>
+    <strong>North wall elements:</strong>
+    Sliding glass doors (center, ~5.5'), built-in bench seating with cream cushions (west), pull-up bar frame (east of doors), gray entry door (NE corner), HVAC cooling tower (NW).<br>
+    <strong>East wall:</strong>
+    Water spigot, orange hose reel, 1 rectangular planter, 3 paraquette cage enclosures.<br>
+    <strong>Interior:</strong>
+    Navy cantilever umbrella; 4 white aluminum loungers; artificial turf patch (~8'×5'); coffee table.<br>
+    <strong>Sources:</strong>
+    SAT-977 (12-photo survey) · SAT-552 (field dimensions) · SAT-998 (project spec) · Hand sketch (SAT-1080 comment, Sep 27 2026)
   </div>
 </div>
 </body>
