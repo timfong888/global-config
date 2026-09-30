@@ -40,6 +40,10 @@ Rules:
 > - **Call fails:** retry once; if still failing, proceed with the work and note the failure in your pickup comment.
 > - **Scope:** applies only to direct delegation (@blocks mention, direct comment, agent poller) — exempt for background or multi-ticket workflows that incidentally touch an issue.
 
+> **COMPLETION ENFORCEMENT (SAT-1050):** Before ending any directly-delegated session — including inline research, analysis, or admin work with no PR — you MUST call `mcp__linear__linear_updateIssue` with `stateId` = In Review and `subscriberIds` = [`HUMAN_USER_ID`]. A session that ends with the ticket still In Progress is a failure. This applies equally to writing-track tasks answered entirely in the assistant response — post a brief TLDR comment to the Linear issue (load the `linear-tldr` skill) and then transition state. If you find yourself about to send your final response without having called this, do it now before responding.
+> - **What to post:** Load `linear-tldr` to post a 5–8 line comment (answer first, session link, model/effort tag). If `linear-tldr` is unavailable, post the summary manually.
+> - **Scope:** same as In Progress enforcement — direct delegation only; exempt for background multi-ticket batch runs (where the per-ticket handback handles it).
+
 ## Blockers: keep going
 
 The rules above cover a **single delegated ticket** — move it to Blocked, assign it to the user,
