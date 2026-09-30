@@ -14,8 +14,6 @@ Required environment variables:
     REVIEW_BODY            — Review body text (may be empty)
     REVIEWER_LOGIN         — GitHub login of the reviewing bot
     REPO                   — GitHub repository in owner/name format
-    BLOCKS_LINEAR_USER_ID  — Linear user ID for the Blocks agent (@blocks mention target).
-                             Set as a GitHub repository variable (vars.BLOCKS_LINEAR_USER_ID).
 """
 
 from __future__ import annotations
@@ -42,8 +40,8 @@ MAX_BODY = 2000
 LINEAR_API_URL = "https://api.linear.app/graphql"
 
 COMMENT_MUTATION = """
-mutation PostComment($issueId: String!, $body: String!, $mentionedUserIds: [String!]) {
-  commentCreate(input: { issueId: $issueId, body: $body, mentionedUserIds: $mentionedUserIds }) {
+mutation PostComment($issueId: String!, $body: String!) {
+  commentCreate(input: { issueId: $issueId, body: $body }) {
     success
     comment { id url }
   }
@@ -97,14 +95,13 @@ def build_comment_body(
 before this branch is ready to merge.""")
 
 
-def post_comment(api_key: str, issue_id: str, body: str, blocks_user_id: str) -> None:
+def post_comment(api_key: str, issue_id: str, body: str) -> None:
     payload = json.dumps(
         {
             "query": COMMENT_MUTATION,
             "variables": {
                 "issueId": issue_id,
                 "body": body,
-                "mentionedUserIds": [blocks_user_id],
             },
         }
     ).encode()
@@ -121,6 +118,12 @@ def post_comment(api_key: str, issue_id: str, body: str, blocks_user_id: str) ->
     try:
         with urllib.request.urlopen(req) as resp:
             result = json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        # Linear returns the GraphQL error body on 4xx. Without printing it, a
+        # schema mistake surfaces only as "Bad Request", which is undiagnosable.
+        detail = exc.read().decode("utf-8", "replace")
+        print(f"❌ Linear API returned HTTP {exc.code}: {detail}", file=sys.stderr)
+        sys.exit(1)
     except urllib.error.URLError as exc:
         print(f"❌ Network error posting to Linear: {exc.reason}", file=sys.stderr)
         sys.exit(1)
@@ -148,7 +151,6 @@ def main() -> None:
     review_body = os.environ.get("REVIEW_BODY", "").strip()
     reviewer_login = os.environ.get("REVIEWER_LOGIN", "AI reviewer")
     repo = _require("REPO")
-    blocks_user_id = _require("BLOCKS_LINEAR_USER_ID")
 
     reviewer_name = BOT_NAMES.get(reviewer_login, reviewer_login)
 
@@ -163,7 +165,7 @@ def main() -> None:
         review_body=review_body,
     )
 
-    post_comment(api_key, linear_id, body, blocks_user_id)
+    post_comment(api_key, linear_id, body)
 
 
 if __name__ == "__main__":

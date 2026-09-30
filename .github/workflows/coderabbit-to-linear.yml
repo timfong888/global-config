@@ -13,9 +13,9 @@
 #   LINEAR_API — a Linear personal API key with comment:create scope.
 #   Generate one at: https://linear.app/settings/api  (Personal API keys)
 #
-# Required repository variable in global-config (already set):
-#   BLOCKS_LINEAR_USER_ID — the Blocks agent's Linear user ID.
-#   Manage at: github.com/timfong888/global-config/settings/variables/actions
+# No repository variables are required. The @blocks mention is plain text in the
+# comment body — Linear resolves the handle and wakes the agent (verified on
+# SAT-1035, where a plain "@blocks ..." comment gets an agent reply in ~2 min).
 #
 # Branch-name convention (case-insensitive):
 #   The workflow extracts the first token matching [A-Z]+-[0-9]+ from the PR
@@ -78,5 +78,4 @@ jobs:
           REVIEW_BODY:           ${{ github.event.review.body }}
           REVIEWER_LOGIN:        ${{ github.event.review.user.login }}
           REPO:                  ${{ github.repository }}
-          BLOCKS_LINEAR_USER_ID: ${{ vars.BLOCKS_LINEAR_USER_ID }}
         run: python3 scripts/notify-linear.py
