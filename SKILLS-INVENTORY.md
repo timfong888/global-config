@@ -227,3 +227,13 @@ All six source `profiles/*.md` files are accounted for across the original two r
 **Correction made along the way:** `capability-image-host.md` documents Google Drive (`GOOGLEDRIVE_UPLOAD_FROM_URL`) as the durable-hosting stage before a Linear attachment. In practice that path has repeatedly failed to render **inline** in Linear even when the link is directly reachable — only a native Linear file-upload (`uploads.linear.app`) asset has been confirmed reliable for inline display. `linear-image-pipeline` now prefers native Linear upload when the session's Linear access exposes it, and documents Drive as an attachment-only fallback, unverified for inline rendering — the same kind of correction-with-a-note SAT-685 made for the dead Goldsky endpoint, rather than silently porting a known-shaky default.
 
 **Validator:** `scripts/validate_skills.py` passes clean with both skills added (no error growth against the SAT-685 baseline).
+
+## Vendored third-party skills (2026-11-12)
+
+Unlike the rest of this repo, these are verbatim copies of upstream skills, not condensed ports.
+Kept at full size because their `references/` files are loaded on demand, not per session.
+
+- `web-design-engineer` — ConardLi/garden-skills (builder)
+- `better-interface` + `better-accessibility`, `-colors`, `-layout`, `-typography`, `-ui`, `-writing`, `interface-review` — jakubkrehel/skills (reviewer; the siblings are required by the orchestrator)
+
+Details, upstream SHAs, and the one local edit: see `CHANGELOG.md`.
