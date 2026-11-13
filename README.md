@@ -13,6 +13,7 @@ everything here is merged into *every* Blocks session — the sandbox, Slack, Gi
 | `scripts/validate_skills.py` | Pre-merge check that every skill is discoverable and unique. |
 | `scripts/notify-linear.py` | Posts `@blocks` Linear comment when a review bot finishes a PR review. |
 | `SKILLS-INVENTORY.md` | Decision record: what was kept, merged, and dropped, and why. |
+| `CHANGELOG.md` | What changed and when (vendored skills, upstream SHAs, local edits). |
 
 ## Skills
 
