@@ -58,6 +58,24 @@ head: if fixed, reply with the fixing commit and resolve it; if not, keep it in 
 repeat a finding a human rebutted or reacted 👎 to; if you still think it matters, say so once in
 the summary.
 
+## 5. Hand a failing Blocks PR back to Blocks
+
+Last step, only when **all** of these hold:
+
+- the verdict is FAIL and there is **no P0** finding (security and data-loss go to a human);
+- the PR's author is the Blocks bot (`blocksorg[bot]`); never for PRs by people or Claude cloud
+  sessions, which watch their own PRs;
+- the PR is not a test-author PR (only adds `tests/acceptance/` or equivalent): those are red by
+  design, and asking a coder to turn them green invites weakening the tests.
+
+Count the PR's earlier comments containing `@blocks address the review comments`. Fewer than 3:
+post exactly `@blocks address the review comments and update the PR` as its own comment. 3 or
+more: do not mention @blocks; add the `needs-human` label and post a short summary of what still
+fails after three rounds.
+
+This needs Dashboard → Settings → GitHub → **Bot Invocations** on, because Blocks ignores
+mentions from bot accounts by default. With it off the comment does nothing; say so in the summary.
+
 ## Repo rules: `.blocks/review.md`
 
 Optional, per repo. One rule per line:
