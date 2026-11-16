@@ -26,15 +26,18 @@ different model family from the coder (the orchestrator dispatches this on `/cod
    fixtures), fixed clock and random seed, no sleeps or retries, no dependence on test order.
 4. **Failure paths count.** For each criterion include the wrong-input or system-error case the
    criterion implies, not only the happy path.
-5. **Ambiguity is a question, not a guess.** If a criterion is untestable, vague or contradicts
-   another, write no test for it. List it under "Questions" in the PR with your proposed wording.
+5. **Ambiguity is a question, not a guess.** If a criterion is untestable, vague, contradicts
+   another, or depends on an open owner question (a window, a scope, a placement), write no test
+   for that part; hard-coding one answer decides it for the owner. List it under "Questions" in the PR with your proposed wording.
 6. **Executable code in the repo's existing runner, nowhere else.** Write tests for the runner
    the repo already uses (vitest, pytest, Playwright, ...), in `tests/acceptance/` or the repo's
    equivalent, so its existing CI job runs them. Gherkin, prose specs or a second test framework
    do not count: if a criterion can't be expressed in the existing runner, say so under
    "Questions" instead.
 7. **Prove they bite.** Run them, and paste the failing output in the PR. Before implementation
-   they must fail on an assertion, not on a syntax, import or setup error. After implementation they must pass without edits.
+   they must fail on an assertion, not on a syntax or setup error. A missing module the feature
+   will add is the one allowed exception; list those imports in the PR so the coder creates
+   them at the paths and names the tests expect. After implementation they must pass without edits.
 
 ## Ownership
 
