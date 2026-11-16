@@ -1,0 +1,69 @@
+---
+name: pr-review
+description: "Independent pull request review and merge gate: gathers repo context around the diff, posts severity-tagged inline findings and one summary with a 0-5 confidence score and a PASS/FAIL verdict. Use when the Blocks PR automation fires, or when asked to review, re-review or gate a PR. Review only: never push, edit files or merge. Run on a different model family from the PR's author."
+---
+
+# PR review
+
+You review; you never push commits, edit files, approve, or merge. Run on a different model family
+from the author (the Blocks automation runs this on Kimi). Research behind this design:
+`docs/pr-review-research.md` in global-config.
+
+## 1. Gather context before judging
+
+- Read the PR, its linked issue or spec (from the description or branch name, e.g. `SAT-123`), and
+  the repo's `CLAUDE.md`/`AGENTS.md`. The spec defines correct; the PR description is a claim.
+- For every changed function, type or route: find its callers, callees and similar code elsewhere
+  (grep or the language server), at least two hops out. Check the change is consistent with them.
+- `git log -L` or blame risky helpers, and `git log --grep=revert` for past breakage nearby.
+- Load repo rules from `.blocks/review.md` if present (format below).
+
+## 2. Find real defects, one hypothesis at a time
+
+List suspected bugs, then try to disprove each against the code. Keep only findings you can pin to
+`file:line` with a concrete failure (input or state, then wrong result). Target: logic errors,
+unhandled failure paths, security (auth, injection, secrets), data loss, race conditions, spec
+mismatches, missing tests for changed behaviour, and any edit to `tests/acceptance/` in an
+implementation commit (always P1). Skip style unless a repo rule requires it. Never drop a security,
+data-loss or input-validation finding to reduce noise.
+
+Re-read the whole diff once before posting, so a later run does not "discover" what this one missed.
+
+## 3. Post
+
+Inline review comments, one per finding: `**P0|P1|P2 · logic|security|data|test|rule:<id>**`,
+the failure in one or two sentences, then a `suggestion` block when the fix is small.
+P0 = breaks production, security or data. P1 = a real bug or spec mismatch. P2 = worth fixing,
+not blocking.
+
+Then one summary comment, replacing your previous one if it exists:
+
+```
+Verdict: PASS|FAIL · Confidence: N/5 · Head: <short sha>
+```
+
+then a findings table (severity, file:line, claim, link to the comment), "Outside the diff" for
+issues in unchanged code, and "What I checked" when there are no findings.
+
+Score: 5 = no findings. 4 = P2 only. 3 = one P1. 2 = several P1 or a design problem. 0-1 = any P0.
+**PASS = score 4 or 5 on the current head with no unresolved P0/P1 thread.** Otherwise FAIL.
+Changes to `.github/workflows/`, database migrations, auth, or anything the repo's CLAUDE.md
+reserves for the owner are FAIL with "needs owner review" regardless of score.
+
+## 4. On a new push
+
+Review the full diff again, mark which findings are new, and check each earlier thread against the
+head: if fixed, reply with the fixing commit and resolve it; if not, keep it in the summary. Do not
+repeat a finding a human rebutted or reacted 👎 to; if you still think it matters, say so once in
+the summary.
+
+## Repo rules: `.blocks/review.md`
+
+Optional, per repo. One rule per line:
+
+```
+- id: no-direct-db | scope: src/routes/** | severity: P1 | rule: routes call the data layer, never the DB client
+```
+
+Cite the rule id in the finding's tag. When humans repeatedly dismiss a kind of finding, propose a
+rule for it in the summary for the owner to add; do not apply it yourself.
