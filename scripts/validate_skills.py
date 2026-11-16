@@ -50,7 +50,8 @@ RETIRED = (
     (r"\brube\s+mcp\b", "Rube MCP was sunset 2026-05-15; use the Composio CLI"),
     (r"\bcomposio[-_]personal\b", "no such MCP server exists; use the Composio CLI"),
     (r"\bpipedream\b", "the pipedream MCP servers are retired"),
-    (r"\bgreptile\b", "Greptile was retired 2026-05-27; use the CodeRabbit CLI"),
+    (r"\bgreptile\b", "Greptile was retired 2026-11-16; use the kimi-review skill"),
+    (r"\bcoderabbit\b", "CodeRabbit was retired 2026-11-16; use the kimi-review skill"),
 )
 
 

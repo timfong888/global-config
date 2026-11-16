@@ -113,7 +113,7 @@ Always hyperlink PR and issue references — never use raw URLs or plain `#N` nu
 | Referencing a Linear issue | `[SAT-N: Title](https://linear.app/.../issue/SAT-N/...)` |
 
 **Correct:**
-> PR is live at [PR #5: Add CodeRabbit → Linear workflow](https://github.com/timfong888/global-config/pull/5).
+> PR is live at [PR #5: Add the review workflow](https://github.com/timfong888/global-config/pull/5).
 
 **Incorrect:**
 > PR is live at **https://github.com/timfong888/global-config/pull/5**.
@@ -181,13 +181,9 @@ Traverse at most **2 hops up** (parent + grandparent). Do not fetch beyond the g
 
 Individual skill files live in `.claude/skills/`. Each skill is loaded via the `Skill` tool using its directory name. Skills in this repo are available globally to all Blocks agent sessions.
 
-## Code Review (CodeRabbit — paused)
+## Code Review
 
-The CodeRabbit subscription is cancelled, so the `cr` CLI is **no longer installed or authenticated** in Blocks sessions. Do not run `Skill: coderabbit`, and do not install `cr` on the fly.
-
-Before creating a pull request, use the built-in `/code-review` (and the repo's own review skill, if it has one) instead.
-
-To restore CodeRabbit, see `docs/coderabbit-paused.md`.
+Before creating a pull request, run the repo's own review skill if it has one, else the built-in `/code-review`. After the PR is opened, the Blocks PR automation runs the cross-model review; do not run it yourself unless asked.
 
 ## Post-Clone Setup
 

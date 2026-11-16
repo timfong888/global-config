@@ -7,7 +7,4 @@ npm install -g .
 echo "Verifying aurora-mcp-server..."
 aurora-mcp-server --version 2>/dev/null || true
 
-# CodeRabbit CLI install + auth removed (subscription cancelled).
-# To restore, see docs/coderabbit-paused.md.
-
 echo "Global post-clone setup complete!"

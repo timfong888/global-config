@@ -108,8 +108,8 @@ Every success comment carries two structured bullets right after the headline:
   For a coding PR handback: `{links}` must be the full clickable URL —
   `https://github.com/<owner>/<repo>/pull/<N>` (never a bare `PR #<N>`). Add:
   ```text
-  - Review on: the GitHub PR page linked above — open it to read the diff (CodeRabbit has
-    already reviewed) and merge; Linear just tracks status.
+  - Review on: the GitHub PR page linked above — open it to read the diff and the automated
+    review, then merge; Linear just tracks status.
   ```
 
 - **Judgment-bearing** (writing, admin that needs your eyes):
