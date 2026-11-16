@@ -45,7 +45,8 @@ Verdict: PASS|FAIL · Confidence: N/5 · Head: <short sha>
 then a findings table (severity, file:line, claim, link to the comment), "Outside the diff" for
 issues in unchanged code, and "What I checked" when there are no findings.
 
-Score: 5 = no findings. 4 = P2 only. 3 = one P1. 2 = several P1 or a design problem. 0-1 = any P0.
+Score, computed from your own findings and nothing else: 5 = no findings. 4 = P2 only. 3 = one P1.
+2 = several P1 or a design problem. 0-1 = any P0. A P1 or P0 finding means the score is 3 or lower.
 **PASS = score 4 or 5 on the current head with no unresolved P0/P1 thread.** Otherwise FAIL.
 Changes to `.github/workflows/`, database migrations, auth, or anything the repo's CLAUDE.md
 reserves for the owner are FAIL with "needs owner review" regardless of score.
