@@ -28,11 +28,13 @@ different model family from the coder (the orchestrator dispatches this on `/cod
    criterion implies, not only the happy path.
 5. **Ambiguity is a question, not a guess.** If a criterion is untestable, vague or contradicts
    another, write no test for it. List it under "Questions" in the PR with your proposed wording.
-6. **Put them where CI runs them.** Use `tests/acceptance/` (or the repo's equivalent) and make
-   sure an existing CI job runs that folder on every PR. If none does, add the smallest job that
-   does, using the repo's own test command.
-7. **Prove they bite.** Run them. Before implementation they must fail on an assertion, not on a
-   syntax, import or setup error. After implementation they must pass without edits.
+6. **Executable code in the repo's existing runner, nowhere else.** Write tests for the runner
+   the repo already uses (vitest, pytest, Playwright, ...), in `tests/acceptance/` or the repo's
+   equivalent, so its existing CI job runs them. Gherkin, prose specs or a second test framework
+   do not count: if a criterion can't be expressed in the existing runner, say so under
+   "Questions" instead.
+7. **Prove they bite.** Run them, and paste the failing output in the PR. Before implementation
+   they must fail on an assertion, not on a syntax, import or setup error. After implementation they must pass without edits.
 
 ## Ownership
 
@@ -48,4 +50,5 @@ branch), then post on the PR:
 | Criterion | Test | Status before implementation |
 | --- | --- | --- |
 
-followed by "Questions" (rule 5) and the exact command to run the suite locally.
+followed by "Questions" (rule 5), the exact command to run the suite locally, and its failing
+output. A PR with no executable test and no failing output is not done.
