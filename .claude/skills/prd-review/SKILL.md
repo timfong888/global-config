@@ -9,7 +9,7 @@ No subagents to dispatch here — work through the modes below yourself, directl
 
 ## Modes
 
-Run all six (`strategy`, `journey`, `research`, `growth`, `validation`, `writing`) on round 1. Route with `/prd-review --strategy` etc. to run a single mode ad hoc. For a full iterative review, follow the Scoring loop below.
+Run all six (`strategy`, `journey`, `research`, `growth`, `validation`, `writing`) on round 1. `journey` replaces the old `jtbd` mode (`--jtbd` runs `journey`); `growth` is new. Route with `/prd-review --strategy` etc. to run a single mode ad hoc. For a full iterative review, follow the Scoring loop below.
 
 ## Scoring
 
@@ -85,7 +85,8 @@ Catalog risks by category (technical/market/execution/external) with likelihood 
 ## Output
 
 1. **Critique:** the top 5 issues, ranked by leverage (the change most likely to move adoption,
-   growth or revenue first). One or two lines each, with the evidence.
+   growth or revenue first). One or two lines each, with the evidence, including a linked
+   user-pain quote or number when one exists.
 2. **Proposed edits** as suggestions or comments anchored to the doc text; never rewrite the doc
    silently. The PRD belongs to its author.
 
