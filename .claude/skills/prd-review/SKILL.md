@@ -1,6 +1,6 @@
 ---
 name: prd-review
-description: "Reviews a PRD to make it more concise, user-focused, differentiated and built for product-led growth: six scored domains (strategy, journey, research, growth, validation, writing), then a top-5 critique ranked by leverage and proposed edits as doc suggestions, never silent rewrites. Activate for review this PRD, score this PRD, run full PM review."
+description: "Reviews a PRD to make it more concise, user-focused, differentiated and built for product-led growth: six scored domains (strategy, journey, research, growth, validation, writing), then a top-5 critique ranked by impact and proposed edits as doc suggestions, never silent rewrites. Activate for review this PRD, score this PRD, run full PM review."
 ---
 
 # PRD Review
@@ -84,7 +84,9 @@ Catalog risks by category (technical/market/execution/external) with likelihood 
 
 ## Output
 
-1. **Critique:** the top 5 issues, ranked by leverage (the change most likely to move adoption,
+Produce both only after the scoring loop stops and the final coherence pass is done.
+
+1. **Critique:** the top 5 issues, ranked by impact (the change most likely to move adoption,
    growth or revenue first). One or two lines each, with the evidence, including a linked
    user-pain quote or number when one exists.
 2. **Proposed edits** as suggestions or comments anchored to the doc text; never rewrite the doc
