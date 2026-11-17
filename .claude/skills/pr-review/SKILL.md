@@ -60,7 +60,7 @@ the summary.
 
 ## 5. Hand a failing Blocks PR back to Blocks
 
-Last step, only when **all** of these hold:
+Last action on GitHub, only when **all** of these hold:
 
 - the verdict is FAIL and there is **no P0** finding (security and data-loss go to a human);
 - the PR's author is the Blocks bot (`blocksorg[bot]`); never for PRs by people or Claude cloud
