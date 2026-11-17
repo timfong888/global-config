@@ -26,7 +26,8 @@ anything else:
    finished.
 4. Lowest claim wins, so carry on with the review. Delete your claim after posting the summary.
 
-A new commit has a new SHA, so it is always reviewed.
+A new commit has a new SHA, so it is always reviewed. A comment that explicitly asks for a re-review
+(e.g. after the linked spec changed) skips check 2; the claim in check 3 still applies.
 
 ## 1. Gather context before judging
 
