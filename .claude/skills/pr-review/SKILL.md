@@ -36,17 +36,18 @@ the failure in one or two sentences, then a `suggestion` block when the fix is s
 P0 = breaks production, security or data. P1 = a real bug or spec mismatch. P2 = worth fixing,
 not blocking.
 
-Then one summary comment, replacing your previous one if it exists:
+Then exactly one summary comment per PR. If a comment by you starting with `Verdict:` already
+exists on the PR, **edit that comment** (update it in place) instead of posting a new one:
 
 ```
-Verdict: PASS|FAIL · Confidence: N/5 · Head: <short sha>
+Verdict: PASS|FAIL · Score: N/5 · Head: <short sha>
 ```
 
 then a findings table (severity, file:line, claim, link to the comment), "Outside the diff" for
 issues in unchanged code, and "What I checked" when there are no findings.
 
-Score, computed from your own findings and nothing else: 5 = no findings. 4 = P2 only. 3 = one P1.
-2 = several P1 or a design problem. 0-1 = any P0. A P1 or P0 finding means the score is 3 or lower.
+Score (the `Score:` field; it is not your confidence), computed from your own findings only:
+5 = no findings. 4 = P2 only. 3 = one P1. 2 = several P1 or a design problem. 0-1 = any P0. A P1 or P0 finding means the score is 3 or lower.
 **PASS = score 4 or 5 on the current head with no unresolved P0/P1 thread.** Otherwise FAIL.
 Changes to `.github/workflows/`, database migrations, auth, or anything the repo's CLAUDE.md
 reserves for the owner are FAIL with "needs owner review" regardless of score.
