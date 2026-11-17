@@ -6,8 +6,32 @@ description: "Independent pull request review and merge gate: gathers repo conte
 # PR review
 
 You review; you never push commits, edit files, approve, or merge. Run on a different model family
-from the author (the Blocks automation runs this on Kimi). Research behind this design:
+from the author; the skill is the same whichever model runs it. Research behind this design:
 `docs/pr-review-research.md` in global-config.
+
+## 0. One review per head commit
+
+Blocks can start two runs for the same commit (a push and "ready for review" together). Before
+anything else:
+
+1. Get the PR's current head SHA.
+2. If a summary by you starting with `Verdict:` already shows `Head: <that short sha>`, post
+   nothing, end with a `CI determination:` line (step 6) that matches its verdict, and stop.
+3. Otherwise claim the head: post a comment that is exactly `PR Review claim · Head: <short sha>`
+   and keep its ID. Re-list the PR's comments. Ignore claims older than 30 minutes with no
+   matching `Verdict:` (a run that died). If another claim for this SHA has a lower comment ID
+   than yours, another run owns this head: delete your claim, wait for its summary for this SHA
+   (check every minute, up to 20 minutes), then end with a `CI determination:` that matches it and
+   stop. If none appears, end with `CI determination: FAIL` and say the duplicate run never
+   finished.
+4. Before reviewing, re-check check 2 against the re-listed comments: a run may have finished
+   and deleted its claim while you were posting yours. If a `Verdict:` for this SHA is there now
+   (unless this is an explicit re-review), delete your claim, end with a matching
+   `CI determination:` and stop.
+5. Otherwise your claim is the lowest, so carry on with the review. Delete your claim after posting the summary.
+
+A new commit has a new SHA, so it is always reviewed. A comment that explicitly asks for a re-review
+(e.g. after the linked spec changed) skips checks 2 and 4; the claim in check 3 still applies.
 
 ## 1. Gather context before judging
 

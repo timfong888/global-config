@@ -1,7 +1,7 @@
 # How the `pr-review` skill was designed
 
 `pr-review` replaces Greptile (cancelled 2026-11-16 for cost) with a skill run by the Blocks PR
-automation on Kimi. This note records what Greptile publicly says about its approach and what the
+automation (Codex since 2026-11-17, Kimi before that and now as the second opinion). This note records what Greptile publicly says about its approach and what the
 skill takes from it. Public sources only; no prompts were copied. Researched 2026-11-16.
 
 ## What Greptile does
