@@ -9,7 +9,7 @@ No subagents to dispatch here — work through the modes below yourself, directl
 
 ## Modes
 
-Run all six (`strategy`, `journey`, `research`, `growth`, `validation`, `writing`) on round 1. `journey` replaces the old `jtbd` mode (`--jtbd` runs `journey`); `growth` is new. Route with `/prd-review --strategy` etc. to run a single mode ad hoc. For a full iterative review, follow the Scoring loop below.
+Run all six (`strategy`, `journey`, `research`, `growth`, `validation`, `writing`) on round 1. `journey` replaces the old `jtbd` mode (`--jtbd` runs `journey` with the journey rubric); `growth` is new. Route with `/prd-review --strategy` etc. to run a single mode ad hoc. For a full iterative review, follow the Scoring loop below.
 
 ## Scoring
 
@@ -48,16 +48,25 @@ Distinguish JTBD (strategic "why," persona-agnostic) from user stories (tactical
 - JTBD format: "When [situation/trigger], I want to [motivation], so I can [outcome]."
 - User story format: "As a [role], I want to [action], so that [benefit]."
 
-Group user stories by journey stage (discover → try → first value → habit → pay → share); flag
-stages with no story. For each stage, add only the edge cases and anti-patterns that would change
-a decision or need a guardrail: user mistakes, bad or hostile input, system errors and empty
-states, and child safety wherever minors could use it. Every JTBD should map to at least one user story. Flag JTBDs missing a concrete trigger or outcome ("Users want better storage" is not a JTBD — no situation, vague motivation, no outcome). Draft up to 3 clarifying questions about unclear user context/motivation/outcome, and 2-3 research queries to validate them.
+- **Persona:** one primary user named, with their context, constraints and motivation; flag a
+  PRD that serves several personas equally.
+- **Stages:** group user stories by journey stage (discover → try → first value → habit → pay →
+  share); flag stages with no story.
+- **Edge cases:** for each stage, add only the edge cases and anti-patterns that would change a
+  product decision (scope, priority or design) or need a guardrail: user mistakes, bad or hostile
+  input, system errors and empty states, and child safety wherever minors could use it.
+- **JTBD:** every JTBD maps to at least one user story. Flag JTBDs missing a concrete trigger or
+  outcome ("Users want better storage" has no situation and no outcome). Draft up to 3 clarifying
+  questions and 2-3 research queries to settle them.
 
 ## Research
 
-Scan for unsupported claims ("users want X," "market is growing," pricing claims) lacking a citation. Check competitive coverage: top 3-5 direct competitors named with strengths/weaknesses and a differentiation response — not just a competitor list. For each gap: state priority (high/medium/low) and the specific query needed to close it. If research tools are available, use them to close gaps rather than only flagging them. For
-user pain, look at real users' words in Reddit, app-store reviews, G2 and forums: at most 3
-quotes or numbers, each with a link. Short beats exhaustive.
+Scan for unsupported claims ("users want X," "market is growing," pricing claims) lacking a citation. Check competitive coverage: top 3-5 direct competitors named with strengths/weaknesses and a differentiation response — not just a competitor list. For each gap: state priority (high/medium/low) and the specific query needed to close it. If research tools are available, use them to close gaps rather than only flagging them.
+
+User pain: run web searches for real users' words on Reddit, in app-store reviews, on G2 and in
+forums, and keep at most 3 quotes or numbers, each with a link. A competitor's own page is not user
+pain. If no search tool is available, say "no user research run" in the critique; never imply
+research was done.
 
 ## Growth
 
@@ -81,19 +90,6 @@ Review from 5 stakeholder lenses and mark each Yes/Unclear/No with what's missin
 - Leadership — business case and risk stated?
 
 Catalog risks by category (technical/market/execution/external) with likelihood × impact and a mitigation. Verify every goal has an owned, measurable metric with a target, and check for stated kill criteria — flag if absent.
-
-## Output
-
-Produce both only after the scoring loop stops and the final coherence pass is done.
-
-1. **Critique:** the top 5 issues, ranked by impact (the change most likely to move adoption,
-   growth or revenue first). One or two lines each, with the evidence, including a linked
-   user-pain quote or number when one exists.
-2. **Proposed edits** as suggestions or comments anchored to the doc text; never rewrite the doc
-   silently. The PRD belongs to its author.
-
-Concision rule: proposed text must not make the PRD longer than it was. Fix root issues (an
-unclear user, a missing loop) rather than adding sections; cut what doesn't change a decision.
 
 ## Writing
 
@@ -121,3 +117,22 @@ Enforce (Amazon + Strunk & White style):
 | many users / significant improvement / better experience | specific percentage or metric |
 
 If asked to "review writing only, minimize changes": fix only jargon/AI-patterns, no structural edits.
+
+## Output
+
+Produce all three only after the scoring loop stops and the final coherence pass is done.
+
+1. **Critique:** the top 5 issues, ranked by impact (the change most likely to move adoption,
+   growth or revenue first). One or two lines each, with the evidence, including a linked
+   user-pain quote or number when one exists.
+2. **Metrics:** the 3 to 5 measurable metrics from Growth, each with a target and time frame.
+3. **Proposed edits** as suggestions or comments anchored to the doc text, each quoting the exact
+   text it replaces; never rewrite the doc silently. The PRD belongs to its author.
+
+Numbers: every number you propose (price, age band, target, threshold, date) is labelled
+`assumption: Tim to choose` and comes with 2-3 options, e.g. "$1.99 / $2.99 / $4.99 pack". Never
+present a number you made up as a decision.
+
+Concision rule: proposed text must not make the PRD longer than it was. Report the PRD's word
+count before and after your edits. Fix root issues (an unclear user, a missing loop) rather than
+adding sections; cut what doesn't change a decision.
