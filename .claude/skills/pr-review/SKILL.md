@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: "Independent pull request review and merge gate: gathers repo context around the diff, posts severity-tagged inline findings and one summary with a 0-5 confidence score and a PASS/FAIL verdict. Use when the Blocks PR automation fires, or when asked to review, re-review or gate a PR. Review only: never push, edit files or merge. Run on a different model family from the PR's author."
+description: "Independent pull request review and merge gate: gathers repo context around the diff, posts severity-tagged inline findings and one summary with a 0-5 score and a PASS/FAIL verdict. Use when the Blocks PR automation fires, or when asked to review, re-review or gate a PR. Review only: never push, edit files or merge. Run on a different model family from the PR's author."
 ---
 
 # PR review
