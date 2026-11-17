@@ -49,9 +49,9 @@ Distinguish JTBD (strategic "why," persona-agnostic) from user stories (tactical
 - User story format: "As a [role], I want to [action], so that [benefit]."
 
 Group user stories by journey stage (discover → try → first value → habit → pay → share); flag
-stages with no story. For each stage, add the edge cases and anti-patterns the PRD skips: user
-mistakes, bad or hostile input, system errors and empty states, and child safety wherever minors
-could use it. Every JTBD should map to at least one user story. Flag JTBDs missing a concrete trigger or outcome ("Users want better storage" is not a JTBD — no situation, vague motivation, no outcome). Draft up to 3 clarifying questions about unclear user context/motivation/outcome, and 2-3 research queries to validate them.
+stages with no story. For each stage, add only the edge cases and anti-patterns that would change
+a decision or need a guardrail: user mistakes, bad or hostile input, system errors and empty
+states, and child safety wherever minors could use it. Every JTBD should map to at least one user story. Flag JTBDs missing a concrete trigger or outcome ("Users want better storage" is not a JTBD — no situation, vague motivation, no outcome). Draft up to 3 clarifying questions about unclear user context/motivation/outcome, and 2-3 research queries to validate them.
 
 ## Research
 

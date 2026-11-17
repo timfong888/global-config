@@ -50,7 +50,7 @@ Nine consolidations account for 28 of the source skills.
 | Skill | Merged from | Lines |
 |---|---|---|
 | `spec-review` | `dev-spec-clarity`, `dev-spec-completeness`, `dev-spec-dx-review`, `dev-spec-implementation-readiness`, `dev-spec-technical-accuracy-v2` | 3,091 → 128 |
-| `prd-review` | `pm-orchestrator` + its 5 sub-agents (`pm-strategy-agent`, `pm-jtbd-agent`, `pm-research-agent`, `pm-validation-agent`, `pm-writing-agent`) | 2,227 → 91 |
+| `prd-review` | `pm-orchestrator` + its 5 sub-agents (`pm-strategy-agent`, `pm-jtbd-agent`, `pm-research-agent`, `pm-validation-agent`, `pm-writing-agent`); extended in #82: `jtbd` → `journey`, new `growth` | 2,227 → 91 (→ ~120 after #82) |
 | `frontend-performance-audit` | `nextjs-performance-audit`, `nextjs-bundle-check`, `react-rerender-audit` | 950 → 161 |
 | `google-sheets` | `google-sheets`, `google-sheets-sdk`, `perplexity-sheets` | 1,135 → 102 |
 | `prd-intake` | `pm-intake`, `intake-to-prd-weave` | 808 → 70 |
