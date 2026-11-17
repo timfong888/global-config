@@ -24,10 +24,14 @@ anything else:
    (check every minute, up to 20 minutes), then end with a `CI determination:` that matches it and
    stop. If none appears, end with `CI determination: FAIL` and say the duplicate run never
    finished.
-4. Lowest claim wins, so carry on with the review. Delete your claim after posting the summary.
+4. Before reviewing, re-check check 2 against the re-listed comments: a run may have finished
+   and deleted its claim while you were posting yours. If a `Verdict:` for this SHA is there now
+   (unless this is an explicit re-review), delete your claim, end with a matching
+   `CI determination:` and stop.
+5. Otherwise your claim is the lowest, so carry on with the review. Delete your claim after posting the summary.
 
 A new commit has a new SHA, so it is always reviewed. A comment that explicitly asks for a re-review
-(e.g. after the linked spec changed) skips check 2; the claim in check 3 still applies.
+(e.g. after the linked spec changed) skips checks 2 and 4; the claim in check 3 still applies.
 
 ## 1. Gather context before judging
 
