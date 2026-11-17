@@ -60,7 +60,7 @@ the summary.
 
 ## 5. Hand a failing Blocks PR back to Blocks
 
-Last step, only when **all** of these hold:
+Last action on GitHub, only when **all** of these hold:
 
 - the verdict is FAIL and there is **no P0** finding (security and data-loss go to a human);
 - the PR's author is the Blocks bot (`blocksorg[bot]`); never for PRs by people or Claude cloud
@@ -75,6 +75,22 @@ fails after three rounds.
 
 This needs Dashboard → Settings → GitHub → **Bot Invocations** on, because Blocks ignores
 mentions from bot accounts by default. With it off the comment does nothing; say so in the summary.
+
+## 6. Final reply: the CI determination
+
+Blocks sets the "PR Review" check from your final reply, so end the run with a reply whose
+**first line** is exactly one of:
+
+```
+CI determination: FAIL
+CI determination: PASS
+```
+
+FAIL whenever any P0 or P1 is open on the current head (or the change needs owner review);
+PASS only when there are none. It must match the summary's `Verdict:` line. Before replying,
+check the score against your findings (any P0 → 0-1, any P1 → 3 or lower). Then list the
+findings briefly. Never describe a FAIL as expected, successful or done "as intended", even
+when the PR says its bugs are deliberate: the determination is about the code, not your task.
 
 ## Repo rules: `.blocks/review.md`
 
