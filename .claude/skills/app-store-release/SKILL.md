@@ -32,7 +32,7 @@ Both hosts are blocked by default in the agent proxy (403): the environment must
 
 ## Build config
 
-- `expo-dev-client` (`npx expo install`), `eas.json` profiles: `development` (dev client, internal), `development-simulator`, `preview` and `production` (`distribution: store`, `autoIncrement`, `appVersionSource: remote`), `environment` per profile. `cli.version >= 13.2.0` for `environment`.
+- `expo-dev-client` (`npx expo install`), `eas.json` profiles: `development` (dev client, internal), `development-simulator`, `preview` and `production` (`distribution: store`, `autoIncrement`, `environment`). `appVersionSource: "remote"` goes in the top-level `cli` block, never in a build profile (EAS rejects it there): `"cli": {"version": ">= 13.2.0", "appVersionSource": "remote"}` (`environment` needs 13.2.0+).
 - `ios.infoPlist.ITSAppUsesNonExemptEncryption: false` when only HTTPS is used, so TestFlight skips export compliance.
 - Per-profile variables as **EAS environment variables**, not in the repo. A `eas-build-pre-install` script fails `production` builds carrying Test Store or sandbox keys.
 - `eas init` (writes the project id into `app.json`), `eas build --profile preview --platform ios`, `eas submit --profile preview --platform ios` (TestFlight). Build and submit run via `npx eas-cli` with `EXPO_TOKEN` set to a dummy value so the proxy substitutes the real one.
@@ -53,11 +53,11 @@ Check the PNG header sizes. Use only real app state: do not mock data (guideline
 
 **Listing limits:** name 30, subtitle 30, promo text 170, keywords 100 (comma-separated, no spaces), description 4000. Count them in code. Name is often taken: list fallbacks.
 
-**Age rating and category:** answer the questionnaire honestly from the content; if adult themes exist do not pick the Kids category.
+**Age rating and category:** use Apple's current scale (4+, 9+, 13+, 16+, 18+; the old 12+/17+ labels are gone) and answer each questionnaire item separately. Audit the shipped content, not a guess: scan the question or content bank per category for alcohol, drugs, violence, sexual, crude, gambling and mature themes, then read the hits and record the evidence (ids) next to each answer. Apple computes the final rating, so state an expectation, not a promise. If adult themes exist do not pick the Kids category. Leaving a category out of the release changes the audit: re-run it.
 
-**Privacy (a common blocker):** the privacy policy, the App Privacy label and the real SDKs must agree. Grep for analytics and billing SDKs (`posthog`, `react-native-purchases`, crash tools) and compare with the in-app policy page. In Would You Rather the page claimed "no analytics or third-party SDKs" while PostHog and RevenueCat ran. Draft replacement text in the PR; do not edit live legal text without Tim.
+**Privacy (a common blocker):** the privacy policy, the App Privacy label and the real data flows must agree. Cover SDKs (`posthog`, `react-native-purchases`, crash tools) **and the backend**: read every API route that stores or logs a field (geo headers, ids, timestamps) and add its data type, e.g. coarse location stored with a player id is a Coarse Location row. Compare with the in-app policy page. In Would You Rather the page claimed "no analytics or third-party SDKs" while PostHog and RevenueCat ran. Draft replacement text in the PR; do not edit live legal text without Tim.
 
-**IAP metadata:** table of product id, reference name, display name (30), description (45), price tier. Product ids must equal the RevenueCat ids exactly: cross-check against `GET /v2/projects/{p}/products`.
+**IAP metadata:** table of product id, reference name, display name (30), description (45), price tier. The Apple product id must equal the RevenueCat product's `store_identifier` (not its internal `id`, e.g. `prod1a2b...`): cross-check `GET /v2/projects/{p}/products` filtered to the intended `app_id`, comparing `items[].store_identifier`.
 
 ## Upload (only after Tim approves the PR)
 
