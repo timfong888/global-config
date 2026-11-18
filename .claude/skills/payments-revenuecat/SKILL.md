@@ -1,6 +1,6 @@
 ---
 name: payments-revenuecat
-description: Add in-app purchases to an Expo / React Native app with RevenueCat, sandbox-test them, and hand off go-live to Tim. Use for "add payments", "accept payments via RevenueCat", "paywall", "in-app purchase", "unlock" or "restore purchases" in any mobile app. Worked example is timfong888/would-you-rather (PR #83, docs/payments.md).
+description: Add in-app purchases to an Expo / React Native app with RevenueCat, sandbox-test them, and hand off go-live to Tim. Use for "add payments", "accept payments via RevenueCat", "paywall", "in-app purchase", "unlock" or "restore purchases" in any mobile app. Worked example is timfong888/would-you-rather (PR 83, docs/payments.md).
 ---
 
 # Payments with RevenueCat (Expo / React Native)
