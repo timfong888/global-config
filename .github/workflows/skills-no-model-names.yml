@@ -1,0 +1,27 @@
+name: Skills
+
+# Tim, 2026-11-18: no SKILL.md names a model; which model runs a skill is chosen
+# outside it. Exceptions live in scripts/validate_skills.py (MODEL_NAME_EXCEPTIONS)
+# and CONTRIBUTING.md.
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/**"
+      - ".codex/skills/**"
+      - ".agents/skills/**"
+      - "scripts/validate_skills.py"
+      - ".github/workflows/skills-no-model-names.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  no-model-names:
+    name: No model names in skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validator self-test
+        run: python3 scripts/validate_skills.py --selftest
+      - name: Check skills for model names
+        run: python3 scripts/validate_skills.py --models-only

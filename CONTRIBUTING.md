@@ -6,7 +6,8 @@ A skill says **what** to do. Which model runs it is chosen outside the skill: Bl
 automation settings, the orchestrator's routing, or a workspace config table. (Tim, 2026-11-18.)
 
 - Don't name LLM models or vendor models in a `SKILL.md`: no Kimi, Codex, GPT-*, Sol, Terra, Luna,
-  Astra, Opus, Sonnet, Haiku, Fable, Gemini (as an LLM), DeepSeek, GLM, and no `--profile <model>`
+  Astra, Opus, Sonnet, Haiku, Fable, Gemini, Mistral, Llama, DeepSeek, GLM, Claude model ids
+  (`claude-<family>-<n>`; "Claude" alone names the agent and is fine), and no `--profile <model>`
   or "use model X".
 - If a skill needs a capability, say it neutrally: "needs deep reasoning", "high-volume and cheap",
   "a different model family from the author".
@@ -19,7 +20,9 @@ automation settings, the orchestrator's routing, or a workspace config table. (T
 Before opening a PR, run:
 
 ```bash
-grep -rniE 'kimi|codex[^/]|gpt-|\b(sol|terra|luna|astra)\b|opus|sonnet|haiku|fable|deepseek|glm-' .claude/skills --include=SKILL.md | grep -vE '/(do|aurora|capability-image[^/]*|linear-image-pipeline|photo-compositing)/'
+python3 scripts/validate_skills.py --models-only
 ```
 
-It should print nothing.
+It should report 0 model-name errors. CI runs the same check on every PR that touches a skill
+(`.github/workflows/skills-no-model-names.yml`). To add an exception, add the skill's folder name to
+`MODEL_NAME_EXCEPTIONS` in `scripts/validate_skills.py` and list it above.

@@ -23,7 +23,8 @@ Skip, without posting inline findings, when any of these holds:
   `.github/pull_request_template.md`, `.vscode/**`, `.editorconfig`, `.gitignore`, `LICENSE`, or an
   image or font file. Anything else (code, `package.json`, lockfiles, build or deploy config,
   `.github/workflows/**`, database rules, migrations) means review.
-- **(b) Small follow-up.** A `Verdict:` summary by you already exists on this PR, the diff from its
+- **(b) Small follow-up after a PASS.** Your latest `Verdict:` summary on this PR is PASS (a push after
+  a FAIL is always re-reviewed, within the cap in (c)), the diff from its
   `Head:` sha to the current head is under about 50 changed lines, and no changed path touches
   sign-in, payments or data (paths or names containing `auth`, `login`, `signin`, `session`,
   `token`, `payment`, `billing`, `stripe`, `revenuecat`, `checkout`, `migration`, `schema`, `db`,
