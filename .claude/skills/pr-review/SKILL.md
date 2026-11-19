@@ -13,8 +13,8 @@ from the author; the skill is the same whichever model runs it. Research behind 
 
 Do this first, before reading code, so a review that shouldn't run ends within seconds. Tim's
 review rules (2026-11-18): one review per PR, at ready; re-review only after a substantial change;
-no AI review for docs, content or settings PRs; at most 2 reviews per PR; never Astra or Kimi
-models. Use only the PR metadata, the changed-file list and the comments; don't check out code.
+no AI review for docs, content or settings PRs; at most 2 reviews per PR. Which model runs this
+skill is set outside it (the automation or the orchestrator), not here. Use only the PR metadata, the changed-file list and the comments; don't check out code.
 
 Skip, without posting inline findings, when any of these holds:
 
