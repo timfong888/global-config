@@ -17,8 +17,12 @@ Checks, per skill directory:
   6. Directory names are unique across all skill roots.
   7. No references to retired infrastructure.
   8. Directory name is a valid slash-command slug.
+  9. No model names in SKILL.md (Tim, 2026-11-18): which model runs a skill is
+     chosen outside it. Exceptions are listed in MODEL_NAME_EXCEPTIONS and in
+     CONTRIBUTING.md.
 
 Run `--selftest` to exercise the frontmatter parser against known-bad inputs.
+Run `--models-only` to report and fail on check 9 alone (what CI runs).
 Exit code 0 = clean, 1 = at least one error.
 """
 
@@ -54,6 +58,36 @@ RETIRED = (
     (r"\bcoderabbit\b", "CodeRabbit was retired 2026-11-16; use the pr-review skill"),
 )
 
+# Check 9. LLM and vendor-model names a skill must not hardcode. `.codex/` paths
+# are skill roots, not the model, so `codex` after a dot or before a slash is
+# allowed.
+MODEL_NAMES = re.compile(
+    r"(?<!\.)\bcodex\b(?!/)"
+    r"|\bkimi\b|\bgpt-\d"
+    r"|\b(?:sol|terra|luna|astra)\b"
+    r"|\b(?:opus|sonnet|haiku|fable)\b"
+    r"|\bdeepseek\b|\bglm-\d"
+    r"|--profile\s+(?:kimi|codex|opus|sonnet|haiku|fable)\b",
+    re.IGNORECASE,
+)
+# Skills allowed to name models (see CONTRIBUTING.md): routers whose job is
+# shorthand -> model id, and image skills that pick an image tool.
+MODEL_NAME_EXCEPTIONS = {
+    "do", "aurora",
+    "capability-image", "capability-image-cost", "capability-image-download",
+    "capability-image-host", "linear-image-pipeline", "photo-compositing",
+}
+
+
+def model_name_hits(text: str) -> list[str]:
+    """Distinct model names found in a skill's text, in order of first use."""
+    hits: list[str] = []
+    for m in MODEL_NAMES.finditer(text):
+        word = m.group(0)
+        if word.lower() not in (h.lower() for h in hits):
+            hits.append(word)
+    return hits
+
 
 def within_repo(path: Path) -> bool:
     """True when an already-resolved path is REPO_ROOT or lives under it.
@@ -68,6 +102,7 @@ def within_repo(path: Path) -> bool:
 class Findings:
     def __init__(self) -> None:
         self.errors: list[str] = []
+        self.model_errors: list[str] = []
         self.checked = 0
 
     def error(self, where: Path, msg: str) -> None:
@@ -218,6 +253,14 @@ def check_skill(skill_dir: Path, out: Findings) -> str | None:
         if match:
             out.error(skill_md, f"references retired `{match.group(0)}` — {why}")
 
+    if dir_name not in MODEL_NAME_EXCEPTIONS:
+        hits = model_name_hits(text)
+        if hits:
+            before = len(out.errors)
+            out.error(skill_md, f"names a model ({', '.join(hits)}) — skills say what to do; "
+                                f"model choice lives outside them (see CONTRIBUTING.md)")
+            out.model_errors.extend(out.errors[before:])
+
     return name or dir_name
 
 
@@ -252,6 +295,14 @@ def selftest() -> int:
     }
 
     failures = []
+    for text in ("Run on Kimi.", "use gpt-6", "Sonnet default", "--profile codex",
+                 "Terra for routine", "the orchestrator dispatches on `/codex`"):
+        if not model_name_hits(text):
+            failures.append(f"model name not caught: {text!r}")
+    for text in (".codex/skills/x", "different model family", "solution", "terraform",
+                 "eas build --profile preview"):
+        if model_name_hits(text):
+            failures.append(f"false model-name hit: {text!r}")
     for label, text in bad.items():
         fields, err = parse_frontmatter(text)
         if err is None:
@@ -265,7 +316,7 @@ def selftest() -> int:
 
     for line in failures:
         print(f"SELFTEST FAIL  {line}", file=sys.stderr)
-    total = len(bad) + len(good)
+    total = len(bad) + len(good) + 11
     print(f"selftest: {total - len(failures)}/{total} cases passed "
           f"(pyyaml {'available' if yaml else 'not installed'})")
     return 1 if failures else 0
@@ -274,6 +325,7 @@ def selftest() -> int:
 def main(argv: list[str]) -> int:
     if "--selftest" in argv:
         return selftest()
+    models_only = "--models-only" in argv
 
     out = Findings()
     seen: dict[str, Path] = {}
@@ -316,11 +368,13 @@ def main(argv: list[str]) -> int:
               f"{', '.join(SKILL_ROOTS)}", file=sys.stderr)
         return 1
 
-    for err in out.errors:
+    errors = out.model_errors if models_only else out.errors
+    for err in errors:
         print(f"ERROR  {err}", file=sys.stderr)
 
-    print(f"\nChecked {out.checked} skill(s); {len(out.errors)} error(s).")
-    return 1 if out.errors else 0
+    scope = "model-name error(s)" if models_only else "error(s)"
+    print(f"\nChecked {out.checked} skill(s); {len(errors)} {scope}.")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

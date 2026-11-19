@@ -19,7 +19,9 @@ automation settings, the orchestrator's routing, or a workspace config table. (T
 Before opening a PR, run:
 
 ```bash
-grep -rniE 'kimi|codex[^/]|gpt-|\b(sol|terra|luna|astra)\b|opus|sonnet|haiku|fable|deepseek|glm-' .claude/skills --include=SKILL.md | grep -vE '/(do|aurora|capability-image[^/]*|linear-image-pipeline|photo-compositing)/'
+python3 scripts/validate_skills.py --models-only
 ```
 
-It should print nothing.
+It should report 0 model-name errors. CI runs the same check on every PR that touches a skill
+(`.github/workflows/skills-no-model-names.yml`). To add an exception, add the skill's folder name to
+`MODEL_NAME_EXCEPTIONS` in `scripts/validate_skills.py` and list it above.
