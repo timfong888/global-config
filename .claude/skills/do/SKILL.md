@@ -15,7 +15,7 @@ Route the user's prompt through DigitalOcean's Serverless Inference endpoint usi
 | `/deepseek` | `deepseek-chat` |
 | `/glm` | `glm-4-plus` |
 
-If no model shorthand is given, default to `kimi-k2-instruct`.
+If no model shorthand is given, ask which model to use; never default to Kimi (cost rule, 2026-11-18).
 
 To see all currently available models, call `do_list_models` first.
 
