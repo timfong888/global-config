@@ -34,7 +34,7 @@ This command is workspace-agnostic. Resolve these variables before doing anythin
 | `STATE_TODO` | Plain `unstarted` Todo state — landing state for human-action Todo spin-outs. If `none`, skip spin-outs. |
 | `HUMAN_USER_ID` | Tim's user — informational only; assignee stays on the human permanently |
 | `ROUTING_LABELS` | routing-label ids (coding/writing/admin); if `none`, infer track from description |
-| `MODEL_LABELS` | Optional per-ticket model override. Maps label name → actual `model:` value (e.g. `sonnet 5` → `sonnet`, `opus 4.8` → `opus`, `fable 5` → `fable`, `haiku` → `haiku`). If `none`/absent, fall back to default. |
+| `MODEL_LABELS` | Optional per-ticket model override. Maps label name → `model:` value; the mapping lives in the workspace's Agent Poll Configuration, not in this skill. If `none`/absent, fall back to default. |
 | `EFFORT_LABELS` | Optional per-ticket effort override. Identity mapping (`high` → `high`). If `none`/absent, fall back to default. |
 | `CODING_PROJECT_LABEL` | Project-level label marking a Linear Project as coding-track. Until created, treat every Project in `CODING_REPO_ROOT` as coding-track. |
 | `CODING_REPO_ROOT` | Per-Project repo mapping (e.g. `Project Name` → `/path/to/repo`). **No portable default — must be set per workspace.** |
@@ -106,7 +106,7 @@ exactly its one issue. Hand the worker: `id`, `identifier`, `track`, `model`, `e
 all resolved workspace config variables.
 
 **Model selection:** if A2 found a `models`-group label, use that translated model directly.
-Otherwise, fall back to the inherited session default (Sonnet) unless explicitly overriding by
+Otherwise, fall back to the inherited session default unless explicitly overriding by
 judgment. Wait for all workers to finish, then collect each worker's one-line result.
 
 *Known limit:* two admin workers that both append to `CLAUDE-CHANGELOG.md` can race. Rare

@@ -7,7 +7,7 @@ description: "Write executable acceptance tests from a ticket's acceptance crite
 
 You are the test author, not the implementer. Your tests are the contract the coding agent must
 meet, so they must be impossible to satisfy by anything other than correct behaviour. Run on a
-different model family from the coder (the orchestrator dispatches this on `/codex`).
+different model family from the coder; the orchestrator picks which one.
 
 ## Inputs
 
