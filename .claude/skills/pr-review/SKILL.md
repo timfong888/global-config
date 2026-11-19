@@ -9,6 +9,41 @@ You review; you never push commits, edit files, approve, or merge. Run on a diff
 from the author; the skill is the same whichever model runs it. Research behind this design:
 `docs/pr-review-research.md` in global-config.
 
+## Gate: should this review run at all?
+
+Do this first, before reading code, so a review that shouldn't run ends within seconds. Tim's
+review rules (2026-11-18): one review per PR, at ready; re-review only after a substantial change;
+no AI review for docs, content or settings PRs; at most 2 reviews per PR; never Astra or Kimi
+models. Use only the PR metadata, the changed-file list and the comments; don't check out code.
+
+Skip, without posting inline findings, when any of these holds:
+
+- **(a) Docs, content or settings only.** Every changed path matches: `*.md`, `*.mdx`, `*.txt`,
+  `docs/**`, `content/**`, `.claude/**` (skills, settings), `.github/ISSUE_TEMPLATE/**`,
+  `.github/pull_request_template.md`, `.vscode/**`, `.editorconfig`, `.gitignore`, `LICENSE`, or an
+  image or font file. Anything else (code, `package.json`, lockfiles, build or deploy config,
+  `.github/workflows/**`, database rules, migrations) means review.
+- **(b) Small follow-up.** A `Verdict:` summary by you already exists on this PR, the diff from its
+  `Head:` sha to the current head is under about 50 changed lines, and no changed path touches
+  sign-in, payments or data (paths or names containing `auth`, `login`, `signin`, `session`,
+  `token`, `payment`, `billing`, `stripe`, `revenuecat`, `checkout`, `migration`, `schema`, `db`,
+  `rules`, `firestore`, `sql`).
+- **(c) Cap reached.** Two `Verdict:` summaries other than SKIP have already been posted on this PR
+  (count edits of your summary to a new `Head:` as reviews).
+
+An explicit re-review request by Tim or the orchestrator in a comment overrides (b) and (c), not (a).
+
+How to skip:
+
+- (a): post (or edit your existing summary to) `Verdict: SKIP (docs/content/settings only) · Head:
+  <short sha>`, then end with `CI determination: PASS`.
+- (b) and (c): leave the existing summary as it is and post one line, `Verdict: SKIP (<small
+  follow-up | review cap reached>) · Head: <short sha>`. End with a `CI determination:` that matches
+  the last real verdict, so a skip never turns a FAIL into a PASS. If (c) and that verdict is FAIL,
+  also add the `needs-human` label.
+
+Otherwise continue with step 0.
+
 ## 0. One review per head commit
 
 Blocks can start two runs for the same commit (a push and "ready for review" together). Before
@@ -16,7 +51,8 @@ anything else:
 
 1. Get the PR's current head SHA.
 2. If a summary by you starting with `Verdict:` already shows `Head: <that short sha>`, post
-   nothing, end with a `CI determination:` line (step 6) that matches its verdict, and stop.
+   nothing, end with a `CI determination:` line (step 6) that matches its verdict (for a SKIP
+   line, the determination the gate gave), and stop.
 3. Otherwise claim the head: post a comment that is exactly `PR Review claim · Head: <short sha>`
    and keep its ID. Re-list the PR's comments. Ignore claims older than 30 minutes with no
    matching `Verdict:` (a run that died). If another claim for this SHA has a lower comment ID
