@@ -60,13 +60,16 @@ RETIRED = (
 
 # Check 9. LLM and vendor-model names a skill must not hardcode. `.codex/` paths
 # are skill roots, not the model, so `codex` after a dot or before a slash is
-# allowed.
+# allowed. Bare "Claude" is allowed: it names the agent (Claude Code), not a model;
+# Claude model ids (claude-<family>-<n>) and family names are caught.
 MODEL_NAMES = re.compile(
     r"(?<!\.)\bcodex\b(?!/)"
     r"|\bkimi\b|\bgpt-\d"
     r"|\b(?:sol|terra|luna|astra)\b"
     r"|\b(?:opus|sonnet|haiku|fable)\b"
     r"|\bdeepseek\b|\bglm-\d"
+    r"|\bgemini\b|\bmistral\b|\bllama\b"
+    r"|\bclaude-[a-z]+-\d"
     r"|--profile\s+(?:kimi|codex|opus|sonnet|haiku|fable)\b",
     re.IGNORECASE,
 )
@@ -296,11 +299,12 @@ def selftest() -> int:
 
     failures = []
     for text in ("Run on Kimi.", "use gpt-6", "Sonnet default", "--profile codex",
-                 "Terra for routine", "the orchestrator dispatches on `/codex`"):
+                 "Terra for routine", "the orchestrator dispatches on `/codex`",
+                 "fall back to Gemini", "use Mistral", "Llama 4", "model claude-opus-5"):
         if not model_name_hits(text):
             failures.append(f"model name not caught: {text!r}")
     for text in (".codex/skills/x", "different model family", "solution", "terraform",
-                 "eas build --profile preview"):
+                 "eas build --profile preview", "Claude Code sessions"):
         if model_name_hits(text):
             failures.append(f"false model-name hit: {text!r}")
     for label, text in bad.items():
@@ -316,7 +320,7 @@ def selftest() -> int:
 
     for line in failures:
         print(f"SELFTEST FAIL  {line}", file=sys.stderr)
-    total = len(bad) + len(good) + 11
+    total = len(bad) + len(good) + 16
     print(f"selftest: {total - len(failures)}/{total} cases passed "
           f"(pyyaml {'available' if yaml else 'not installed'})")
     return 1 if failures else 0

@@ -6,7 +6,8 @@ A skill says **what** to do. Which model runs it is chosen outside the skill: Bl
 automation settings, the orchestrator's routing, or a workspace config table. (Tim, 2026-11-18.)
 
 - Don't name LLM models or vendor models in a `SKILL.md`: no Kimi, Codex, GPT-*, Sol, Terra, Luna,
-  Astra, Opus, Sonnet, Haiku, Fable, Gemini (as an LLM), DeepSeek, GLM, and no `--profile <model>`
+  Astra, Opus, Sonnet, Haiku, Fable, Gemini, Mistral, Llama, DeepSeek, GLM, Claude model ids
+  (`claude-<family>-<n>`; "Claude" alone names the agent and is fine), and no `--profile <model>`
   or "use model X".
 - If a skill needs a capability, say it neutrally: "needs deep reasoning", "high-volume and cheap",
   "a different model family from the author".
